@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mundo das Histórias — Entrar ✨</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"></head>
+<body class="login-body">
+
+  <!-- ═══════════ PORTÃO PARENTAL (Modal) ═══════════ -->
+  <div id="portao-overlay" role="dialog" aria-modal="true" aria-labelledby="pg-titulo-el">
+
+    <div class="pg-card">
+
+      <!-- ── ESTADO: formulário ── -->
+      <div id="pg-form">
+
+        <div class="pg-header">
+          <span class="pg-escudo" aria-hidden="true">🛡️</span>
+          <h2 class="pg-titulo" id="pg-titulo-el">Verificação Parental</h2>
+          <p class="pg-sub">Um adulto precisa confirmar antes<br>de liberar o acesso.</p>
+          <div class="pg-badge">
+            <span id="pg-avatar">🦁</span>
+            <span><strong id="pg-nome-crianca">…</strong> quer entrar!</span>
+          </div>
+        </div>
+
+        <div class="pg-aviso">
+          <span class="pg-aviso-icon">💡</span>
+          <span class="pg-aviso-texto">Resolva a continha abaixo para confirmar que você é um adulto. Isso protege o conteúdo da criança.</span>
+        </div>
+
+        <!-- Conta -->
+        <div>
+          <div class="pg-label">Resolva a conta:</div>
+          <div class="pg-conta-box">
+            <span class="pg-equacao" id="pg-equacao" aria-live="polite">__ + __ = ?</span>
+            <button class="pg-btn-nova" id="pg-btn-nova" aria-label="Gerar nova conta" title="Nova conta">🔄</button>
+          </div>
+        </div>
+
+        <!-- Input -->
+        <div>
+          <div class="pg-label">Sua resposta:</div>
+          <input
+            type="number"
+            id="pg-input"
+            class="pg-input"
+            placeholder="?"
+            min="0" max="999"
+            inputmode="numeric"
+            autocomplete="off"
+            aria-label="Digite a resposta"
+          />
+        </div>
+
+        <!-- Teclado virtual -->
+        <div class="pg-teclado" aria-label="Teclado numérico">
+          <button class="pg-tecla" data-val="7">7</button>
+          <button class="pg-tecla" data-val="8">8</button>
+          <button class="pg-tecla" data-val="9">9</button>
+          <button class="pg-tecla" data-val="4">4</button>
+          <button class="pg-tecla" data-val="5">5</button>
+          <button class="pg-tecla" data-val="6">6</button>
+          <button class="pg-tecla" data-val="1">1</button>
+          <button class="pg-tecla" data-val="2">2</button>
+          <button class="pg-tecla" data-val="3">3</button>
+          <button class="pg-tecla pg-del" data-val="del">⌫</button>
+          <button class="pg-tecla pg-zero" data-val="0">0</button>
+        </div>
+
+        <!-- Dots tentativas -->
+        <div class="pg-dots" aria-label="Tentativas restantes">
+          <span class="pg-dot" id="pg-dot-1"></span>
+          <span class="pg-dot" id="pg-dot-2"></span>
+          <span class="pg-dot" id="pg-dot-3"></span>
+        </div>
+
+        <!-- Feedback -->
+        <div id="pg-feedback" class="pg-feedback" role="alert" aria-live="assertive">
+          <span class="pg-feedback-icon" id="pg-fb-icon"></span>
+          <span id="pg-fb-texto"></span>
+        </div>
+
+        <!-- Confirmar -->
+        <button class="pg-btn-confirmar" id="pg-btn-confirmar">🔓 Confirmar e Liberar Acesso</button>
+
+        <!-- Voltar -->
+        <button class="pg-btn-voltar" id="pg-btn-voltar">← Voltar e trocar perfil</button>
+
+      </div>
+      <!-- fim #pg-form -->
+
+      <!-- ── ESTADO: sucesso ── -->
+      <div class="pg-sucesso" id="pg-sucesso" role="status" aria-live="polite">
+        <span class="pg-sucesso-emoji">🎉</span>
+        <div class="pg-sucesso-titulo">Acesso liberado!</div>
+        <div class="pg-sucesso-sub">Entrando no Mundo das Histórias…</div>
+        <div class="pg-barra-wrap"><div class="pg-barra-fill" id="pg-barra"></div></div>
+      </div>
+
+      <!-- ── ESTADO: bloqueio ── -->
+      <div class="pg-bloqueio" id="pg-bloqueio" role="alert" aria-live="assertive">
+        <span class="pg-bloqueio-icon">🔒</span>
+        <div class="pg-bloqueio-titulo">Muitas tentativas!</div>
+        <div class="pg-timer" id="pg-timer">00:30</div>
+        <div class="pg-bloqueio-sub">Aguarde para tentar novamente.<br>Isso protege a segurança da criança.</div>
+      </div>
+
+    </div>
+    <!-- fim .pg-card -->
+  </div>
+  <!-- fim #portao-overlay -->
+
+
+  <!-- ═══════════ LOGIN ═══════════ -->
+  <div class="login-bg">
+
+    <div class="estrelas-bg" aria-hidden="true">
+      <span class="estrela-flutuante" style="--d:0s;  --x:8%;  --y:12%">⭐</span>
+      <span class="estrela-flutuante" style="--d:1.2s;--x:82%; --y:10%">✨</span>
+      <span class="estrela-flutuante" style="--d:2s;  --x:55%; --y:75%">⭐</span>
+      <span class="estrela-flutuante" style="--d:.6s; --x:22%; --y:82%">✨</span>
+      <span class="estrela-flutuante" style="--d:1.7s;--x:72%; --y:58%">⭐</span>
+      <span class="estrela-flutuante" style="--d:3s;  --x:92%; --y:45%">✨</span>
+      <span class="estrela-flutuante" style="--d:.3s; --x:38%; --y:20%">🌟</span>
+      <span class="estrela-flutuante" style="--d:2.4s;--x:15%; --y:50%">✨</span>
+    </div>
+
+    <div class="login-wrapper">
+
+      <div class="login-logo" aria-label="Mundo das Histórias">
+        <div class="login-logo-icon">📚</div>
+        <h1 class="login-titulo">Mundo das Histórias</h1>
+        <p class="login-subtitulo">Aventuras de leitura feitas pra você!</p>
+      </div>
+
+      <div class="login-card" role="main">
+        <h2 class="login-card-titulo">👋 Quem é você?</h2>
+
+        <!-- Nome -->
+        <div class="campo-grupo">
+          <label class="campo-label" for="input-nome">Seu nome ou apelido</label>
+          <input
+            type="text"
+            id="input-nome"
+            class="campo-input"
+            placeholder="Ex: Lulú, Bento, Ana..."
+            maxlength="20"
+            autocomplete="given-name"
+            aria-required="true"
+          />
+          <span class="campo-erro oculto" id="erro-nome" role="alert">Por favor, escreva seu nome! 😊</span>
+        </div>
+
+        <!-- Avatar -->
+        <div class="campo-grupo">
+          <label class="campo-label" id="label-avatar">Escolha seu avatar</label>
+          <div class="avatar-grid" id="avatar-grid" role="radiogroup" aria-labelledby="label-avatar">
+            <button class="avatar-btn ativo" data-av="🦁" aria-label="Leão"       aria-pressed="true"  role="radio">🦁</button>
+            <button class="avatar-btn"       data-av="🐸" aria-label="Sapo"       aria-pressed="false" role="radio">🐸</button>
+            <button class="avatar-btn"       data-av="🦋" aria-label="Borboleta"  aria-pressed="false" role="radio">🦋</button>
+            <button class="avatar-btn"       data-av="🐢" aria-label="Tartaruga"  aria-pressed="false" role="radio">🐢</button>
+            <button class="avatar-btn"       data-av="🦊" aria-label="Raposa"     aria-pressed="false" role="radio">🦊</button>
+            <button class="avatar-btn"       data-av="🐧" aria-label="Pinguim"    aria-pressed="false" role="radio">🐧</button>
+            <button class="avatar-btn"       data-av="🌟" aria-label="Estrela"    aria-pressed="false" role="radio">🌟</button>
+            <button class="avatar-btn"       data-av="🦄" aria-label="Unicórnio"  aria-pressed="false" role="radio">🦄</button>
+          </div>
+        </div>
+
+        <!-- Faixa etária -->
+        <div class="campo-grupo">
+          <label class="campo-label" id="label-faixa">Sua faixa de idade</label>
+          <div class="chip-grupo" id="faixa-grupo" role="radiogroup" aria-labelledby="label-faixa">
+            <button class="chip ativo" data-faixa="1" aria-pressed="true">5–6 anos</button>
+            <button class="chip"       data-faixa="2" aria-pressed="false">7–8 anos</button>
+            <button class="chip"       data-faixa="3" aria-pressed="false">9–10 anos</button>
+          </div>
+        </div>
+
+        <!-- Gênero favorito -->
+        <div class="campo-grupo">
+          <label class="campo-label" id="label-genero">Gênero de história favorito</label>
+          <div class="chip-grupo" id="genero-grupo" role="radiogroup" aria-labelledby="label-genero">
+            <button class="chip ativo" data-genero="narrativo"    aria-pressed="true">📖 Narrativo</button>
+            <button class="chip"       data-genero="poetico"      aria-pressed="false">🎵 Poético</button>
+            <button class="chip"       data-genero="instrucional" aria-pressed="false">📋 Instrucional</button>
+            <button class="chip"       data-genero="descritivo"   aria-pressed="false">🔍 Descritivo</button>
+            <button class="chip"       data-genero="informativo"  aria-pressed="false">💡 Informativo</button>
+          </div>
+        </div>
+
+        <button class="btn-principal btn-entrar" id="btn-iniciar" aria-label="Iniciar aventura">
+          🚀 Iniciar Aventura!
+        </button>
+      </div>
+
+      <div class="login-card oculto" id="responsavel-card" role="region" aria-label="Login do responsável">
+        <h2 class="login-card-titulo">👤 Área do Responsável</h2>
+        <p class="tela-sub" id="resp-subtitulo">Faça login/cadastro para continuar.</p>
+        <div id="resp-auth-box">
+          <div class="chip-grupo" id="resp-modo">
+            <button class="chip ativo" data-modo="login" aria-pressed="true">Entrar</button>
+            <button class="chip" data-modo="cadastro" aria-pressed="false">Cadastrar</button>
+          </div>
+          <div class="campo-grupo">
+            <label class="campo-label" for="resp-nome">Nome</label>
+            <input type="text" id="resp-nome" class="campo-input" placeholder="Nome do responsável" />
+          </div>
+          <div class="campo-grupo">
+            <label class="campo-label" for="resp-sobrenome">Sobrenome</label>
+            <input type="text" id="resp-sobrenome" class="campo-input" placeholder="Sobrenome" />
+          </div>
+          <div class="campo-grupo">
+            <label class="campo-label" for="resp-email">E-mail</label>
+            <input type="email" id="resp-email" class="campo-input" placeholder="email@exemplo.com" />
+          </div>
+          <div class="campo-grupo">
+            <label class="campo-label" for="resp-senha">Senha</label>
+            <input type="password" id="resp-senha" class="campo-input" placeholder="••••••••" />
+          </div>
+          <button class="btn-secundario" id="btn-esqueci-senha" type="button">Esqueci minha senha</button>
+          <button class="btn-principal" id="btn-resp-continuar">Continuar</button>
+        </div>
+        <div id="resp-recuperar-box" class="oculto">
+          <div class="campo-grupo">
+            <label class="campo-label" for="resp-email-reset">E-mail</label>
+            <input type="email" id="resp-email-reset" class="campo-input" placeholder="email@exemplo.com" />
+          </div>
+          <div class="campo-grupo">
+            <label class="campo-label" for="resp-codigo-reset">Código recebido no e-mail</label>
+            <input type="text" id="resp-codigo-reset" class="campo-input" placeholder="Ex: 123456" maxlength="6" />
+          </div>
+          <div class="campo-grupo">
+            <label class="campo-label" for="resp-nova-senha">Nova senha</label>
+            <input type="password" id="resp-nova-senha" class="campo-input" placeholder="Digite a nova senha" />
+          </div>
+          <button class="btn-secundario" id="btn-enviar-codigo" type="button">Enviar código por e-mail</button>
+          <button class="btn-principal" id="btn-resetar-senha" type="button">Redefinir senha</button>
+          <button class="btn-secundario" id="btn-cancelar-reset" type="button">Voltar para login</button>
+        </div>
+        <span class="campo-erro oculto" id="resp-erro" role="alert"></span>
+      </div>
+
+      <div class="login-card oculto" id="perfis-card" role="region" aria-label="Seleção de perfil infantil">
+        <h2 class="login-card-titulo">👨‍👩‍👧 Seleção de Perfil</h2>
+        <p class="tela-sub">Escolha uma criança para entrar no sistema.</p>
+        <div id="perfis-lista" class="avatar-grid"></div>
+        <button class="btn-secundario" id="btn-add-crianca">+ Adicionar criança atual</button>
+        <button class="btn-principal" id="btn-logout-resp">Sair da conta do responsável</button>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="login.js"></script>
+</body>
+</html>

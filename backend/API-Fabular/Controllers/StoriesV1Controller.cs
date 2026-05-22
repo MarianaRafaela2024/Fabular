@@ -1,0 +1,48 @@
+using API_Fabular.Contracts;
+using API_Fabular.Services;
+using Microsoft.AspNetCore.Mvc;
+
+namespace API_Fabular.Controllers;
+
+[ApiController]
+[Route("api/v1/stories")]
+public class StoriesV1Controller : ControllerBase
+{
+    private readonly StoriesService _storiesService;
+
+    public StoriesV1Controller(StoriesService storiesService)
+    {
+        _storiesService = storiesService;
+    }
+
+    [HttpPost("generate")]
+    public async Task<ActionResult<StoryDetailDto>> Generate([FromBody] StoryGenerateRequest request)
+    {
+        var result = await _storiesService.GenerateAsync(request);
+        if (!result.Success)
+        {
+            return StatusCode(result.StatusCode, new { message = result.Error });
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<StorySummaryDto>>> List([FromQuery] int? faixaEtaria, [FromQuery] string? genero)
+    {
+        var result = await _storiesService.ListAsync(faixaEtaria, genero);
+        return Ok(result.Value);
+    }
+
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<StoryDetailDto>> GetById(int id)
+    {
+        var result = await _storiesService.GetByIdAsync(id);
+        if (!result.Success)
+        {
+            return StatusCode(result.StatusCode, new { message = result.Error });
+        }
+
+        return Ok(result.Value);
+    }
+}

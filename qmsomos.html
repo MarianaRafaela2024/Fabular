@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ambiente Virtual de Alfabetização Narrativa</title>
+  <link rel="stylesheet" href="css.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-inner">
+      <div class="nav-logo">
+        <span class="fox-icon">🦊</span>
+        <span class="logo-text">FABULAR
+        </span>
+      </div>
+      <ul class="nav-links">
+        <li><a href="#sobre">Sobre</a></li>
+        <li><a href="#como-funciona">Como Funciona</a></li>
+        <li><a href="#minigames">Minigames</a></li>
+        <li><a href="#diferenciais">Diferenciais</a></li>
+        <li><a href="#equipe">Equipe</a></li>
+        <li><a href="#contato">Contato</a></li>
+      </ul>
+      <a href="login.html" class="btn-nav-login">Entrar →</a>
+      <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div class="mobile-menu" id="mobile-menu">
+      <a href="#sobre">Sobre</a>
+      <a href="#como-funciona">Como Funciona</a>
+      <a href="#minigames">Minigames</a>
+      <a href="#diferenciais">Diferenciais</a>
+      <a href="#equipe">Equipe</a>
+      <a href="#contato">Contato</a>
+      <a href="/login.html" class="mobile-login">Entrar na Plataforma</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero" id="hero">
+    <div class="hero-bg-shapes">
+      <div class="shape shape-1"></div>
+      <div class="shape shape-2"></div>
+      <div class="shape shape-3"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-text">
+        <div class="badge reveal"><img src="midia/star3.png" height="19px"> Educação + Tecnologia + Magia</div>
+        <h1 class="hero-title reveal">Transformando a alfabetização em uma <em>aventura interativa</em></h1>
+        <p class="hero-sub reveal">O FABULAR une inteligência artificial, histórias envolventes e minigames para tornar o aprendizado da leitura uma jornada inesquecível para cada criança.</p>
+        <div class="hero-btns reveal">
+          <a href="#sobre" class="btn-primary">Saiba mais ↓</a>
+          <a href="/login.html" class="btn-secondary">Entrar / Login →</a>
+        </div>
+        <div class="hero-stats reveal">
+          <div class="stat"><span><img src="midia/book-stack.png" height="40px"></span><strong>Histórias</strong><small>Geradas por IA</small></div>
+          <div class="stat"><span><img src="midia/gamepad.png" height="40px"></span><strong>Minigames</strong><small>Educativos</small></div>
+          <div class="stat"><span><img src="midia/star.png" height="40px"></span><strong>Estrelas</strong><small>Para avançar</small></div>
+        </div>
+      </div>
+      <div class="hero-illustration reveal">
+        <div class="hero-card main-card">
+          <div class="card-story">
+            <div class="story-icon">🦊</div>
+            <p class="story-title">A Raposa e o Rio</p>
+            <div class="stars-row"><img src="midia/star.png" height="40px"><img src="midia/star.png" height="40px"><img src="midia/star.png" height="40px"></div>
+          </div>
+        </div>
+        <div class="hero-card game-card">
+          <div class="game-preview">
+            <span><img src="midia/gamepad.png" height="40px"></span>
+            <p>Caça-Palavras</p>
+          </div>
+        </div>
+        <div class="hero-card progress-card">
+          <p>Progresso</p>
+          <div class="progress-bar"><div class="progress-fill"></div></div>
+          <small>Fase 3 de 5 <img src="midia/star3.png" height="15px"></small>
+        </div>
+        <div class="floating-emoji e1"><img src="midia/book.png" height="40px"></div>
+        <div class="floating-emoji e2"><img src="midia/star3.png" height="40px"></div>
+        <div class="floating-emoji e3"><img src="midia/paint-palette.png" height="40px"></div>
+        <div class="floating-emoji e4"><img src="midia/trophy.png" height="40px"></div>
+      </div>
+    </div>
+    <div class="wave-bottom">
+      <svg viewBox="0 0 1440 100" preserveAspectRatio="none"><path d="M0,60 C360,100 1080,0 1440,60 L1440,100 L0,100 Z" fill="#ffffff"/></svg>
+    </div>
+  </section>
+
+  <!-- SOBRE -->
+  <section class="sobre" id="sobre">
+    <div class="container">
+      <div class="section-label reveal">Conheça o projeto</div>
+      <h2 class="section-title reveal">O que é o <span>FABULAR?</span></h2>
+      <p class="section-sub reveal">Uma plataforma educacional inteligente que combina histórias geradas por IA com atividades gamificadas, criando uma experiência personalizada de aprendizado para cada criança.</p>
+      <div class="cards-grid reveal">
+        <div class="feature-card">
+          <div class="card-icon"><img src="midia/book-stack.png" height="40px"></div>
+          <h3>Histórias Interativas</h3>
+          <p>Narrativas criadas por inteligência artificial, adaptadas à faixa etária e nível de leitura de cada aluno.</p>
+        </div>
+        <div class="feature-card featured">
+          <div class="card-icon"><img src="midia/robot.png" height="40px"></div>
+          <h3>Inteligência Artificial</h3>
+          <p>IA que gera conteúdo único, adapta a dificuldade e personaliza o percurso de aprendizado automaticamente.</p>
+        </div>
+        <div class="feature-card">
+          <div class="card-icon"><img src="midia/gamepad.png" height="40px"></div>
+          <h3>Minigames Educativos</h3>
+          <p>Atividades lúdicas e interativas baseadas nas histórias, reforçando a compreensão de forma divertida.</p>
+        </div>
+      </div>
+    </div>
+    <div class="wave-bottom teal-wave">
+      <svg viewBox="0 0 1440 100" preserveAspectRatio="none"><path d="M0,40 C480,100 960,0 1440,50 L1440,100 L0,100 Z" fill="var(--teal)"/></svg>
+    </div>
+  </section>
+
+  <!-- COMO FUNCIONA -->
+  <section class="como-funciona" id="como-funciona">
+    <div class="container">
+      <div class="section-label light reveal">Como funciona</div>
+      <h2 class="section-title light reveal">A jornada de <span>aprendizado</span></h2>
+      <div class="steps-track">
+        <div class="step reveal">
+          <div class="step-number">01</div>
+          <div class="step-icon"><img src="midia/book.png" height="40px"></div>
+          <h3>Lê a história</h3>
+          <p>A criança lê uma história interativa gerada especialmente para seu nível e interesse.</p>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step reveal">
+          <div class="step-number">02</div>
+          <div class="step-icon"><img src="midia/gamepad.png" height="40px"></div>
+          <h3>Joga e aprende</h3>
+          <p>Minigames baseados no texto lido reforçam vocabulário, compreensão e escrita.</p>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step reveal">
+          <div class="step-number">03</div>
+          <div class="step-icon"><img src="midia/star.png" height="40px"></div>
+          <h3>Ganha estrelas</h3>
+          <p>Cada atividade concluída rende estrelas que desbloqueiam novos conteúdos.</p>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step reveal">
+          <div class="step-number">04</div>
+          <div class="step-icon"><img src="midia/trophy.png" height="40px"></div>
+          <h3>Avança de fase</h3>
+          <p>Com estrelas suficientes, a criança progride para histórias mais complexas e desafiadoras.</p>
+        </div>
+      </div>
+    </div>
+    <div class="wave-bottom yellow-wave">
+      <svg viewBox="0 0 1440 100" preserveAspectRatio="none"><path d="M0,70 C400,0 1000,100 1440,30 L1440,100 L0,100 Z" fill="var(--yellow)"/></svg>
+    </div>
+  </section>
+
+  <!-- MINIGAMES -->
+  <section class="minigames" id="minigames">
+    <div class="container">
+      <div class="section-label reveal">Atividades</div>
+      <h2 class="section-title reveal">Minigames que <span>encantam</span></h2>
+      <p class="section-sub reveal">Cada história gera automaticamente atividades variadas, mantendo o aprendizado sempre fresco e divertido.</p>
+      <div class="games-grid reveal">
+        <div class="game-card-big">
+          <div class="game-emoji"><img src="midia/paint-palette.png" height="40px"></div>
+          <h3>Colorir com Interpretação</h3>
+          <p>A criança coloriza cenas da história respondendo perguntas de compreensão.</p>
+          <div class="game-tag">Criatividade</div>
+        </div>
+        <div class="game-card-big">
+          <div class="game-emoji"><img src="midia/puzzle.png" height="40px"></div>
+          <h3>Montar Frases</h3>
+          <p>Palavras embaralhadas da história são reorganizadas formando frases corretas.</p>
+          <div class="game-tag">Gramática</div>
+        </div>
+        <div class="game-card-big">
+          <div class="game-emoji"><img src="midia/loupe.png" height="40px"></div>
+          <h3>Caça-Palavras</h3>
+          <p>Palavras-chave do texto são escondidas em uma grade para o aluno encontrar.</p>
+          <div class="game-tag">Vocabulário</div>
+        </div>
+        <div class="game-card-big">
+          <div class="game-emoji"><img src="midia/process.png" height="40px"></div>
+          <h3>Sequência da História</h3>
+          <p>Cenas da narrativa são embaralhadas e a criança as coloca na ordem correta.</p>
+          <div class="game-tag">Interpretação</div>
+        </div>
+      </div>
+    </div>
+    <div class="wave-bottom purple-wave">
+      <svg viewBox="0 0 1440 100" preserveAspectRatio="none"><path d="M0,50 C350,100 1100,0 1440,60 L1440,100 L0,100 Z" fill="var(--purple)"/></svg>
+    </div>
+  </section>
+
+  <!-- DIFERENCIAIS -->
+  <section class="diferenciais" id="diferenciais">
+    <div class="container">
+      <div class="section-label light reveal">Porque escolher</div>
+      <h2 class="section-title light reveal">Nossa <span>inovação</span></h2>
+      <div class="diff-grid reveal">
+        <div class="diff-item">
+          <div class="diff-icon"><img src="midia/robot.png" height="40px"></div>
+          <div class="diff-text">
+            <h3>IA que cria histórias</h3>
+            <p>Conteúdo gerado automaticamente garante sempre novidades e nunca repetição.</p>
+          </div>
+        </div>
+        <div class="diff-item">
+          <div class="diff-icon"><img src="midia/effective.png" height="40px"></div>
+          <div class="diff-text">
+            <h3>Minigames gerados automaticamente</h3>
+            <p>Cada história produz suas próprias atividades, sem necessidade de curadoria manual.</p>
+          </div>
+        </div>
+        <div class="diff-item">
+          <div class="diff-icon"><img src="midia/siblings.png" height="40px"></div>
+          <div class="diff-text">
+            <h3>Personalização por idade</h3>
+            <p>O sistema adapta vocabulário, complexidade e temas de acordo com a faixa etária.</p>
+          </div>
+        </div>
+        <div class="diff-item">
+          <div class="diff-icon"><img src="midia/star.png" height="40px"></div>
+          <div class="diff-text">
+            <h3>Sistema de estrelas motivador</h3>
+            <p>Recompensas visuais e progresso claro mantêm a criança engajada e motivada.</p>
+          </div>
+        </div>
+        <div class="diff-item">
+          <div class="diff-icon"><img src="midia/rising.png" height="40px"></div>
+          <div class="diff-text">
+            <h3>Acompanhamento de progresso</h3>
+            <p>Educadores e responsáveis visualizam a evolução detalhada de cada aluno.</p>
+          </div>
+        </div>
+        <div class="diff-item">
+          <div class="diff-icon"><img src="midia/web-design.png" height="40px"></div>
+          <div class="diff-text">
+            <h3>Design inclusivo e acessível</h3>
+            <p>Interface projetada para crianças em processo de alfabetização, com foco na usabilidade.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="wave-bottom neutral-wave">
+      <svg viewBox="0 0 1440 100" preserveAspectRatio="none"><path d="M0,30 C500,100 900,0 1440,70 L1440,100 L0,100 Z" fill="var(--neutral)"/></svg>
+    </div>
+  </section>
+
+  <!-- EQUIPE -->
+  <section class="equipe" id="equipe">
+    <div class="container">
+      <div class="section-label reveal">Quem somos</div>
+      <h2 class="section-title reveal">Nossa <span>equipe</span></h2>
+      <p class="section-sub reveal">Projeto desenvolvido por estudantes da <strong>Etec</strong>, com foco em unir educação e tecnologia para transformar o aprendizado infantil.</p>
+      <div class="team-grid reveal">
+        <div class="team-card">
+          <div class="avatar" style="background: var(--orange-light);">👩‍💻</div>
+          <h4>Desenvolvedora</h4>
+          <p>Frontend & UX</p>
+        </div>
+        <div class="team-card">
+          <div class="avatar" style="background: var(--teal-light);">👨‍💻</div>
+          <h4>Desenvolvedor</h4>
+          <p>Backend & IA</p>
+        </div>
+        <div class="team-card">
+          <div class="avatar" style="background: var(--purple-light);">👩‍🎨</div>
+          <h4>Designer</h4>
+          <p>UI & Identidade Visual</p>
+        </div>
+        <div class="team-card">
+          <div class="avatar" style="background: var(--yellow-light);">👨‍🏫</div>
+          <h4>Orientador</h4>
+          <p>Pedagogo & Mentor</p>
+        </div>
+      </div>
+      <div class="etec-badge reveal">
+        <span>🏫</span>
+        <div>
+          <strong>Escola Técnica Estadual (Etec)</strong>
+          <p>Projeto acadêmico de conclusão de curso — Tecnologia + Educação</p>
+        </div>
+      </div>
+    </div>
+    <div class="wave-bottom cta-wave">
+      <svg viewBox="0 0 1440 100" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="grad-orange" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#FF6B2B" />
+            <stop offset="100%" stop-color="#E85520" />
+          </linearGradient>
+        </defs>
+        <path d="M0,60 C360,0 1080,100 1440,40 L1440,100 L0,100 Z" fill="url(#grad-orange)"></path>
+      </svg>
+    </div>
+  </section>
+  <!-- CTA -->
+  <section class="cta-section" id="cta">
+    <div class="cta-shapes">
+      <div class="cta-shape s1"></div>
+      <div class="cta-shape s2"></div>
+    </div>
+    <div class="container">
+      <div class="cta-inner reveal">
+        <div class="cta-emoji-row">🦊 <img src="midia/book-stack.png" height="40px"> <img src="midia/star.png" height="40px"> <img src="midia/gamepad.png" height="40px"> <img src="midia/trophy.png" height="40px"></div>
+        <h2>Pronto para começar a jornada?</h2>
+        <p>Junte-se a uma nova forma de aprender a ler. Aventuras, histórias e diversão esperam por você!</p>
+        <a href="/login.html" class="btn-cta"> <img src="midia/point.png" height="20px"> Acessar Plataforma</a>
+        <small>Gratuito · Sem anúncios · Seguro para crianças</small>
+      </div>
+    </div>
+    <div class="wave-bottom cta-wave">
+      <svg viewBox="0 0 1440 100" preserveAspectRatio="none"><path d="M0,60 C360,0 1080,100 1440,40 L1440,100 L0,100 Z" fill="var(--dark)"/></svg>
+    </div>
+  </section>
+  <!-- FOOTER + CONTATO -->
+  <footer class="footer" id="contato">
+    <div class="container">
+
+      <!-- Contato dentro do footer -->
+      <div class="footer-contato">
+        <div class="footer-contato-header">
+          <div class="footer-section-label">Contato</div>
+          <h2 class="footer-contato-title">Vamos conversar?</h2>
+          <p class="footer-contato-sub">Estamos prontos para tirar suas dúvidas, ouvir sugestões e ajudar você a levar o FABULAR para sua escola.</p>
+        </div>
+        <div class="footer-contato-grid">
+          <div class="footer-contato-info">
+            <h3>Fale com a equipe</h3>
+            <p>Retornamos em até 1 dia útil.</p>
+            <div class="footer-contato-item">
+              <strong>Email:</strong>
+              <a href="mailto:fabularleitura@gmail.com">fabularleitura@gmail.com</a>
+            </div>
+            <div class="footer-contato-item">
+              <strong>Telefone:</strong>
+              <a href="tel:+5511999999999">(11) 99999-9999</a>
+            </div>
+            <div class="footer-contato-item">
+              <strong>Horário:</strong>
+              <span>Segunda a sexta, 8h às 18h</span>
+            </div>
+          </div>
+          <form class="footer-contato-form" id="footer-contato-form">
+            <label for="contato-nome">Nome</label>
+            <input id="contato-nome" type="text" name="name" placeholder="Seu nome completo" required>
+            <label for="contato-email">Email</label>
+            <input id="contato-email" type="email" name="email" placeholder="seuemail@exemplo.com" required>
+            <label for="contato-assunto">Assunto</label>
+            <select id="contato-assunto" name="subject" required>
+              <option value="duvida-geral">Dúvida geral</option>
+              <option value="suporte-tecnico">Suporte técnico</option>
+              <option value="parceria">Parceria com escola</option>
+              <option value="recuperacao-email">Recuperação de e-mail</option>
+              <option value="outro">Outro</option>
+            </select>
+            <label for="contato-mensagem">Mensagem</label>
+            <textarea id="contato-mensagem" name="message" placeholder="Como podemos ajudar?" required></textarea>
+            <button type="submit" class="footer-btn-enviar">Enviar mensagem</button>
+            <p id="contato-feedback" class="contato-feedback" aria-live="polite"></p>
+          </form>
+        </div>
+      </div>
+      <!-- Rodapé -->
+      <div class="footer-top">
+        <div class="footer-brand">
+          <span class="fox-icon">🦊</span>
+          <span>FABULAR</span>
+          <p>Ambiente Virtual de Incentivo a Leitura</p>
+        </div>
+        <div class="footer-links">
+          <a href="#sobre">Sobre</a>
+          <a href="#como-funciona">Como Funciona</a>
+          <a href="#minigames">Minigames</a>
+          <a href="#equipe">Equipe</a>
+          <a href="#contato">Contato</a>
+          <a href="/login.html">Login</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2026 FABULAR — Projeto</p>
+      </div>
+
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
