@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "D:\\TCC-main\\TCC\\backend\\API-Fabular\\API-Fabular.csproj": {}
+    "D:\\TCC-main\\Fabular\\Fabular-1\\backend\\API-Fabular\\API-Fabular.csproj": {}
   },
   "projects": {
-    "D:\\TCC-main\\TCC\\backend\\API-Fabular\\API-Fabular.csproj": {
+    "D:\\TCC-main\\Fabular\\Fabular-1\\backend\\API-Fabular\\API-Fabular.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\TCC-main\\TCC\\backend\\API-Fabular\\API-Fabular.csproj",
+        "projectUniqueName": "D:\\TCC-main\\Fabular\\Fabular-1\\backend\\API-Fabular\\API-Fabular.csproj",
         "projectName": "API-Fabular",
-        "projectPath": "D:\\TCC-main\\TCC\\backend\\API-Fabular\\API-Fabular.csproj",
-        "packagesPath": "C:\\Users\\195192024\\.nuget\\packages\\",
-        "outputPath": "D:\\TCC-main\\TCC\\backend\\API-Fabular\\obj\\",
+        "projectPath": "D:\\TCC-main\\Fabular\\Fabular-1\\backend\\API-Fabular\\API-Fabular.csproj",
+        "packagesPath": "C:\\Users\\195222024\\.nuget\\packages\\",
+        "outputPath": "D:\\TCC-main\\Fabular\\Fabular-1\\backend\\API-Fabular\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\195192024\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\195222024\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -39,13 +39,7 @@
           "warnAsError": [
             "NU1605"
           ]
-        },
-        "restoreAuditProperties": {
-          "enableAudit": "true",
-          "auditLevel": "low",
-          "auditMode": "direct"
-        },
-        "SdkAnalysisLevel": "9.0.300"
+        }
       },
       "frameworks": {
         "net8.0": {
@@ -83,7 +77,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.312/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.100/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

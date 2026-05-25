@@ -117,7 +117,7 @@
               </div>
             </div>
             <div class="leitura-acoes">
-              <button class="btn-icon" id="btn-ouvir" title="Ouvir texto" aria-label="Ouvir texto em voz alta">🔊</button>
+              <button class="btn-icon" id="btn-ouvir" title="Ouvir história em voz alta" aria-label="Ouvir história em voz alta">🔊</button>
               <button class="btn-icon" id="btn-destaque" title="Destacar palavras-chave" aria-label="Destacar palavras-chave">🔍</button>
             </div>
           </div>
@@ -153,6 +153,7 @@
               <span class="minigame-titulo-label" id="mg-titulo-label">Minigame</span>
               <span class="mg-contador" id="mg-contador">1 / 4</span>
             </div>
+            <button class="btn-secundario btn-ler-historia-mg" id="btn-ler-historia-mg" type="button" aria-label="Ouvir o texto completo da história">📖 História</button>
             <button class="btn-icon" id="btn-ouvir-mg" title="Ouvir enunciado" aria-label="Ouvir enunciado">🔊</button>
           </div>
           <div class="minigame-corpo" id="minigame-corpo"></div>
@@ -224,6 +225,16 @@
           <div class="progresso-secao">
             <h3>📊 Evolução do Nível</h3>
             <div class="nivel-progress-area">
+              <div class="xp-barra-card">
+                <div class="xp-barra-topo">
+                  <span class="xp-nivel-label" id="xp-nivel-label">🌱 Iniciante</span>
+                  <span class="xp-texto" id="xp-texto">0 XP</span>
+                </div>
+                <div class="xp-barra-track">
+                  <div class="xp-barra-fill" id="xp-barra-fill"></div>
+                </div>
+                <p class="xp-proximo-label" id="xp-proximo-label">Complete fases e minigames para ganhar experiência</p>
+              </div>
               <div class="nivel-steps">
                 <div class="nivel-step" id="ns-iniciante"><span class="ns-icon">🌱</span><span>Iniciante</span></div>
                 <div class="nivel-linha"></div>

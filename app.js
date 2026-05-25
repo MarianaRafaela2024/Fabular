@@ -397,7 +397,7 @@
     const data = await apiGet(`/api/v1/stories/${serverId}`);
     const mgRaw = data.minigames != null ? data.minigames : data.Minigames;
     const minigamesPreset = Array.isArray(mgRaw)
-      ? mgRaw.map((m) => (m && typeof m === 'object' ? m : null)).filter(Boolean)
+      ? mgRaw.map(normalizarMinigamePreset).filter(Boolean)
       : [];
     return {
       id: `api-${data.id}`,
@@ -525,8 +525,8 @@
      'Cada erro nos ensina algo novo! Vamos em frente! 🌟'
    ];
    const MSGS_RESULTADO = {
-     3: ['Perfeito! Você é um(a) super leitor(a)! 🏆', 'Incrível! Três estrelas! Você arrasou! 🌟'],
-     2: ['Muito bem! Duas estrelas! Continue assim! ⭐⭐', 'Ótimo trabalho! Você está melhorando! 🎉'],
+     3: ['Perfeito! Você é um(a) super leitor(a)! 🏆', 'Incrível! Você arrasou nesta história! 🌟'],
+     2: ['Muito bem! Continue assim! 🎉', 'Ótimo trabalho! Você está melhorando! 💪'],
      1: ['Você concluiu! Continue praticando! 💪', 'Parabéns por terminar! Tente de novo! 🌈'],
      0: ['Não desista! Releia a história e tente novamente! 📖', 'Vamos tentar de novo? Você consegue! 💪']
    };
@@ -538,6 +538,7 @@
    let estado = {
      perfil: { nome: '', avatar: '🦁', faixa: 1, genero: 'narrativo' },
      nivel: 'iniciante', // iniciante | intermediario | avancado
+     experiencia: 0,
      totalEstrelas: 0,
      historiasLidas: [],  // [{id, estrelas, data}]
      tempoTotal: 0,       // minutos
@@ -555,6 +556,7 @@
      filtroGenero: 'todos',
      filtroFaixa: 'todos',
     destaqueAtivo: false,
+    modoLeituraCompleta: false,
     relatorioEventos: [] // eventos locais por minigame
    };
    
@@ -567,6 +569,7 @@
        perfil: estado.perfil,
       portaoAprovado: true,
        nivel: estado.nivel,
+       experiencia: estado.experiencia || 0,
        totalEstrelas: estado.totalEstrelas,
        historiasLidas: estado.historiasLidas,
        tempoTotal: estado.tempoTotal,
@@ -908,9 +911,81 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
       multiplaescolha: 'escolha',
       quiz: 'escolha',
       arrastar_passos: 'ordenar_passos',
-      ordenar: 'ordenar_passos'
+      ordenar: 'ordenar_passos',
+      montafrase: 'monta_frase',
+      monta_frase: 'monta_frase',
+      palavras_perdidas: 'completar',
+      complete: 'completar'
     };
     return aliases[tipo] || tipo || 'verdadeiro_falso';
+  }
+
+  function chaveUnicaMinigame(tipo) {
+    const norm = normalizarTipoMinigame(tipo);
+    if (norm === 'palavras_perdidas' || norm === 'completar') return 'completar';
+    if (norm === 'monta_frase') return 'monta_frase';
+    if (norm === 'memoria' || norm === 'jogo_memoria') return 'jogo_memoria';
+    return norm;
+  }
+
+  function montarListaMinigamesUnica(tipos, genero, faixa) {
+    const vistos = new Set();
+    const lista = [];
+    (tipos || []).forEach((t) => {
+      const norm = normalizarTipoMinigame(t);
+      const chave = chaveUnicaMinigame(norm);
+      if (vistos.has(chave)) return;
+      vistos.add(chave);
+      lista.push(norm);
+    });
+    const extras = escolherMinigamesTipos(faixa, genero);
+    for (let i = 0; i < extras.length && lista.length < 4; i++) {
+      const norm = normalizarTipoMinigame(extras[i]);
+      const chave = chaveUnicaMinigame(norm);
+      if (vistos.has(chave)) continue;
+      vistos.add(chave);
+      lista.push(norm);
+    }
+    return lista.slice(0, 4);
+  }
+
+  function extrairPalavrasLista(valor) {
+    if (valor == null) return [];
+    if (Array.isArray(valor)) {
+      return valor.flatMap((item) => extrairPalavrasLista(item));
+    }
+    const texto = String(valor).trim();
+    if (!texto) return [];
+    if (texto.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(texto);
+        if (Array.isArray(parsed)) return extrairPalavrasLista(parsed);
+      } catch (_) {}
+    }
+    return texto.split(/\s+/).filter(Boolean);
+  }
+
+  function extrairDadosMontaFrase(spec) {
+    const fonte = spec && typeof spec === 'object' ? spec : {};
+    const fraseCorreta = String(
+      fonte.resposta != null ? fonte.resposta
+        : (fonte.frase_correta != null ? fonte.frase_correta
+          : (fonte.frase != null ? fonte.frase : ''))
+    ).trim();
+    let palavrasCorretas = extrairPalavrasLista(fraseCorreta);
+    let palavrasPool = extrairPalavrasLista(fonte.palavras);
+    if (!palavrasCorretas.length && palavrasPool.length) palavrasCorretas = [...palavrasPool];
+    if (!palavrasPool.length && palavrasCorretas.length) palavrasPool = [...palavrasCorretas];
+    const norm = (s) => String(s || '').trim().toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    palavrasCorretas.forEach((w) => {
+      if (!palavrasPool.some((p) => norm(p) === norm(w))) palavrasPool.push(w);
+    });
+    return {
+      pergunta: fonte.pergunta || '🧩 Monte a frase com as palavras abaixo.',
+      palavrasCorretas,
+      palavrasPool: palavrasPool.filter(Boolean)
+    };
   }
 
   function normalizarCorreta(valor) {
@@ -935,9 +1010,22 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
     if (tipo === 'escolha') {
       base.opcoes = Array.isArray(fonte.opcoes) ? fonte.opcoes.map(String) : [];
       base.correta = normalizarCorreta(fonte.correta);
-    } else if (tipo === 'completar' || tipo === 'monta_frase') {
-      base.resposta = String(fonte.resposta != null ? fonte.resposta : (fonte.correta != null ? fonte.correta : '')).trim();
-      if (Array.isArray(fonte.palavras)) base.palavras = fonte.palavras.map(String);
+    } else if (tipo === 'completar' || tipo === 'palavras_perdidas') {
+      base.resposta = String(
+        fonte.resposta != null ? fonte.resposta
+          : (fonte.palavra != null ? fonte.palavra
+            : (fonte.lacuna != null ? fonte.lacuna
+              : (fonte.correta != null ? fonte.correta : '')))
+      ).trim();
+      const fraseRaw = fonte.frase || fonte.texto || '';
+      base.frase = String(fraseRaw).trim();
+      if (fonte.dica != null) base.dica = String(fonte.dica);
+    } else if (tipo === 'monta_frase' || tipo === 'palavras_perdidas') {
+      const mf = extrairDadosMontaFrase(fonte);
+      base.resposta = mf.palavrasCorretas.join(' ');
+      base.frase_correta = base.resposta;
+      base.palavras = mf.palavrasPool;
+      if (pergunta) base.pergunta = pergunta;
     } else if (tipo === 'verdadeiro_falso') {
       base.afirmacao = String(fonte.afirmacao || pergunta || '');
       base.opcoes = Array.isArray(fonte.opcoes) ? fonte.opcoes.map(String) : ['Verdadeiro', 'Falso'];
@@ -977,15 +1065,10 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
 
   function garantirMinigamesGroq(minigames, genero, faixa) {
     const lista = Array.isArray(minigames) ? minigames.map(normalizarMinigamePreset).filter(Boolean) : [];
-    const usados = new Set(lista.map((m) => m.tipo));
-    const fallbackTipos = escolherMinigamesTipos(faixa, genero);
-    for (let i = 0; i < fallbackTipos.length && lista.length < 4; i++) {
-      const tipo = fallbackTipos[i];
-      if (usados.has(tipo)) continue;
-      lista.push({ tipo, pergunta: '' });
-      usados.add(tipo);
-    }
-    return lista.slice(0, 4);
+    const tipos = montarListaMinigamesUnica(lista.map((m) => m.tipo), faixa, genero);
+    const porChave = {};
+    lista.forEach((m) => { porChave[chaveUnicaMinigame(m.tipo)] = m; });
+    return tipos.map((tipo) => porChave[chaveUnicaMinigame(tipo)] || { tipo, pergunta: '' });
   }
 
   function normalizarStoryGroq(storyRaw, faixaSelecionada, generoSelecionado) {
@@ -1226,21 +1309,21 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
      window.speechSynthesis.cancel();
      if (ttsAtivo) {
        ttsAtivo = false;
-       document.querySelectorAll('#btn-ouvir, #btn-ouvir-mg').forEach(b => b.classList.remove('ativo'));
-       return;
-     }
-     // Remove HTML tags
-     const textoLimpo = texto.replace(/<[^>]*>/g, '');
-     ttsUtterance = new SpeechSynthesisUtterance(textoLimpo);
-     ttsUtterance.lang = 'pt-BR';
-     ttsUtterance.rate = 0.85;
-     //define 
-     ttsUtterance.pitch = 1.1;
-     ttsAtivo = true;
-     document.querySelectorAll('#btn-ouvir, #btn-ouvir-mg').forEach(b => b.classList.add('ativo'));
-     ttsUtterance.onend = () => {
-       ttsAtivo = false;
-       document.querySelectorAll('#btn-ouvir, #btn-ouvir-mg').forEach(b => b.classList.remove('ativo'));
+       document.querySelectorAll('#btn-ouvir, #btn-ouvir-mg, #btn-ouvir-resumo, #btn-ler-historia-mg').forEach(b => b.classList.remove('ativo'));
+     return;
+   }
+   // Remove HTML tags
+   const textoLimpo = texto.replace(/<[^>]*>/g, '');
+    ttsUtterance = new SpeechSynthesisUtterance(textoLimpo);
+    ttsUtterance.lang = 'pt-BR';
+    ttsUtterance.rate = 0.85;
+    //define
+    ttsUtterance.pitch = 1.1;
+    ttsAtivo = true;
+    document.querySelectorAll('#btn-ouvir, #btn-ouvir-mg, #btn-ouvir-resumo, #btn-ler-historia-mg').forEach(b => b.classList.add('ativo'));
+    ttsUtterance.onend = () => {
+      ttsAtivo = false;
+      document.querySelectorAll('#btn-ouvir, #btn-ouvir-mg, #btn-ouvir-resumo, #btn-ler-historia-mg').forEach(b => b.classList.remove('ativo'));
      };
      window.speechSynthesis.speak(ttsUtterance);
    }
@@ -1303,6 +1386,143 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
    
    function labelNivel(n) {
      return { iniciante: '🌱 Iniciante', intermediario: '🌿 Intermediário', avancado: '🌳 Avançado' }[n] || '🌱 Iniciante';
+   }
+
+   const FAIXAS_NIVEL_XP = [
+     { id: 'iniciante', min: 0, max: 100 },
+     { id: 'intermediario', min: 100, max: 280 },
+     { id: 'avancado', min: 280, max: 450 }
+   ];
+
+   function calcularNivelPorXp(xp) {
+     const x = Math.max(0, Number(xp) || 0);
+     if (x >= 280) return 'avancado';
+     if (x >= 100) return 'intermediario';
+     return 'iniciante';
+   }
+
+   function obterFaixaXpAtual(xp) {
+     const nivel = calcularNivelPorXp(xp);
+     return FAIXAS_NIVEL_XP.find((f) => f.id === nivel) || FAIXAS_NIVEL_XP[0];
+   }
+
+   function adicionarExperiencia(quantidade, motivo) {
+     const ganho = Math.max(0, Number(quantidade) || 0);
+     if (!ganho) return;
+     const antes = estado.experiencia || 0;
+     const nivelAntes = calcularNivelPorXp(antes);
+     estado.experiencia = antes + ganho;
+     const nivelDepois = calcularNivelPorXp(estado.experiencia);
+     estado.nivel = nivelDepois;
+     salvarEstado();
+     atualizarHeader();
+     atualizarBarraExperiencia();
+     if (nivelDepois !== nivelAntes) {
+       const labels = { intermediario: 'Intermediário 🌿', avancado: 'Avançado 🌳' };
+       mostrarToast(`Você subiu de nível! Agora é ${labels[nivelDepois] || nivelDepois} ✨`);
+     }
+   }
+
+   function atualizarBarraExperiencia() {
+     const xp = estado.experiencia || 0;
+     const faixa = obterFaixaXpAtual(xp);
+     const noNivel = xp - faixa.min;
+     const tamanhoFaixa = faixa.max - faixa.min;
+     const pct = Math.min(100, Math.round((noNivel / tamanhoFaixa) * 100));
+     const fill = document.getElementById('xp-barra-fill');
+     const texto = document.getElementById('xp-texto');
+     const label = document.getElementById('xp-nivel-label');
+     const proxLabel = document.getElementById('xp-proximo-label');
+     if (fill) fill.style.width = pct + '%';
+     if (texto) texto.textContent = `${xp} XP · ${noNivel} / ${tamanhoFaixa} neste nível`;
+     if (label) label.textContent = labelNivel(estado.nivel);
+     if (proxLabel) {
+       if (faixa.id === 'avancado') {
+         proxLabel.textContent = xp >= faixa.max ? 'Nível máximo alcançado! 🏆' : `Faltam ${faixa.max - xp} XP para dominar tudo`;
+       } else {
+         const prox = faixa.id === 'iniciante' ? 'Intermediário' : 'Avançado';
+         proxLabel.textContent = `Faltam ${faixa.max - xp} XP para ${prox}`;
+       }
+     }
+     ['iniciante', 'intermediario', 'avancado'].forEach((n) => {
+       const el = document.getElementById('ns-' + n);
+       if (el) el.classList.toggle('ativo', niveisOrdem(estado.nivel) >= niveisOrdem(n));
+     });
+   }
+
+   function textoValidoCompletar(texto) {
+     const t = String(texto || '').trim();
+     if (!t) return false;
+     if (/^[-–—_\s.]+$/u.test(t)) return false;
+     if (/^complete(\s+a\s+frase)?[:.]?\s*$/i.test(t)) return false;
+     return true;
+   }
+
+   function limparTextoCompletar(texto) {
+     return String(texto || '')
+       .replace(/^✍️\s*/u, '')
+       .replace(/^Complete:\s*/i, '')
+       .replace(/^Complete a frase[^:]*:\s*/i, '')
+       .replace(/\s*[-–—]{2,}\s*/g, ' ')
+       .replace(/\s+/g, ' ')
+       .trim();
+   }
+
+   function montarDadosCompletarMG(fase, h, spec) {
+     const fonte = spec && typeof spec === 'object' ? spec : {};
+     let resposta = String(
+       fonte.resposta != null ? fonte.resposta
+         : (fonte.palavra != null ? fonte.palavra
+           : (fonte.lacuna != null ? fonte.lacuna : ''))
+     ).trim();
+     let frase = '';
+     if (textoValidoCompletar(fonte.frase)) frase = limparTextoCompletar(fonte.frase);
+     else if (textoValidoCompletar(fonte.texto)) frase = limparTextoCompletar(fonte.texto);
+
+     const inter = fase && fase.interacao && fase.interacao.tipo === 'completar' ? fase.interacao : null;
+     if (!resposta && inter) resposta = String(inter.resposta || '').trim();
+     if (!frase && inter && textoValidoCompletar(inter.pergunta)) {
+       frase = limparTextoCompletar(inter.pergunta);
+     }
+
+     if (!resposta && h) {
+       const kw = (h.palavrasChave || []).find(Boolean) || 'história';
+       resposta = kw;
+       const textoLimpo = (fase && fase.texto ? fase.texto : h.fases[0]?.texto || '')
+         .replace(/<[^>]+>/g, '')
+         .replace(/\s+/g, ' ')
+         .trim();
+       const fraseTxt = textoLimpo.split(/[.!?]/).map((s) => s.trim()).find((s) => s.length > 12) || textoLimpo;
+       const re = new RegExp(`\\b${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+       if (re.test(fraseTxt)) frase = fraseTxt.replace(re, '___');
+       else frase = (fraseTxt.length > 80 ? fraseTxt.slice(0, 80) + '…' : fraseTxt) + ' ___';
+     }
+
+     if (frase && resposta && !/_{2,}|___/.test(frase)) {
+       const reResp = new RegExp(`\\b${resposta.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+       if (reResp.test(frase)) frase = frase.replace(reResp, '___');
+       else frase = frase + ' ___';
+     }
+
+     if (!frase) frase = 'Complete a frase ___';
+
+     let instrucao = 'Leia a frase e escreva uma palavra para completar.';
+     const perguntaSpec = limparTextoCompletar(fonte.pergunta || '');
+     if (textoValidoCompletar(perguntaSpec) && !/_{2,}|___/.test(perguntaSpec) && perguntaSpec !== frase) {
+       instrucao = perguntaSpec;
+     }
+
+     return {
+       frase,
+       instrucao,
+       resposta: resposta || 'palavra',
+       dica: fonte.dica || (inter && inter.dica) || ''
+     };
+   }
+
+   function formatarFraseLacunaHtml(frase) {
+     const limpa = limparTextoCompletar(String(frase || '').replace(/<[^>]+>/g, ''));
+     return limpa.replace(/_{2,}|___/g, '<span class="lacuna-vazia" aria-hidden="true">_____</span>');
    }
    
    // =============================================
@@ -1367,10 +1587,67 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
    function labelFaixa(f) {
      return { 1:'5–6 anos', 2:'7–8 anos', 3:'9–10 anos' }[f] || '';
    }
-   function renderEstrelas(ganhas, total) {
-     let s = '';
-     for (let i = 0; i < total; i++) s += i < ganhas ? '⭐' : '☆';
-     return s;
+   function calcularEstrelasPorAcertos(acertos, total) {
+     const a = Math.max(0, Number(acertos) || 0);
+     const t = Math.max(1, Number(total) || 1);
+     if (a >= t) return 3;
+     if (a >= Math.ceil(t * 0.5)) return 2;
+     if (a >= 1) return 1;
+     return 0;
+   }
+
+   function registrarEstrelasHistoria(estrelasNovas) {
+     const id = estado.historiaAtual && estado.historiaAtual.id;
+     if (!id) return;
+     const novas = Math.max(0, Math.min(3, Number(estrelasNovas) || 0));
+     const idx = estado.historiasLidas.findIndex(r => r.id === id);
+     if (idx >= 0) {
+       const antigas = Number(estado.historiasLidas[idx].estrelas) || 0;
+       if (novas > antigas) {
+         estado.totalEstrelas += novas - antigas;
+         estado.historiasLidas[idx].estrelas = novas;
+         salvarEstado();
+         atualizarHeader();
+         renderizarBiblioteca();
+       }
+     } else if (novas > 0) {
+       estado.historiasLidas.push({
+         id,
+         estrelas: novas,
+         data: new Date().toLocaleDateString('pt-BR')
+       });
+       estado.totalEstrelas += novas;
+       salvarEstado();
+       atualizarHeader();
+       renderizarBiblioteca();
+     }
+   }
+
+   function atualizarEstrelasAposMinigame() {
+     if (!estado.historiaAtual) return;
+     const total = estado.minigamesLista.length || 4;
+     const acertos = (estado.acertos || 0) + (estado.mgAcertos || 0);
+     registrarEstrelasHistoria(calcularEstrelasPorAcertos(acertos, total));
+   }
+
+   function renderEstrelas(ganhas, total = 3) {
+     const n = Math.max(0, Math.min(total, Number(ganhas) || 0));
+     let html = `<span class="estrelas-rating" aria-label="${n} de ${total} estrelas">`;
+     for (let i = 0; i < total; i++) {
+       html += `<span class="estrela-icon ${i < n ? 'estrela-preenchida' : 'estrela-vazia'}" aria-hidden="true">★</span>`;
+     }
+     return html + '</span>';
+   }
+
+   function revelarMontaFraseCorreta(palavrasCorretas) {
+     const espaco = document.getElementById('mfEspaco');
+     const pool = document.getElementById('mfPool');
+     if (espaco) {
+       espaco.innerHTML = palavrasCorretas.map(p =>
+         `<span class="mf-colocada mf-resposta-correta">${p}</span>`
+       ).join(' ');
+     }
+     if (pool) pool.querySelectorAll('.mf-chip, .mf-colocada').forEach(b => { b.disabled = true; });
    }
    
    function inicializarFiltros() {
@@ -1439,11 +1716,74 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
     // renderizarFase();
   }
    
+   function obterTextoCompletoHistoria(h) {
+     if (!h || !Array.isArray(h.fases)) return '';
+     return h.fases.map((f) => f.texto || '').filter(Boolean).join(' ');
+   }
+
+   function lerTextoCompletoHistoria(opcoes) {
+     const opts = opcoes || {};
+     const h = estado.historiaAtual;
+     if (!h) {
+       mostrarToast('Escolha uma história primeiro! 📚');
+       return;
+     }
+     const textoCompleto = obterTextoCompletoHistoria(h);
+     if (!textoCompleto.trim()) {
+       mostrarToast('Esta história ainda não tem texto para ler.');
+       return;
+     }
+
+     irParaTela('leitura');
+     setUiLeituraModoCompleto(true);
+     document.getElementById('leitura-titulo-badge').textContent = h.titulo;
+     document.getElementById('fase-atual-label').textContent = 'História completa';
+     document.getElementById('historia-emoji-cena').textContent = h.cena || (h.fases[0] && h.fases[0].cena) || '';
+
+     const textoEl = document.getElementById('historia-texto');
+     textoEl.innerHTML = textoCompleto;
+     textoEl.classList.toggle('sem-destaque', !estado.destaqueAtivo);
+     textoEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+     ocultarFeedback();
+
+     if (opts.somenteExibir) return;
+
+     if (opts.autoOuvir || estado.perfil.faixa === 1) {
+       setTimeout(() => ouvirTexto(textoCompleto), opts.autoOuvir ? 400 : 800);
+     }
+   }
+
+   function setUiLeituraModoCompleto(completo) {
+     estado.modoLeituraCompleta = completo;
+     const faseInd = document.querySelector('.fase-indicador');
+     const barra = document.querySelector('.barra-progresso-fases');
+     const inter = document.getElementById('interacao-area');
+     const btnPular = document.getElementById('btn-pular-fase');
+     if (faseInd) faseInd.style.display = completo ? 'none' : '';
+     if (barra) barra.style.display = completo ? 'none' : '';
+     if (inter) inter.style.display = completo ? 'none' : '';
+     if (btnPular) btnPular.style.display = completo ? 'none' : '';
+   }
+
+   function mostrarLeituraCompleta() {
+     const h = estado.historiaAtual;
+     if (!h) return;
+     lerTextoCompletoHistoria({ autoOuvir: estado.perfil.faixa === 1 });
+
+     const n = estado.minigamesLista.length;
+     const btn = document.getElementById('btn-continuar');
+     btn.textContent = `Vamos Jogar! 🚀 (${n} minigame${n > 1 ? 's' : ''})`;
+     btn.style.display = 'block';
+   }
+
    function renderizarFase() {
      const h = estado.historiaAtual;
      const fi = estado.faseAtual;
      const fase = h.fases[fi];
      const totalFases = h.fases.length;
+
+     setUiLeituraModoCompleto(false);
    
      // Título e badge
      document.getElementById('leitura-titulo-badge').textContent = h.titulo;
@@ -1540,6 +1880,7 @@ const verificar = () => {
      btns[idx].classList.add(ok ? 'correta' : 'errada');
     if (!ok) { btns[correta].classList.add('correta'); estado.ajudas++; estado.tentativasReprovadas++; }
      else estado.acertos++;
+     adicionarExperiencia(12, 'fase');
      mostrarFeedbackFase(ok);
    }
    
@@ -1555,6 +1896,7 @@ const verificar = () => {
      } else {
        estado.acertos++;
      }
+     adicionarExperiencia(12, 'fase');
      mostrarFeedbackFase(ok);
    }
    
@@ -1743,12 +2085,12 @@ const verificar = () => {
      const mapa = {
        narrativo: {
         1: ['jogo_memoria', 'som_palavra', 'escolha', 'quem_disse'],
-        2: ['monta_frase', 'verdadeiro_falso', 'palavras_perdidas', 'ordenar_passos'],
+        2: ['monta_frase', 'verdadeiro_falso', 'completar', 'ordenar_passos'],
         3: ['ordenar_passos', 'quem_disse', 'completar', 'verdadeiro_falso']
        },
        poetico: {
         1: ['som_palavra', 'jogo_memoria', 'rima', 'colorir'],
-        2: ['rima', 'monta_frase', 'verdadeiro_falso', 'palavras_perdidas'],
+        2: ['rima', 'monta_frase', 'verdadeiro_falso', 'completar'],
         3: ['rima', 'completar', 'verdadeiro_falso', 'quem_disse']
        },
        instrucional: {
@@ -1758,12 +2100,12 @@ const verificar = () => {
        },
        descritivo: {
         1: ['jogo_memoria', 'som_palavra', 'colorir', 'escolha'],
-        2: ['monta_frase', 'caca_palavras', 'verdadeiro_falso', 'palavras_perdidas'],
+        2: ['monta_frase', 'caca_palavras', 'verdadeiro_falso', 'completar'],
         3: ['caca_palavras', 'quem_disse', 'completar', 'verdadeiro_falso']
        },
        informativo: {
         1: ['verdadeiro_falso', 'som_palavra', 'escolha', 'colorir'],
-        2: ['verdadeiro_falso', 'caca_palavras', 'palavras_perdidas', 'monta_frase'],
+        2: ['verdadeiro_falso', 'caca_palavras', 'completar', 'monta_frase'],
         3: ['caca_palavras', 'monta_frase', 'completar', 'quem_disse']
        }
      };
@@ -1785,58 +2127,53 @@ const verificar = () => {
      const h   = estado.historiaAtual;
     const presetSrc = Array.isArray(h.minigamesPreset) ? h.minigamesPreset : [];
     if (presetSrc.length) {
-      let preset = embaralhar(presetSrc.slice()).slice(0, 4);
+      let preset = embaralhar(
+        presetSrc.map((p) => normalizarMinigamePreset(p) || p).filter(Boolean)
+      );
+      const vistos = new Set();
+      preset = preset.filter((p) => {
+        const chave = chaveUnicaMinigame(p.tipo);
+        if (vistos.has(chave)) return false;
+        vistos.add(chave);
+        return true;
+      });
       if (preset.length < 4) {
-        const extras = escolherMinigamesTipos(estado.perfil.faixa, h.genero).filter(
-          (t) => !preset.some((p) => (p.tipo || p.Tipo) === t)
-        );
-        while (preset.length < 4 && extras.length) {
-          preset.push({ tipo: extras.shift() });
+        const extras = escolherMinigamesTipos(estado.perfil.faixa, h.genero);
+        for (let i = 0; i < extras.length && preset.length < 4; i++) {
+          const chave = chaveUnicaMinigame(extras[i]);
+          if (vistos.has(chave)) continue;
+          vistos.add(chave);
+          preset.push({ tipo: extras[i], pergunta: '' });
         }
       }
-      estado.minigamesPreset = preset;
-      estado.minigamesLista = preset.map((p) => p.tipo || p.Tipo || 'verdadeiro_falso');
+      preset = preset.slice(0, 4);
+      estado.minigamesLista = montarListaMinigamesUnica(
+        preset.map((p) => p.tipo),
+        estado.perfil.faixa,
+        h.genero
+      );
+      const presetPorChave = {};
+      preset.forEach((p) => { presetPorChave[chaveUnicaMinigame(p.tipo)] = p; });
+      estado.minigamesPreset = estado.minigamesLista.map((tipo) =>
+        presetPorChave[chaveUnicaMinigame(tipo)] || { tipo, pergunta: '' }
+      );
     } else {
       estado.minigamesPreset = null;
       const tiposBase = escolherMinigamesTipos(estado.perfil.faixa, h.genero);
-      const tiposUnicos = embaralhar([...new Set(tiposBase)]);
-      estado.minigamesLista = tiposUnicos;
+      estado.minigamesLista = montarListaMinigamesUnica(
+        embaralhar(tiposBase),
+        estado.perfil.faixa,
+        h.genero
+      );
     }
      estado.minigameAtual  = 0;
      estado.mgAcertos      = 0;
-     mostrarResumoHistoria();
+     mostrarLeituraCompleta();
    }
 
-   // --- Mostrar história completa antes dos minigames ---
-   function mostrarResumoHistoria() {
-     const h = estado.historiaAtual;
+   function iniciarSequenciaMinigames() {
      irParaTela('minigame');
-
-     const corpo = document.getElementById('minigame-corpo');
-     corpo.innerHTML = '';
-
-     document.getElementById('mg-titulo-label').textContent = '📖 ' + h.titulo;
-     document.getElementById('mg-contador').textContent = 'Resumo';
-     document.getElementById('mg-feedback').classList.add('oculto');
-     document.getElementById('btn-proximo-mg').classList.add('oculto');
-     document.getElementById('btn-finalizar-mg').classList.add('oculto');
-
-     const textoCompleto = h.fases.map(f => f.texto).join(' ');
-
-     const wrap = document.createElement('div');
-     wrap.className = 'resumo-historia-wrap';
-     wrap.innerHTML = `
-       <div class="resumo-cena">${h.cena}</div>
-       <h2 class="resumo-titulo">${h.titulo}</h2>
-       <div class="resumo-texto">${textoCompleto}</div>
-       <p class="resumo-aviso">🎮 Agora vamos brincar com <strong>${estado.minigamesLista.length} minigame${estado.minigamesLista.length > 1 ? 's' : ''}</strong> sobre essa história!</p>
-       <button class="btn-confirmar resumo-btn-iniciar" id="btnIniciarMG">Vamos Jogar! 🚀</button>
-     `;
-     corpo.appendChild(wrap);
-
-     document.getElementById('btnIniciarMG').addEventListener('click', () => {
-       renderizarMinigame();
-     });
+     renderizarMinigame();
    }
    
    // --- Label legível do tipo ---
@@ -1882,13 +2219,15 @@ const verificar = () => {
    
      const corpo = document.getElementById('minigame-corpo');
      corpo.innerHTML = '';
-   
-     // Cabeçalho do minigame
-     const header = document.createElement('div');
-     header.className = 'mg-enunciado';
-     header.textContent = nomeMinigame(tipo);
-     corpo.appendChild(header);
-   
+
+     const tiposSemEnunciadoDuplicado = ['completar', 'palavras_perdidas', 'escolha', 'verdadeiro_falso', 'som_palavra', 'rima', 'quem_disse'];
+     if (!tiposSemEnunciadoDuplicado.includes(tipo)) {
+       const header = document.createElement('div');
+       header.className = 'mg-enunciado';
+       header.textContent = nomeMinigame(tipo);
+       corpo.appendChild(header);
+     }
+
      // Renderiza o tipo correto
      switch (tipo) {
       case 'memoria':
@@ -1904,7 +2243,7 @@ const verificar = () => {
       case 'escolha':          renderEscolhaMG(fase, corpo, spec);            break;
       case 'completar':        renderCompletarMG(fase, corpo, spec);          break;
       case 'colorir':          renderColorirMG(h, corpo, spec);         break;
-      case 'palavras_perdidas':renderMontaFrase(fase, corpo, spec);           break;
+      case 'palavras_perdidas':  renderCompletarMG(fase, corpo, spec || { tipo: 'completar' }); break;
        default:                 renderVerdadeiroFalso(fase, h, corpo, spec);
      }
    }
@@ -1926,7 +2265,7 @@ const verificar = () => {
      if (ok) {
        card.style.background  = 'linear-gradient(135deg,#DCFCE7,#D1FAE5)';
        card.style.borderColor = 'var(--cor-verde)';
-       emoji.textContent      = ['🎉','⭐','🌟','🏆','💫'][Math.floor(Math.random()*5)];
+       emoji.textContent      = ['🎉','🌟','🏆','💫','🚀'][Math.floor(Math.random()*5)];
        msg.textContent        = MSGS_ACERTO[Math.floor(Math.random()*MSGS_ACERTO.length)];
        msg.style.color        = '#166534';
      } else {
@@ -1946,6 +2285,7 @@ const verificar = () => {
        btnFin.classList.toggle('oculto',  !isUltimo);
        if (isUltimo) btnFin.textContent = 'Ver Resultado 🏆';
        else          btnProx.textContent = 'Próximo Jogo →';
+       adicionarExperiencia(18, 'fase');
      }
    
      area.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -1963,36 +2303,23 @@ const verificar = () => {
      estado.tempoTotal += tempoMin;
      estado.minigamesJogados += estado.minigamesLista.length;
    
-     // Calcular estrelas com base nos acertos dos minigames
-      const acertosTotal    = (estado.acertos || 0) + (estado.mgAcertos || 0);
-    
-      let estrelas = 0;
-      if (acertosTotal >= 4) estrelas = 3;
-      else if (acertosTotal >= 2) estrelas = 2;
-      else if (acertosTotal >= 1) estrelas = 1;
-   
-     // Registra história concluída
+     const acertosTotal = (estado.acertos || 0) + (estado.mgAcertos || 0);
+     const totalJogos   = estado.minigamesLista.length || 4;
+     const estrelas     = calcularEstrelasPorAcertos(acertosTotal, totalJogos);
+
+     registrarEstrelasHistoria(estrelas);
      const id = estado.historiaAtual.id;
      const idx = estado.historiasLidas.findIndex(r => r.id === id);
      if (idx >= 0) {
-       if (estrelas > estado.historiasLidas[idx].estrelas) {
-         estado.totalEstrelas += (estrelas - estado.historiasLidas[idx].estrelas);
-         estado.historiasLidas[idx].estrelas = estrelas;
-       }
-     } else {
-       estado.historiasLidas.push({ id, estrelas, data: new Date().toLocaleDateString('pt-BR') });
-       estado.totalEstrelas += estrelas;
+       estado.historiasLidas[idx].data = new Date().toLocaleDateString('pt-BR');
      }
    
-     // Atualiza nível
-     const totalLidas   = estado.historiasLidas.length;
-     const mediaEstrelas = totalLidas > 0 ? estado.totalEstrelas / totalLidas : 0;
-     if      (totalLidas >= 6 || mediaEstrelas >= 2.5) estado.nivel = 'avancado';
-     else if (totalLidas >= 3 || mediaEstrelas >= 2)   estado.nivel = 'intermediario';
-     else                                               estado.nivel = 'iniciante';
-   
+     adicionarExperiencia(28, 'historia');
+     estado.nivel = calcularNivelPorXp(estado.experiencia || 0);
+
      salvarEstado();
      atualizarHeader();
+     renderizarBiblioteca();
      mostrarResultado(estrelas, tempoMin, acertosTotal);
    }
    
@@ -2207,21 +2534,17 @@ const verificar = () => {
   }
 
   function renderCompletarMG(fase, corpo, spec) {
-    let pergunta;
-    let resposta;
-    if (spec && spec.pergunta && spec.resposta != null && String(spec.resposta).trim()) {
-      pergunta = spec.pergunta;
-      resposta = String(spec.resposta).trim();
-    } else {
-      const inter = fase.interacao && fase.interacao.tipo === 'completar' ? fase.interacao : null;
-      pergunta = inter ? inter.pergunta : 'Complete a frase com a palavra correta:';
-      resposta = (inter ? inter.resposta : (estado.historiaAtual.palavrasChave || ['historia'])[0]) || 'historia';
-    }
+    const h = estado.historiaAtual;
+    const dados = montarDadosCompletarMG(fase, h, spec);
     const wrap = document.createElement('div');
+    wrap.className = 'mg-completar-wrap';
     wrap.innerHTML = `
-      <p class="mg-desc">${pergunta}</p>
-      <div class="interacao-input-area">
-        <input type="text" class="interacao-input" id="mgInputCompletar" placeholder="Digite a resposta..." />
+      <p class="mg-desc">${dados.instrucao}</p>
+      <div class="mg-frase-lacuna" id="mgFraseLacuna">${formatarFraseLacunaHtml(dados.frase)}</div>
+      ${dados.dica ? `<p class="mg-completar-dica">💡 Dica: ${dados.dica}</p>` : ''}
+      <div class="mg-completar-input-row interacao-input-area">
+        <input type="text" class="interacao-input mg-input-palavra" id="mgInputCompletar"
+          placeholder="Digite uma palavra..." autocomplete="off" aria-label="Palavra para completar a frase" maxlength="40" />
         <button class="btn-confirmar" id="mgBtnCompletar">✓ OK</button>
       </div>
     `;
@@ -2229,12 +2552,17 @@ const verificar = () => {
     const norm = (s) => String(s || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     const input = document.getElementById('mgInputCompletar');
     const btn = document.getElementById('mgBtnCompletar');
+    const resposta = dados.resposta;
     const validar = () => {
-      const ok = norm(input.value) === norm(resposta);
+      const v = norm(input.value);
+      const c = norm(resposta);
+      const ok = v === c || (v.length >= 2 && (c.includes(v) || v.includes(c)));
       registrarEventoMG('completar', ok ? 'acerto' : 'erro');
       input.disabled = true;
       btn.disabled = true;
-      if (!ok) input.value = resposta;
+      input.value = resposta;
+      input.classList.add('correta');
+      if (!ok) input.classList.add('errada');
       mostrarFeedbackMG(ok);
     };
     btn.addEventListener('click', validar);
@@ -2280,7 +2608,12 @@ const verificar = () => {
         if (marcado !== it.correta) ok = false;
       });
       registrarEventoMG('colorir', ok ? 'acerto' : 'erro');
-      wrap.querySelectorAll('.rima-opc').forEach((btn) => btn.disabled = true);
+      wrap.querySelectorAll('.rima-opc').forEach((btn, idx) => {
+        btn.disabled = true;
+        btn.classList.remove('correta');
+        if (itens[idx].correta) btn.classList.add('correta');
+        else if (selecionadas.has(idx)) btn.classList.add('errada');
+      });
       document.getElementById('btnConfColorir').disabled = true;
       mostrarFeedbackMG(ok);
     });
@@ -2289,14 +2622,15 @@ const verificar = () => {
    // ─── 3. MONTA-FRASE ──────────────────────────────────────────────────────────
    
    function renderMontaFrase(fase, corpo, spec) {
-    if (spec && Array.isArray(spec.palavras) && spec.palavras.length >= 2 && spec.resposta != null) {
-      const embaralhadas = embaralhar(spec.palavras.map(String));
-      const palavrasCorretas = String(spec.resposta).trim().split(/\s+/).filter(Boolean);
+    const dadosSpec = spec ? extrairDadosMontaFrase(spec) : null;
+    if (dadosSpec && dadosSpec.palavrasPool.length >= 2 && dadosSpec.palavrasCorretas.length >= 2) {
+      const embaralhadas = embaralhar(dadosSpec.palavrasPool.map(String));
+      const palavrasCorretas = dadosSpec.palavrasCorretas.map(String);
       let colocadosIdx = [];
       const wrap = document.createElement('div');
       wrap.className = 'mf-wrap';
       wrap.innerHTML = `
-        <p class="mg-desc">${spec.pergunta || '🧩 Monte a frase com as palavras abaixo.'}</p>
+        <p class="mg-desc">${dadosSpec.pergunta}</p>
         <p class="mg-desc">Monte a frase clicando nas palavras. Clique em uma palavra já colocada para removê-la.</p>
         <div class="mf-espaco" id="mfEspaco"><span class="mf-placeholder">Clique nas palavras abaixo…</span></div>
         <div class="mf-pool" id="mfPool"></div>
@@ -2337,6 +2671,7 @@ const verificar = () => {
         const correta = norm(palavrasCorretas.join(' '));
         const ok = tentativa === correta;
         document.getElementById('btnConfMF').disabled = true;
+        revelarMontaFraseCorreta(palavrasCorretas);
         registrarEventoMG('monta_frase', ok ? 'acerto' : 'erro');
         mostrarFeedbackMG(ok);
       });
@@ -2406,6 +2741,8 @@ const verificar = () => {
        const correta   = palavrasCorretas.join(' ').toLowerCase().trim();
        const ok = tentativa === correta;
        document.getElementById('btnConfMF').disabled = true;
+       revelarMontaFraseCorreta(palavrasCorretas);
+       registrarEventoMG('monta_frase', ok ? 'acerto' : 'erro');
        mostrarFeedbackMG(ok);
      });
    }
@@ -2726,36 +3063,20 @@ const verificar = () => {
        document.getElementById('btnConfCP').disabled = true;
        palavrasAlvo.forEach(palavra => {
          if (!encontradas.has(palavra) && posicoes[palavra]) {
+           const cor = CORES_PALAVRAS[palavrasAlvo.indexOf(palavra) % CORES_PALAVRAS.length];
            posicoes[palavra].forEach(({ r, c }) => {
              const el = getCell(r, c);
-             if (el) el.classList.add('cp-missed');
+             if (el) {
+               el.classList.add('cp-missed');
+               el.style.setProperty('--found-color', cor);
+             }
            });
+           document.getElementById('cpa-' + palavra)?.classList.add('cp-alvo-found');
          }
        });
-       const area  = document.getElementById('mg-feedback');
-       const card  = document.getElementById('mg-feedback-card');
-       const emoji = document.getElementById('mg-feedback-emoji');
-       const msg   = document.getElementById('mg-feedback-msg');
-       const ok    = encontradas.size > 0;
-       area.classList.remove('oculto');
-       card.style.background  = ok ? 'linear-gradient(135deg,#DCFCE7,#D1FAE5)' : 'linear-gradient(135deg,#FEF3C7,#FDE68A)';
-       card.style.borderColor = ok ? 'var(--cor-verde)' : '#F59E0B';
-       emoji.textContent      = ok ? '🎉' : '💛';
-       msg.textContent        = encontradas.size >= palavrasAlvo.length
-         ? '🏆 Você encontrou todas as palavras! Incrível!'
-         : encontradas.size > 0
-           ? `Encontrou ${encontradas.size} de ${palavrasAlvo.length}! As restantes estão destacadas.`
-           : '💛 Tudo bem! As palavras estão destacadas em amarelo para você aprender.';
-       msg.style.color        = ok ? '#166534' : '#92400E';
-
-       const isUltimo = estado.minigameAtual >= estado.minigamesLista.length - 1;
-       const btnProx  = document.getElementById('btn-proximo-mg');
-       const btnFin   = document.getElementById('btn-finalizar-mg');
-       btnProx.classList.toggle('oculto',  isUltimo);
-       btnFin.classList.toggle('oculto',  !isUltimo);
-       if (isUltimo) btnFin.textContent = 'Ver Resultado 🏆';
-       else          btnProx.textContent = 'Próximo Jogo →';
-       area.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+       const ok = encontradas.size >= palavrasAlvo.length;
+       registrarEventoMG('caca_palavras', ok ? 'acerto' : 'erro');
+       mostrarFeedbackMG(ok);
      });
    }
    
@@ -3118,7 +3439,12 @@ const verificar = () => {
      document.getElementById('btnConfOP').addEventListener('click', () => {
        const correta = passos.map((_, i) => i);
        const ok = JSON.stringify(ordem) === JSON.stringify(correta);
+       ordem = [...correta];
+       renderLista();
+       document.querySelectorAll('.op-item').forEach(li => li.classList.add('correta'));
+       document.querySelectorAll('.op-seta').forEach(b => b.disabled = true);
        document.getElementById('btnConfOP').disabled = true;
+       registrarEventoMG('ordenar_passos', ok ? 'acerto' : 'erro');
        mostrarFeedbackMG(ok);
      });
    }
@@ -3140,14 +3466,14 @@ const verificar = () => {
    function mostrarResultado(estrelas, tempo, acertos) {
      irParaTela('resultado');
    
-     document.getElementById('resultado-estrelas').textContent = renderEstrelas(estrelas, 3);
+     document.getElementById('resultado-estrelas').innerHTML = renderEstrelas(estrelas, 3);
      const msgs = MSGS_RESULTADO[estrelas] || MSGS_RESULTADO[0];
      const msg = msgs[Math.floor(Math.random() * msgs.length)];
      const titulos = {
-       0: '😕 Tente Novamente!',
-       1: '⭐ Concluído!',
-       2: '⭐⭐ Muito Bem!',
-       3: '⭐⭐⭐ Perfeito!'
+       0: 'Tente Novamente!',
+       1: 'História Concluída!',
+       2: 'Muito Bem!',
+       3: 'Perfeito!'
      };
      document.getElementById('resultado-titulo').textContent = titulos[estrelas] || titulos[0];
      document.getElementById('resultado-msg').textContent = msg;
@@ -3204,14 +3530,10 @@ const verificar = () => {
     const acertosMG = (estado.relatorioEventos || []).filter(e => e.acao === 'acerto').length;
     const errosMG = (estado.relatorioEventos || []).filter(e => e.acao === 'erro').length;
     const naoOuco = (estado.relatorioEventos || []).filter(e => e.acao === 'nao_consigo_ouvir').length;
-    document.getElementById('progresso-sub').textContent =
-      `Olá, ${p.nome}! Continue explorando histórias!`;
+     document.getElementById('progresso-sub').textContent =
+      `Olá, ${p.nome}! Você tem ${estado.experiencia || 0} XP — continue com calma, cada fase conta!`;
    
-     // Nível steps
-     ['iniciante','intermediario','avancado'].forEach(n => {
-       const el = document.getElementById('ns-' + n);
-       if (el) el.classList.toggle('ativo', estado.nivel === n || niveisOrdem(estado.nivel) >= niveisOrdem(n));
-     });
+     atualizarBarraExperiencia();
    
      // Histórias concluídas
      const cont = document.getElementById('historias-concluidas');
@@ -3319,6 +3641,8 @@ const verificar = () => {
   async function inicializar() {
      // Redireciona para login se não tiver perfil
      carregarEstado();
+    if (estado.experiencia == null) estado.experiencia = 0;
+    estado.nivel = calcularNivelPorXp(estado.experiencia);
     estado.relatorioResponsavelLiberado = false;
      if (!estado.perfil || !estado.perfil.nome) {
        window.location.href = 'login.html';
@@ -3329,6 +3653,7 @@ const verificar = () => {
     aplicarFaixaDoPerfilNosFiltros();
     // Carrega app
      atualizarHeader();
+     atualizarBarraExperiencia();
      renderizarBiblioteca();
      irParaTela('biblioteca');
    
@@ -3371,8 +3696,32 @@ const verificar = () => {
    
      // Leitura
      document.getElementById('btn-ouvir').addEventListener('click', () => {
-       const texto = document.getElementById('historia-texto').innerHTML;
+       const h = estado.historiaAtual;
+       if (!h) {
+         mostrarToast('Escolha uma história primeiro! 📚');
+         return;
+       }
+       if (ttsAtivo) {
+         window.speechSynthesis.cancel();
+         ttsAtivo = false;
+         document.getElementById('btn-ouvir').classList.remove('ativo');
+         return;
+       }
+       const texto = estado.modoLeituraCompleta
+         ? obterTextoCompletoHistoria(h)
+         : document.getElementById('historia-texto').innerHTML;
        ouvirTexto(texto);
+     });
+     document.getElementById('btn-ler-historia-mg').addEventListener('click', () => {
+       if (ttsAtivo) {
+         window.speechSynthesis.cancel();
+         ttsAtivo = false;
+         document.querySelectorAll('#btn-ouvir, #btn-ler-historia-mg').forEach((b) => b.classList.remove('ativo'));
+         return;
+       }
+       const h = estado.historiaAtual;
+       if (!h) return;
+       ouvirTexto(obterTextoCompletoHistoria(h));
      });
      document.getElementById('btn-destaque').addEventListener('click', () => {
        estado.destaqueAtivo = !estado.destaqueAtivo;
@@ -3380,14 +3729,20 @@ const verificar = () => {
        document.getElementById('historia-texto').classList.toggle('sem-destaque', !estado.destaqueAtivo);
        mostrarToast(estado.destaqueAtivo ? 'Palavras-chave destacadas! 🔍' : 'Destaque removido');
      });
-     document.getElementById('btn-continuar').addEventListener('click', avancarFase);
+     document.getElementById('btn-continuar').addEventListener('click', () => {
+       if (estado.modoLeituraCompleta) iniciarSequenciaMinigames();
+       else avancarFase();
+     });
      document.getElementById('btn-pular-fase').addEventListener('click', pularFase);
      document.getElementById('btn-voltar-biblioteca').addEventListener('click', () => irParaTela('biblioteca'));
    
      // Minigame
      document.getElementById('btn-proximo-mg').addEventListener('click', proximoMinigame);
      document.getElementById('btn-finalizar-mg').addEventListener('click', finalizarMinigames);
-     document.getElementById('btn-voltar-leitura').addEventListener('click', () => irParaTela('leitura'));   
+     document.getElementById('btn-voltar-leitura').addEventListener('click', () => {
+       if (estado.modoLeituraCompleta) mostrarLeituraCompleta();
+       else { irParaTela('leitura'); renderizarFase(); }
+     });
      document.getElementById('btn-pular-fase').addEventListener('click', pularFase);
      document.getElementById('btn-ouvir-mg').addEventListener('click', () => {
        const enunc = document.querySelector('#minigame-corpo .mg-enunciado');
