@@ -1651,23 +1651,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\195822024\\.nuget\\packages\\": {},
+    "C:\\Users\\195192024\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\TCC\\Fabular-2\\backend\\API-Fabular\\API-Fabular.csproj",
+      "projectUniqueName": "D:\\TCC-main\\Fabular\\Fabular\\backend\\API-Fabular\\API-Fabular.csproj",
       "projectName": "API-Fabular",
-      "projectPath": "E:\\TCC\\Fabular-2\\backend\\API-Fabular\\API-Fabular.csproj",
-      "packagesPath": "C:\\Users\\195822024\\.nuget\\packages\\",
-      "outputPath": "E:\\TCC\\Fabular-2\\backend\\API-Fabular\\obj\\",
+      "projectPath": "D:\\TCC-main\\Fabular\\Fabular\\backend\\API-Fabular\\API-Fabular.csproj",
+      "packagesPath": "C:\\Users\\195192024\\.nuget\\packages\\",
+      "outputPath": "D:\\TCC-main\\Fabular\\Fabular\\backend\\API-Fabular\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\195822024\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\195192024\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],

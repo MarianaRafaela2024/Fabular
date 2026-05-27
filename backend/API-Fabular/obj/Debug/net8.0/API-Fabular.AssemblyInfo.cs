@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("API-Fabular")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+99c125b9379f8a9535556a6f084f23abcc0e64c9")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5d0145b47b0b566cca9100eedbae4b45ddb7c3c4")]
 [assembly: System.Reflection.AssemblyProductAttribute("API-Fabular")]
 [assembly: System.Reflection.AssemblyTitleAttribute("API-Fabular")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

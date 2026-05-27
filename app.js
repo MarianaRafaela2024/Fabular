@@ -1394,7 +1394,7 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
      window.speechSynthesis.cancel();
      if (ttsAtivo) {
        ttsAtivo = false;
-       document.querySelectorAll('#btn-ouvir, #btn-ouvir-mg, #btn-ouvir-resumo, #btn-ler-historia-mg').forEach(b => b.classList.remove('ativo'));
+       document.querySelectorAll('#btn-ouvir, #btn-ouvir-mg, #btn-ouvir-resumo').forEach(b => b.classList.remove('ativo'));
      return;
    }
    // Remove HTML tags
@@ -1405,10 +1405,10 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
     //define
     ttsUtterance.pitch = 1.1;
     ttsAtivo = true;
-    document.querySelectorAll('#btn-ouvir, #btn-ouvir-mg, #btn-ouvir-resumo, #btn-ler-historia-mg').forEach(b => b.classList.add('ativo'));
+    document.querySelectorAll('#btn-ouvir, #btn-ouvir-mg, #btn-ouvir-resumo').forEach(b => b.classList.add('ativo'));
     ttsUtterance.onend = () => {
       ttsAtivo = false;
-      document.querySelectorAll('#btn-ouvir, #btn-ouvir-mg, #btn-ouvir-resumo, #btn-ler-historia-mg').forEach(b => b.classList.remove('ativo'));
+      document.querySelectorAll('#btn-ouvir, #btn-ouvir-mg, #btn-ouvir-resumo').forEach(b => b.classList.remove('ativo'));
      };
      window.speechSynthesis.speak(ttsUtterance);
    }
@@ -3809,17 +3809,6 @@ const verificar = () => {
          ? obterTextoCompletoHistoria(h)
          : document.getElementById('historia-texto').innerHTML;
        ouvirTexto(texto);
-     });
-     document.getElementById('btn-ler-historia-mg').addEventListener('click', () => {
-       if (ttsAtivo) {
-         window.speechSynthesis.cancel();
-         ttsAtivo = false;
-         document.querySelectorAll('#btn-ouvir, #btn-ler-historia-mg').forEach((b) => b.classList.remove('ativo'));
-         return;
-       }
-       const h = estado.historiaAtual;
-       if (!h) return;
-       ouvirTexto(obterTextoCompletoHistoria(h));
      });
      document.getElementById('btn-destaque').addEventListener('click', () => {
        estado.destaqueAtivo = !estado.destaqueAtivo;

@@ -818,13 +818,6 @@ body.login-body {
 }
 .leitura-rodape .btn-principal { flex: 1; }
 .leitura-rodape .btn-secundario { flex: 0 0 auto; }
-.btn-ler-historia-mg {
-  font-size: .78rem;
-  padding: 8px 12px;
-  white-space: nowrap;
-}
-.minigame-header .btn-ler-historia-mg { margin-right: 4px; }
-
 /* ==============================================
    MINIGAMES
    ============================================== */
