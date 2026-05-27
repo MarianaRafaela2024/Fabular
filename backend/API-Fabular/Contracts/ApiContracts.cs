@@ -19,6 +19,25 @@ public record StoryGenerateRequest(
     string? Tema
 );
 
+public record StorySavePayload(
+    string Titulo,
+    string Genero,
+    int FaixaEtaria,
+    string? Duracao,
+    string? Emoji,
+    string? Cena,
+    string Texto,
+    List<string> PalavrasChave,
+    List<MinigameDto> Minigames
+);
+
+public record StorySaveRequest(
+    int CriancaId,
+    string PromptCrianca,
+    string? Modelo,
+    StorySavePayload Story
+);
+
 public record StorySummaryDto(
     int Id,
     string Titulo,

@@ -54,8 +54,9 @@ Backend em `backend/API-Fabular` com rotas principais:
 - `POST /api/v1/parents/login`
 - `POST /api/v1/children/link-local`
 - `POST /api/v1/stories/generate`
-- `GET /api/v1/stories`
-- `GET /api/v1/stories/{id}`
+- `POST /api/v1/stories/save` (histórias Groq já geradas no cliente)
+- `GET /api/v1/stories?criancaId=` (histórias IA só da criança vinculada)
+- `GET /api/v1/stories/{id}?criancaId=`
 - `POST /api/v1/sync/progress`
 
 ### Arquitetura atual (MVC com evolução para DDD)

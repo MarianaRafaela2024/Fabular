@@ -376,25 +376,57 @@
     };
   }
   
+  function garantirHistoriaNaBiblioteca(historia) {
+    if (!historia || !historia.id) return;
+    const idx = HISTORIAS.findIndex((h) => h.id === historia.id);
+    if (idx >= 0) HISTORIAS[idx] = historia;
+    else HISTORIAS.unshift(historia);
+  }
+
+  function preservarDetalheHistoriaNaBiblioteca(id, detalhe) {
+    const idx = HISTORIAS.findIndex((h) => h.id === id);
+    if (idx < 0) {
+      garantirHistoriaNaBiblioteca(detalhe);
+      return;
+    }
+    HISTORIAS[idx] = {
+      ...HISTORIAS[idx],
+      ...detalhe,
+      fases: detalhe.fases || HISTORIAS[idx].fases,
+      minigamesPreset: detalhe.minigamesPreset || HISTORIAS[idx].minigamesPreset,
+      palavrasChave: detalhe.palavrasChave || HISTORIAS[idx].palavrasChave
+    };
+  }
+
+  function historiaApiTemTextoCompleto(h) {
+    const texto = h?.fases?.[0]?.texto || '';
+    return texto.length > 0 && !texto.includes('História carregada da API');
+  }
+
   async function carregarHistoriasDaApi() {
     try {
       const faixa = estado?.perfil?.faixa;
-      const genero = estado?.perfil?.genero;
+      const vinculo = obterVinculoCrianca();
       const query = new URLSearchParams();
       if (faixa) query.set('faixaEtaria', String(faixa));
-      if (genero) query.set('genero', String(genero));
+      if (vinculo?.criancaId) query.set('criancaId', String(vinculo.criancaId));
       const list = await apiGet(`/api/v1/stories?${query.toString()}`);
       if (!Array.isArray(list) || list.length === 0) return;
       const mapped = list.map(mapStorySummaryToLegacy);
       const manuais = HISTORIAS.filter((h) => !String(h.id).startsWith('api-'));
-      HISTORIAS.splice(0, HISTORIAS.length, ...manuais, ...mapped);
+      const detalhadasApi = HISTORIAS.filter((h) => String(h.id).startsWith('api-') && historiaApiTemTextoCompleto(h));
+      const idsDetalhadas = new Set(detalhadasApi.map((h) => h.id));
+      const resumosNovos = mapped.filter((h) => !idsDetalhadas.has(h.id));
+      HISTORIAS.splice(0, HISTORIAS.length, ...manuais, ...detalhadasApi, ...resumosNovos);
     } catch (_) {}
   }
   
   async function carregarDetalheHistoriaDaApi(id) {
     if (!String(id).startsWith('api-')) return null;
     const serverId = String(id).replace('api-', '');
-    const data = await apiGet(`/api/v1/stories/${serverId}`);
+    const vinculo = obterVinculoCrianca();
+    const query = vinculo?.criancaId ? `?criancaId=${encodeURIComponent(vinculo.criancaId)}` : '';
+    const data = await apiGet(`/api/v1/stories/${serverId}${query}`);
     const mgRaw = data.minigames != null ? data.minigames : data.Minigames;
     const minigamesPreset = Array.isArray(mgRaw)
       ? mgRaw.map(normalizarMinigamePreset).filter(Boolean)
@@ -1124,14 +1156,51 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
     definirGeneroSelecionadoBotIa(estado.perfil?.genero || 'narrativo');
   }
 
-  function mapStoryDetailToLegacy(story) {
+  function mapMinigameGroqParaApi(minigame) {
+    if (!minigame || typeof minigame !== 'object') return null;
+    const tipo = minigame.tipo || minigame.Tipo;
+    if (!tipo) return null;
+    const pergunta = minigame.pergunta || minigame.Pergunta || '';
+    const dados = {};
+    Object.keys(minigame).forEach((chave) => {
+      const k = chave.toLowerCase();
+      if (k === 'tipo' || k === 'pergunta') return;
+      dados[chave] = minigame[chave];
+    });
+    return { tipo: String(tipo), pergunta: String(pergunta), dados };
+  }
+
+  function montarBodySalvarHistoriaGroq(story, criancaId, prompt, modelo) {
+    const minigames = (story.minigames || story.Minigames || [])
+      .map(mapMinigameGroqParaApi)
+      .filter(Boolean);
+    return {
+      criancaId,
+      promptCrianca: prompt,
+      modelo: modelo || 'llama-3.3-70b-versatile',
+      story: {
+        titulo: story.titulo,
+        genero: story.genero,
+        faixaEtaria: story.faixaEtaria,
+        duracao: story.duracao || '6 min',
+        emoji: story.emoji || '📖',
+        cena: story.cena || '🌟',
+        texto: story.texto,
+        palavrasChave: Array.isArray(story.palavrasChave) ? story.palavrasChave : [],
+        minigames
+      }
+    };
+  }
+
+  function mapStoryDetailToLegacy(story, serverId) {
     const minigamesRaw = Array.isArray(story?.minigames)
       ? story.minigames
       : (Array.isArray(story?.Minigames) ? story.Minigames : []);
     const minigamesPreset = minigamesRaw.map(normalizarMinigamePreset).filter(Boolean);
+    const idApi = serverId != null ? `api-${serverId}` : `ia-bot-${Date.now()}`;
 
     return {
-      id: `ia-bot-${Date.now()}`,
+      id: idApi,
       genero: story?.genero || 'narrativo',
       faixa: story?.faixaEtaria || 1,
       titulo: story?.titulo || 'História criada pela IA',
@@ -1218,12 +1287,28 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
       }
       story = normalizarStoryGroq(story, faixaSelecionada, generoSelecionado);
 
-      const historiaLegacy = mapStoryDetailToLegacy(story);
-      HISTORIAS.unshift(historiaLegacy);
+      const vinculo = obterVinculoCrianca();
+      if (!vinculo?.criancaId) {
+        throw new Error('Vincule o perfil da criança ao responsável para salvar histórias da IA.');
+      }
+
+      const salva = await apiPost(
+        '/api/v1/stories/save',
+        montarBodySalvarHistoriaGroq(story, vinculo.criancaId, prompt, 'llama-3.3-70b-versatile')
+      );
       promptEl.value = '';
-      estado.historiaAtual = historiaLegacy;
-      iniciarHistoria(historiaLegacy.id);
-      mostrarToast('História criada! Vamos para os minigames 🎮');
+
+      const historiaCompleta = mapStoryDetailToLegacy(
+        { ...story, ...salva, faixaEtaria: faixaSelecionada, genero: generoSelecionado },
+        salva.id
+      );
+      garantirHistoriaNaBiblioteca(historiaCompleta);
+      await carregarHistoriasDaApi();
+      preservarDetalheHistoriaNaBiblioteca(historiaCompleta.id, historiaCompleta);
+      renderizarBiblioteca();
+
+      await iniciarHistoria(historiaCompleta.id, { irLeitura: true });
+      mostrarToast('História criada! Boa leitura 📖');
     } catch (e) {
       if (errEl) {
         errEl.textContent = (e && e.message) || 'Não foi possível gerar a história agora.';
@@ -1693,27 +1778,36 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
    // 10. LEITURA — Fluxo de fases
    // =============================================
    
-  async function iniciarHistoria(id) {
-    let historia = HISTORIAS.find(h => h.id === id);
-    if (!historia) return;
-  
-    estado.minigamesPreset = null;
+  async function iniciarHistoria(id, opcoes) {
+    let historia = HISTORIAS.find((h) => h.id === id);
+
     if (String(id).startsWith('api-')) {
       try {
-        historia = await carregarDetalheHistoriaDaApi(id);
+        const detalhe = await carregarDetalheHistoriaDaApi(id);
+        if (detalhe) {
+          historia = detalhe;
+          preservarDetalheHistoriaNaBiblioteca(id, detalhe);
+        }
       } catch (_) {}
     }
+
     if (!historia) return;
-  
+
     estado.historiaAtual = historia;
     estado.faseAtual = 0;
     estado.acertos = 0;
     estado.ajudas = 0;
     estado.iniciouEm = Date.now();
-    
-  iniciarMinigames();
-    // irParaTela('leitura');
-    // renderizarFase();
+
+    if (opcoes && opcoes.irLeitura) {
+      prepararMinigamesPreset(historia);
+      irParaTela('leitura');
+      renderizarFase();
+      return;
+    }
+
+    estado.minigamesPreset = null;
+    iniciarMinigames();
   }
    
    function obterTextoCompletoHistoria(h) {
@@ -2122,9 +2216,7 @@ const verificar = () => {
     return semDuplicatas.slice(0, 4);
    }
    
-   // --- Iniciar bloco de minigames ---
-   function iniciarMinigames() {
-     const h   = estado.historiaAtual;
+   function prepararMinigamesPreset(h) {
     const presetSrc = Array.isArray(h.minigamesPreset) ? h.minigamesPreset : [];
     if (presetSrc.length) {
       let preset = embaralhar(
@@ -2166,8 +2258,14 @@ const verificar = () => {
         h.genero
       );
     }
-     estado.minigameAtual  = 0;
-     estado.mgAcertos      = 0;
+   }
+
+   // --- Iniciar bloco de minigames ---
+   function iniciarMinigames() {
+     const h = estado.historiaAtual;
+     prepararMinigamesPreset(h);
+     estado.minigameAtual = 0;
+     estado.mgAcertos = 0;
      mostrarLeituraCompleta();
    }
 

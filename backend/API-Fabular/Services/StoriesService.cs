@@ -1,3 +1,4 @@
+using System.Data;
 using System.Text.Json;
 using API_Fabular.Contracts;
 using API_Fabular.Infra;
@@ -19,71 +20,108 @@ public class StoriesService
     public async Task<ApplicationResult<StoryDetailDto>> GenerateAsync(StoryGenerateRequest request)
     {
         var generated = _generator.Generate(request);
-        var wordsJson = JsonSerializer.Serialize(generated.PalavrasChave);
-        var payloadJson = JsonSerializer.Serialize(generated);
-
         await using var conn = _db.Create();
-        var id = await conn.QuerySingleAsync<int>(
-            """
-            INSERT INTO Historia (Origem, Titulo, Genero, FaixaEtaria, Duracao, Emoji, Cena, TextoHtml, PalavrasChaveJson, PayloadJson)
-            OUTPUT INSERTED.Id
-            VALUES ('ia', @Titulo, @Genero, @FaixaEtaria, @Duracao, @Emoji, @Cena, @TextoHtml, @PalavrasChaveJson, @PayloadJson)
-            """,
-            new
-            {
-                generated.Titulo,
-                generated.Genero,
-                generated.FaixaEtaria,
-                generated.Duracao,
-                generated.Emoji,
-                generated.Cena,
-                TextoHtml = generated.Texto,
-                PalavrasChaveJson = wordsJson,
-                PayloadJson = payloadJson
-            });
 
+        var id = await PersistStoryAsync(conn, generated, "ia");
         if (request.CriancaId.HasValue && request.CriancaId.Value > 0)
         {
-            await conn.ExecuteAsync(
-                """
-                INSERT INTO IA_Geracao (Id_Crianca, Id_Historia, PromptCrianca, ContextoJson, Modelo, PayloadRespostaJson)
-                VALUES (@Id_Crianca, @Id_Historia, @Prompt, @Contexto, 'local-template-v1', @Payload)
-                """,
-                new
-                {
-                    Id_Crianca = request.CriancaId.Value,
-                    Id_Historia = id,
-                    Prompt = request.PromptCrianca,
-                    Contexto = JsonSerializer.Serialize(new { request.FaixaEtaria, request.GeneroTextual, request.Tema }),
-                    Payload = payloadJson
-                });
+            await LinkIaGeracaoAsync(
+                conn,
+                request.CriancaId.Value,
+                id,
+                request.PromptCrianca,
+                "local-template-v1",
+                JsonSerializer.Serialize(new { request.FaixaEtaria, request.GeneroTextual, request.Tema }),
+                JsonSerializer.Serialize(generated with { Id = id }));
         }
 
         return ApplicationResult<StoryDetailDto>.Ok(generated with { Id = id });
     }
 
-    public async Task<ApplicationResult<IEnumerable<StorySummaryDto>>> ListAsync(int? faixaEtaria, string? genero)
+    public async Task<ApplicationResult<StoryDetailDto>> SaveAsync(StorySaveRequest request)
+    {
+        if (request.CriancaId <= 0)
+        {
+            return ApplicationResult<StoryDetailDto>.BadRequest("Informe o perfil da criança vinculado.");
+        }
+
+        if (request.Story is null || string.IsNullOrWhiteSpace(request.Story.Titulo) || string.IsNullOrWhiteSpace(request.Story.Texto))
+        {
+            return ApplicationResult<StoryDetailDto>.BadRequest("História inválida para salvar.");
+        }
+
+        var faixa = Math.Clamp(request.Story.FaixaEtaria, 1, 3);
+        var genero = string.IsNullOrWhiteSpace(request.Story.Genero) ? "narrativo" : request.Story.Genero.ToLowerInvariant();
+        var minigames = request.Story.Minigames ?? new List<MinigameDto>();
+
+        var detail = new StoryDetailDto(
+            0,
+            request.Story.Titulo.Trim(),
+            genero,
+            faixa,
+            request.Story.Duracao,
+            request.Story.Emoji,
+            request.Story.Cena,
+            request.Story.Texto.Trim(),
+            request.Story.PalavrasChave ?? new List<string>(),
+            minigames);
+
+        await using var conn = _db.Create();
+        var id = await PersistStoryAsync(conn, detail, "ia");
+        var payloadJson = JsonSerializer.Serialize(detail with { Id = id });
+        var modelo = string.IsNullOrWhiteSpace(request.Modelo) ? "groq" : request.Modelo.Trim();
+
+        await LinkIaGeracaoAsync(
+            conn,
+            request.CriancaId,
+            id,
+            request.PromptCrianca,
+            modelo,
+            JsonSerializer.Serialize(new { detail.FaixaEtaria, detail.Genero }),
+            payloadJson);
+
+        return ApplicationResult<StoryDetailDto>.Ok(detail with { Id = id });
+    }
+
+    public async Task<ApplicationResult<IEnumerable<StorySummaryDto>>> ListAsync(int? faixaEtaria, string? genero, int? criancaId)
     {
         await using var conn = _db.Create();
         var sql = """
-                  SELECT Id, Titulo, Genero, FaixaEtaria, Duracao, Emoji, Cena
-                  FROM Historia
-                  WHERE (@Faixa IS NULL OR FaixaEtaria = @Faixa)
-                    AND (@Genero IS NULL OR Genero = @Genero)
-                  ORDER BY Id DESC
+                  SELECT h.Id, h.Titulo, h.Genero, h.FaixaEtaria, h.Duracao, h.Emoji, h.Cena
+                  FROM Historia h
+                  WHERE (@Faixa IS NULL OR h.FaixaEtaria = @Faixa)
+                    AND (@Genero IS NULL OR h.Genero = @Genero)
+                    AND (
+                      h.Origem = 'manual'
+                      OR (
+                        @CriancaId IS NOT NULL
+                        AND EXISTS (
+                          SELECT 1
+                          FROM IA_Geracao g
+                          WHERE g.Id_Historia = h.Id AND g.Id_Crianca = @CriancaId
+                        )
+                      )
+                    )
+                  ORDER BY h.Id DESC
                   """;
 
         var result = await conn.QueryAsync<StorySummaryDto>(sql, new
         {
             Faixa = faixaEtaria,
-            Genero = string.IsNullOrWhiteSpace(genero) ? null : genero.ToLowerInvariant()
+            Genero = string.IsNullOrWhiteSpace(genero) ? null : genero.ToLowerInvariant(),
+            CriancaId = criancaId
         });
         return ApplicationResult<IEnumerable<StorySummaryDto>>.Ok(result);
     }
 
-    public async Task<ApplicationResult<StoryDetailDto>> GetByIdAsync(int id)
+    public async Task<ApplicationResult<StoryDetailDto>> GetByIdAsync(int id, int? criancaId)
     {
         await using var conn = _db.Create();
+        if (!await ChildCanAccessStoryAsync(conn, id, criancaId))
+        {
+            return ApplicationResult<StoryDetailDto>.NotFound("História não encontrada.");
+        }
+
         var row = await conn.QueryFirstOrDefaultAsync<(int Id, string Titulo, string Genero, int FaixaEtaria, string Duracao, string Emoji, string Cena, string TextoHtml, string PalavrasChaveJson, string PayloadJson)>(
             "SELECT Id, Titulo, Genero, FaixaEtaria, Duracao, Emoji, Cena, TextoHtml, PalavrasChaveJson, PayloadJson FROM Historia WHERE Id = @Id",
             new { Id = id });
@@ -106,7 +144,171 @@ public class StoriesService
             ? new List<string>()
             : JsonSerializer.Deserialize<List<string>>(row.PalavrasChaveJson) ?? new List<string>();
 
+        var minigames = await LoadMinigamesAsync(conn, id);
         return ApplicationResult<StoryDetailDto>.Ok(new StoryDetailDto(
-            row.Id, row.Titulo, row.Genero, row.FaixaEtaria, row.Duracao, row.Emoji, row.Cena, row.TextoHtml, words, new List<MinigameDto>()));
+            row.Id, row.Titulo, row.Genero, row.FaixaEtaria, row.Duracao, row.Emoji, row.Cena, row.TextoHtml, words, minigames));
+    }
+
+    private static async Task<int> PersistStoryAsync(IDbConnection conn, StoryDetailDto story, string origem)
+    {
+        var wordsJson = JsonSerializer.Serialize(story.PalavrasChave);
+        var payloadJson = JsonSerializer.Serialize(story);
+
+        var id = await conn.QuerySingleAsync<int>(
+            """
+            INSERT INTO Historia (Origem, Titulo, Genero, FaixaEtaria, Duracao, Emoji, Cena, TextoHtml, PalavrasChaveJson, PayloadJson)
+            OUTPUT INSERTED.Id
+            VALUES (@Origem, @Titulo, @Genero, @FaixaEtaria, @Duracao, @Emoji, @Cena, @TextoHtml, @PalavrasChaveJson, @PayloadJson)
+            """,
+            new
+            {
+                Origem = origem,
+                story.Titulo,
+                story.Genero,
+                story.FaixaEtaria,
+                story.Duracao,
+                story.Emoji,
+                story.Cena,
+                TextoHtml = story.Texto,
+                PalavrasChaveJson = wordsJson,
+                PayloadJson = payloadJson
+            });
+
+        await SaveMinigamesAsync(conn, id, story.Minigames);
+        return id;
+    }
+
+    private static async Task SaveMinigamesAsync(IDbConnection conn, int historiaId, List<MinigameDto> minigames)
+    {
+        if (minigames.Count == 0) return;
+
+        var ordem = 1;
+        foreach (var mg in minigames)
+        {
+            var dados = new Dictionary<string, object?>
+            {
+                ["pergunta"] = mg.Pergunta
+            };
+            if (mg.Dados is JsonElement el)
+            {
+                foreach (var prop in el.EnumerateObject())
+                {
+                    dados[prop.Name] = JsonSerializer.Deserialize<object>(prop.Value.GetRawText());
+                }
+            }
+            else if (mg.Dados is not null)
+            {
+                var extra = JsonSerializer.SerializeToElement(mg.Dados);
+                foreach (var prop in extra.EnumerateObject())
+                {
+                    dados[prop.Name] = JsonSerializer.Deserialize<object>(prop.Value.GetRawText());
+                }
+            }
+
+            await conn.ExecuteAsync(
+                """
+                INSERT INTO Historia_Minigame (Id_Historia, Ordem, Tipo, DadosJson)
+                VALUES (@Id_Historia, @Ordem, @Tipo, @DadosJson)
+                """,
+                new
+                {
+                    Id_Historia = historiaId,
+                    Ordem = ordem,
+                    mg.Tipo,
+                    DadosJson = JsonSerializer.Serialize(dados)
+                });
+            ordem++;
+        }
+    }
+
+    private static async Task<List<MinigameDto>> LoadMinigamesAsync(IDbConnection conn, int historiaId)
+    {
+        var rows = await conn.QueryAsync<(string Tipo, string DadosJson)>(
+            """
+            SELECT Tipo, DadosJson
+            FROM Historia_Minigame
+            WHERE Id_Historia = @Id
+            ORDER BY Ordem
+            """,
+            new { Id = historiaId });
+
+        var list = new List<MinigameDto>();
+        foreach (var row in rows)
+        {
+            var pergunta = "";
+            object dados = new { };
+            if (!string.IsNullOrWhiteSpace(row.DadosJson))
+            {
+                using var doc = JsonDocument.Parse(row.DadosJson);
+                if (doc.RootElement.TryGetProperty("pergunta", out var p))
+                {
+                    pergunta = p.GetString() ?? "";
+                }
+
+                var clone = JsonSerializer.Deserialize<Dictionary<string, object?>>(row.DadosJson) ?? new Dictionary<string, object?>();
+                clone.Remove("pergunta");
+                dados = clone;
+            }
+
+            list.Add(new MinigameDto(row.Tipo, pergunta, dados));
+        }
+
+        return list;
+    }
+
+    private static async Task LinkIaGeracaoAsync(
+        IDbConnection conn,
+        int criancaId,
+        int historiaId,
+        string prompt,
+        string modelo,
+        string contextoJson,
+        string payloadJson)
+    {
+        await conn.ExecuteAsync(
+            """
+            INSERT INTO IA_Geracao (Id_Crianca, Id_Historia, PromptCrianca, ContextoJson, Modelo, PayloadRespostaJson)
+            VALUES (@Id_Crianca, @Id_Historia, @Prompt, @Contexto, @Modelo, @Payload)
+            """,
+            new
+            {
+                Id_Crianca = criancaId,
+                Id_Historia = historiaId,
+                Prompt = prompt,
+                Contexto = contextoJson,
+                Modelo = modelo,
+                Payload = payloadJson
+            });
+    }
+
+    private static async Task<bool> ChildCanAccessStoryAsync(IDbConnection conn, int historiaId, int? criancaId)
+    {
+        var origem = await conn.QuerySingleOrDefaultAsync<string?>(
+            "SELECT Origem FROM Historia WHERE Id = @Id",
+            new { Id = historiaId });
+
+        if (string.IsNullOrWhiteSpace(origem))
+        {
+            return false;
+        }
+
+        if (origem == "manual")
+        {
+            return true;
+        }
+
+        if (!criancaId.HasValue || criancaId.Value <= 0)
+        {
+            return false;
+        }
+
+        return await conn.ExecuteScalarAsync<bool>(
+            """
+            SELECT CASE WHEN EXISTS (
+              SELECT 1 FROM IA_Geracao
+              WHERE Id_Historia = @Id AND Id_Crianca = @CriancaId
+            ) THEN 1 ELSE 0 END
+            """,
+            new { Id = historiaId, CriancaId = criancaId.Value });
     }
 }

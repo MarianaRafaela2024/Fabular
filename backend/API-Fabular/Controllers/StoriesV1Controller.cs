@@ -27,17 +27,32 @@ public class StoriesV1Controller : ControllerBase
         return Ok(result.Value);
     }
 
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<StorySummaryDto>>> List([FromQuery] int? faixaEtaria, [FromQuery] string? genero)
+    [HttpPost("save")]
+    public async Task<ActionResult<StoryDetailDto>> Save([FromBody] StorySaveRequest request)
     {
-        var result = await _storiesService.ListAsync(faixaEtaria, genero);
+        var result = await _storiesService.SaveAsync(request);
+        if (!result.Success)
+        {
+            return StatusCode(result.StatusCode, new { message = result.Error });
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<StorySummaryDto>>> List(
+        [FromQuery] int? faixaEtaria,
+        [FromQuery] string? genero,
+        [FromQuery] int? criancaId)
+    {
+        var result = await _storiesService.ListAsync(faixaEtaria, genero, criancaId);
         return Ok(result.Value);
     }
 
     [HttpGet("{id:int}")]
-    public async Task<ActionResult<StoryDetailDto>> GetById(int id)
+    public async Task<ActionResult<StoryDetailDto>> GetById(int id, [FromQuery] int? criancaId)
     {
-        var result = await _storiesService.GetByIdAsync(id);
+        var result = await _storiesService.GetByIdAsync(id, criancaId);
         if (!result.Success)
         {
             return StatusCode(result.StatusCode, new { message = result.Error });
