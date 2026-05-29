@@ -19,27 +19,22 @@
     fases: [
       {
         texto: 'Era uma vez um <strong class="palavra-chave">leão</strong> chamado <strong class="palavra-chave">Léo</strong>. Ele morava numa <strong class="palavra-chave">floresta</strong> verde e bonita. Léo era grande e forte. Todo mundo achava que ele não tinha medo de nada. Mas Léo tinha um segredo…',
-        cena: '🌲🦁🌸',
         interacao: { tipo: 'escolha', pergunta: '😮 Qual era o segredo de Léo?', opcoes: ['Ele tinha medo do escuro.', 'Ele não sabia rugir.'], correta: 0 }
       },
       {
         texto: 'De <strong class="palavra-chave">dia</strong>, Léo brincava com os amigos. Ele corria, pulava e rugia bem alto. Mas quando o <strong class="palavra-chave">sol</strong> ia embora, Léo ficava quietinho. A noite chegava. O escuro chegava. E Léo corria se esconder atrás de uma pedra grande.',
-        cena: '☀️🦁🌑',
         interacao: { tipo: 'escolha', pergunta: '🌙 O que acontecia quando a noite chegava?', opcoes: ['Léo ficava quietinho.', 'Léo cantava para os amigos.'], correta: 0 }
       },
       {
         texto: 'Os amigos perguntavam: "Léo, onde você está?" A <strong class="palavra-chave">zebra</strong>, o <strong class="palavra-chave">elefante</strong> e o <strong class="palavra-chave">macaco</strong> procuravam por ele. Léo não respondia. Ele fechava os olhos e esperava o dia voltar.',
-        cena: '🦓🐘🐒',
         interacao: { tipo: 'completar', pergunta: '✍️ Complete: Os amigos de Léo eram a zebra, o elefante e o ___', resposta: 'macaco', dica: 'macaco' }
       },
       {
         texto: 'Uma noite, a <strong class="palavra-chave">lua</strong> apareceu bem grande no céu. Ela disse com voz mansa: "Léo, não tenha medo! Eu fico aqui com você toda noite." Léo olhou para o céu. Viu a lua brilhando. Viu as estrelas piscando. E sorriu.',
-        cena: '🌕🦁⭐',
         interacao: { tipo: 'escolha', pergunta: '💛 O que a lua disse para o Léo?', opcoes: ['"Eu fico aqui com você toda noite."', '"Vai dormir, Léo!"'], correta: 0 }
       },
       {
         texto: 'Dali em diante, Léo não tinha mais medo. Toda noite ele olhava para a lua e se sentia <strong class="palavra-chave">corajoso</strong>. Ele chamava os amigos para brincar à luz das estrelas. A noite virou a hora favorita de Léo!',
-        cena: '🌙🦁🎉',
         interacao: { tipo: 'escolha', pergunta: '🌟 O que mudou para o Léo depois disso?', opcoes: ['A noite virou sua hora favorita.', 'Léo foi embora da floresta.'], correta: 0 }
       }
     ],
@@ -53,28 +48,23 @@
     duracao: '8 min',
     fases: [
       {
-        texto: 'Marina tinha um hobby que ninguém mais tinha: ela <strong class="palavra-chave">colecionava nuvens</strong>. Não as nuvens de verdade, claro — essas não dá para guardar numa caixa. Marina colecionava os <strong class="palavra-chave">desenhos</strong> delas. Toda manhã, antes do café, ela corria para a janela do seu quarto e ficava olhando o céu por alguns minutos. Se a nuvem tinha um formato interessante, ela pegava o caderno azul e desenhava com cuidado. Já eram mais de cem desenhos. Cada um tinha um nome diferente, escolhido por ela.',
-        cena: '☁️👧🖍️',
-        interacao: { tipo: 'escolha', pergunta: '🤔 Como Marina colecionava nuvens?', opcoes: ['Ela desenhava as nuvens num caderno.', 'Ela fotografava todas as manhãs.'], correta: 0 }
+        texto: 'Marina tinha um hobby que ninguém mais tinha: ela <strong class="palavra-chave">colecionava nuvens</strong>. Não as nuvens de verdade, claro — essas não dá para guardar numa caixa. Marina colecionava os <strong class="palavra-chave">desenhos</strong> dela. Toda manhã, antes do café, ela corria para a janela do seu quarto e ficava olhando o céu por alguns minutos. Se a nuvem tinha um formato interessante, ela pegava o caderno azul e desenhava com cuidado. Já eram mais de cem desenhos. Cada um tinha um nome diferente, escolhido por ela.',
+        
       },
       {
         texto: 'Havia a nuvem "Baleia Voadora", a "Bota do Gigante" e até uma chamada "Avó Dormindo". Os colegas da escola achavam graça. "Nuvens? Mas elas somem!", diziam. Marina só dava de ombros. Ela sabia que justamente por isso eram especiais: cada nuvem existia <strong class="palavra-chave">uma única vez</strong>. Nenhuma voltava igual.',
-        cena: '👧📒🌤️',
         interacao: { tipo: 'completar', pergunta: '✍️ Para Marina, cada nuvem era especial porque existia apenas ___ vez', resposta: 'uma única', dica: 'uma única' }
       },
       {
         texto: 'Numa terça-feira de outubro, uma nuvem diferente de todas apareceu no céu. Era enorme, escura nas bordas, mas com o centro branco e brilhante. E o formato… era de um <strong class="palavra-chave">dragão</strong>. Tinha pescoço longo, asas abertas e até o que parecia ser fogo saindo da boca. Marina ficou paralisada. Era a nuvem mais incrível que ela já tinha visto.',
-        cena: '🐉☁️👧',
         interacao: { tipo: 'escolha', pergunta: '🐉 O que tornava aquela nuvem tão especial?', opcoes: ['Tinha formato de dragão com asas abertas.', 'Era completamente preta e enorme.'], correta: 0 }
       },
       {
         texto: 'Ela correu para pegar o caderno — mas quando voltou, a nuvem já estava mudando. O pescoço virou uma colina. As asas viraram ondas. Marina sentiu um aperto no peito. Então lembrou: o celular! Ela fotografou o que restava da nuvem-dragão. Não era perfeito, mas dava para ver um pouco das asas ainda abertas.',
-        cena: '📱☁️😮',
         interacao: { tipo: 'escolha', pergunta: '📸 Por que Marina usou o celular em vez do caderno?', opcoes: ['A nuvem estava mudando rápido demais.', 'Ela tinha perdido o caderno.'], correta: 0 }
       },
       {
         texto: 'Um mês depois, Marina olhou pela janela e não acreditou: o <strong class="palavra-chave">dragão</strong> tinha voltado! Igual. Com pescoço longo, asas e tudo. Ela correu com o caderno e dessa vez desenhou tudo, com calma. E no mês seguinte, voltou de novo. E no outro também. Marina descobriu que aquela nuvem aparecia sempre que o vento vinha do sul. Ela deu um nome para ela: <strong class="palavra-chave">Fogo</strong>. E toda vez que Fogo aparecia, Marina sabia: ia ser um dia especial.',
-        cena: '📷☁️🌟',
         interacao: { tipo: 'completar', pergunta: '✍️ Marina percebeu que a nuvem aparecia quando o vento vinha do ___', resposta: 'sul', dica: 'sul' }
       }
     ],
@@ -88,37 +78,30 @@
   fases: [
     {
       texto: 'Pedro tinha o hábito de não prestar atenção nas coisas. Não por descuido, exatamente — era mais uma questão de <strong class="palavra-chave">escolha</strong>. O mundo tinha partes interessantes e partes que não valiam o esforço, e Pedro achava que sabia muito bem distinguir uma coisa da outra. A porta marrom no fundo do corredor da escola, por exemplo, claramente pertencia à segunda categoria. Era velha, sem plaquinha, sem maçaneta especial. Provavelmente um depósito de vassouras. Ele tinha passado por ela centenas de vezes sem pestanejar.',
-      cena: '🚪👦🏫',
       interacao: { tipo: 'escolha', pergunta: '🔍 Por que Pedro nunca prestou atenção na porta marrom?', opcoes: ['Ele achava que era só um depósito sem importância.', 'A porta estava sempre trancada com cadeado.'], correta: 0 }
     },
     {
       texto: 'Até aquela quinta-feira. Pedro voltava da aula de ciências com a cabeça ainda cheia de perguntas que o professor não soubera responder — ou não quisera. Ao passar pelo corredor, percebeu algo diferente: a porta estava <strong class="palavra-chave">entreaberta</strong>. Uma fresta fina. E por ela vazava uma luz que não era de lâmpada. Era dourada demais. Quente demais. Pedro parou. Olhou para os dois lados do corredor. Não havia ninguém. Ele empurrou a porta devagar.',
-      cena: '🚪✨👦',
       interacao: { tipo: 'escolha', pergunta: '💡 O que chamou a atenção de Pedro na porta naquele dia?', opcoes: ['Ela estava entreaberta com uma luz dourada vazando.', 'Tinha um bilhete colado com seu nome.'], correta: 0 }
     },
     {
       texto: 'O que havia do outro lado não cabia na lógica de um depósito de vassouras. Era uma <strong class="palavra-chave">biblioteca enorme</strong> — alta demais para caber num prédio térreo, larga demais para estar dentro da escola. As prateleiras iam do chão ao teto e se curvavam levemente, como se o cômodo fosse redondo. E os livros brilhavam. Não todos — mas muitos tinham um leve pulsar de luz na lombada, como se respirassem. Pedro sentiu que deveria ter medo. Mas o que sentiu foi outra coisa: <strong class="palavra-chave">reconhecimento</strong>. Como se aquele lugar já o esperasse há tempo.',
-      cena: '📚✨🏛️',
       interacao: { tipo: 'completar', pergunta: '✍️ Em vez de medo, Pedro sentiu algo inesperado: ___', resposta: 'reconhecimento', dica: 'reconhecimento' }
     },
     {
       texto: '"Você demorou." A voz veio de algum lugar entre as prateleiras. Pedro deu um passo atrás — mas não saiu. Uma <strong class="palavra-chave">raposa</strong> surgiu caminhando devagar, óculos de aros dourados equilibrados na ponta do focinho, um livro aberto na pata esquerda. Ela se sentou numa cadeira de veludo vermelho como se aquilo fosse a coisa mais natural do mundo. "Cada guardião demora um tempo diferente para encontrar a biblioteca", ela disse. "Alguns levam dias. Outros, anos. Você levou três." Pedro abriu a boca. "Três o quê?" "Anos de escola", respondeu a raposa, virando uma página.',
-      cena: '🦊📖🏛️',
       interacao: { tipo: 'escolha', pergunta: '🦊 O que a raposa quis dizer com "você demorou"?', opcoes: ['Pedro levou três anos de escola para encontrar a biblioteca.', 'A raposa o esperava desde a manhã.'], correta: 0 }
     },
     {
       texto: 'A raposa explicou com a paciência de quem já explicou a mesma coisa muitas vezes — e ainda assim não achava a explicação cansativa. Cada livro naquela biblioteca guardava uma <strong class="palavra-chave">história verdadeira</strong>: não necessariamente um fato histórico, mas algo que havia sido sentido de verdade por alguém, em algum lugar, em algum tempo. "Histórias verdadeiras precisam ser lidas", ela disse. "Quando ninguém lê, elas enfraquecem. A lombada perde o brilho. E quando o brilho some de vez…" Ela fechou o livro com cuidado. "A história desaparece. Como se nunca tivesse acontecido."',
-      cena: '🦊📖💫',
       interacao: { tipo: 'escolha', pergunta: '📖 O que acontece com uma história quando ninguém a lê?', opcoes: ['Ela perde o brilho e desaparece para sempre.', 'Ela se transforma em outro livro automaticamente.'], correta: 0 }
     },
     {
       texto: 'Pedro passou aquela tarde inteira na biblioteca. Leu sobre uma <strong class="palavra-chave">civilização</strong> que construía cidades nas copas das árvores e desapareceu antes de ser descoberta. Leu o diário de uma menina que vivia numa estação espacial e sentia saudade da chuva. Leu a história de um urso que tinha aprendido a escrever sozinho e deixado cartas escondidas em ocos de árvores pela floresta. Cada livro tinha um brilho diferente. Alguns pulsavam devagar, como coração em repouso. Outros tremiam um pouco, como se tivessem pressa de ser lidos.',
-      cena: '🌍🪐🦕',
       interacao: { tipo: 'completar', pergunta: '✍️ Pedro leu sobre uma civilização que construía cidades nas copas das ___', resposta: 'árvores', dica: 'árvores' }
     },
     {
       texto: 'Quando saiu, o corredor estava vazio e as luzes da escola já tinham sido apagadas. Pedro ficou parado diante da porta marrom, agora fechada de novo. Entendeu, naquele momento, o que a raposa quis dizer. Ser <strong class="palavra-chave">guardião</strong> não era uma tarefa de vigia — não era trancar a biblioteca, catalogar os livros, protegê-los do pó. Era outra coisa, mais difícil e mais simples ao mesmo tempo: era carregar as histórias dentro de si. Lembrar delas. Deixar que mudassem alguma coisa. Porque uma história só existe de verdade quando alguém a leva para fora da página.',
-      cena: '👦🚪🌟',
       interacao: { tipo: 'escolha', pergunta: '💭 Qual é o verdadeiro papel de um guardião de histórias?', opcoes: ['Carregar as histórias dentro de si e deixar que elas mudem algo nele.', 'Proteger os livros do pó e catalogar a biblioteca.'], correta: 0 }
     }
   ],
@@ -134,22 +117,18 @@
   fases: [
     {
       texto: '<em>"Pingo, pingo, pinguinho,<br>a chuva veio sim!<br>Molhou o passarinho,<br>molhou o meu jardim."</em>',
-      cena: '🌧️🐦🌸',
       interacao: { tipo: 'escolha', pergunta: '🎵 O que a chuva molhou no verso?', opcoes: ['O passarinho e o jardim.', 'O sol e a lua.'], correta: 0 }
     },
     {
       texto: '<em>"Pingo, pingo, pinguinho,<br>que gostoso é assim!<br>A chuva faz barulho:<br>tim-tim, tim-tim, tim-tim!"</em>',
-      cena: '🌧️👂🎶',
       interacao: { tipo: 'completar', pergunta: '✍️ A chuva faz barulho: ___', resposta: 'tim-tim', dica: 'tim-tim' }
     },
     {
       texto: '<em>"E eu de guarda-chuva,<br>saí para brincar!<br>Com poça lá na rua,<br>que gostoso pular!"</em>',
-      cena: '☂️💦👧',
       interacao: { tipo: 'completar', pergunta: '✍️ Que gostoso pular na ___', resposta: 'poça', dica: 'poça' }
     },
     {
       texto: '<em>"Pingo, pingo, pinguinho,<br>não para, não, não!<br>A chuva é minha amiga,<br>vem, chuva, venha cá!"</em>',
-      cena: '🌧️💛🌈',
       interacao: { tipo: 'escolha', pergunta: '💛 Como a criança chama a chuva no final?', opcoes: ['De amiga.', 'De chateada.'], correta: 0 }
     }
   ],
@@ -162,28 +141,23 @@
   duracao: '6 min',
   fases: [
     {
-      texto: '<em>"Palavras são pássaros<br>que moram no papel,<br>guardam segredos doces<br>mais doces que o mel."</em>',
-      cena: '🐦📄🍯',
+      texto: '<em>"Palavras são pássaros<br> que moram no papel,<br> guardam segredos doces<br> mais doces que o mel."<br></em>',
       interacao: { tipo: 'escolha', pergunta: '🍯 Com o que as palavras são comparadas neste verso?', opcoes: ['Com pássaros que moram no papel.', 'Com flores no jardim.'], correta: 0 }
     },
     {
-      texto: '<em>"Quando você as lê,<br>elas ganham asas,<br>atravessam a noite<br>e chegam nas casas."</em>',
-      cena: '🦋🏠🌙',
+      texto: '<em> "Quando você as lê,<br> elas ganham asas,<br> atravessam a noite<br> e chegam nas casas."<br></em>',
       interacao: { tipo: 'completar', pergunta: '✍️ Quando lidas, as palavras ganham ___', resposta: 'asas', dica: 'asas' }
     },
     {
-      texto: '<em>"Há palavras mansas<br>que chegam de mansinho,<br>como luz de vela<br>no fim do caminho."</em>',
-      cena: '🕯️🌿🐾',
+      texto: '<em>"Há palavras mansas<br> que chegam de mansinho,<br> como luz de vela<br> no fim do caminho."<br></em>',
       interacao: { tipo: 'escolha', pergunta: '🕯️ A que são comparadas as palavras mansas?', opcoes: ['À luz de vela no fim do caminho.', 'Ao barulho do vento na janela.'], correta: 0 }
     },
     {
-      texto: '<em>"Há palavras bravas<br>que saltam do chão,<br>e batem no peito<br>feito coração."</em>',
-      cena: '❤️💥📢',
+      texto: '<em>"Há palavras bravas<br> que saltam do chão,<br> e batem no peito<br> feito coração."<br></em>',
       interacao: { tipo: 'escolha', pergunta: '❤️ O que as palavras bravas fazem segundo o poema?', opcoes: ['Batem no peito feito coração.', 'Voam alto pelo céu.'], correta: 0 }
     },
     {
-      texto: '<em>"Guarda bem as tuas,<br>escolhe com cuidado —<br>uma palavra dita<br>não volta ao seu lado."</em>',
-      cena: '🦋🌸📜',
+      texto: '<em>"Guarda bem as tuas,<br>escolhe com cuidado —<br>uma palavra dita<br> não volta ao seu lado."<br></em>',
       interacao: { tipo: 'completar', pergunta: '✍️ Uma palavra dita não volta ao seu ___', resposta: 'lado', dica: 'lado' }
     }
   ],
@@ -199,12 +173,10 @@
        fases: [
          {
            texto: 'Você vai precisar de: uma caixa de <strong class="palavra-chave">sapato</strong>, tinta colorida, palitos de madeira e cola. Essa casinha vai ser um lar aconchegante para os pássaros do jardim!',
-           cena: '📦🎨🐦',
            interacao: { tipo: 'escolha', pergunta: '📦 O que é o material principal da casinha?', opcoes: ['Caixa de sapato.', 'Pedaços de telhado.'], correta: 0 }
          },
          {
            texto: 'Passo 1: Pinte a caixa com cores vivas. Passo 2: Cole os <strong class="palavra-chave">palitos</strong> na entrada para fazer o poleiro. Passo 3: Faça um buraco na frente com o tamanho certo para o pássaro entrar!',
-           cena: '🎨📦🔵',
            interacao: { tipo: 'completar', pergunta: '✍️ Cole os ___ para fazer o poleiro', resposta: 'palitos', dica: 'palitos' }
          }
        ],
@@ -218,12 +190,10 @@
        fases: [
          {
            texto: 'O slime caseiro é uma atividade científica divertida! Ingredientes necessários: 1 frasco de cola branca (PVA), 1 colher de chá de <strong class="palavra-chave">bicarbonato</strong> de sódio, solução de lente de contato (com ácido bórico) e corante alimentício.',
-           cena: '🧪🔬⚗️',
            interacao: { tipo: 'escolha', pergunta: '🧪 Qual ingrediente ativa o slime?', opcoes: ['A solução de lente de contato.', 'A cola branca.'], correta: 0 }
          },
          {
            texto: 'Modo de preparo: Misture a cola com o bicarbonato. Adicione o <strong class="palavra-chave">corante</strong>. Aos poucos, vá acrescentando a solução de lente e mexa até obter a consistência elástica. O segredo é não adicionar solução demais!',
-           cena: '🟢✋🔀',
            interacao: { tipo: 'completar', pergunta: '✍️ Adicione o ___ para dar cor', resposta: 'corante', dica: 'corante' }
          }
        ],
@@ -239,27 +209,22 @@
   fases: [
     {
       texto: 'O fundo do mar é um mundo à parte — um lugar que poucos olhos já viram de verdade, mas que existe cheio de vida bem abaixo das ondas. A primeira coisa que chama atenção é a <strong class="palavra-chave">luz</strong>: ela chega filtrada pela água, formando raios dourados e tremidos que iluminam tudo como lanternas gigantes balançando no teto.',
-      cena: '🌊✨🐠',
       interacao: { tipo: 'escolha', pergunta: '💡 Como a luz do sol aparece no fundo do mar?', opcoes: ['Em raios dourados e tremidos, como lanternas balançando.', 'Forte e direta, iluminando tudo de uma vez.'], correta: 0 }
     },
     {
       texto: 'Logo se vê o conjunto de <strong class="palavra-chave">cores vibrantes</strong> que cobre o fundo. Corais <strong class="palavra-chave">laranja e rosa</strong> crescem em formas curiosas — alguns parecem árvores, outros parecem leques abertos, outros ainda parecem cérebros de pedra. Juntos, formam verdadeiras florestas subaquáticas, com suas próprias ruas, esquinas e esconderijos.',
-      cena: '🐠🐡🌿',
       interacao: { tipo: 'escolha', pergunta: '🎨 A que o texto compara os corais juntos?', opcoes: ['A florestas com ruas, esquinas e esconderijos.', 'A jardins de flores coloridas na superfície.'], correta: 0 }
     },
     {
       texto: 'Entre os corais, peixes de todas as formas dançam sem parar. Alguns são listrados de preto e branco, outros têm manchas amarelas e azuis que parecem pintadas à mão. As algas verdes e compridas balançam suavemente na corrente, como se ouvissem uma música que só elas conhecem. Tudo ali se move — nada fica completamente parado.',
-      cena: '🐟🌿🎶',
       interacao: { tipo: 'completar', pergunta: '✍️ As algas balançam na corrente como se ouvissem uma ___ que só elas conhecem', resposta: 'música', dica: 'música' }
     },
     {
       texto: 'No chão do oceano, o ritmo é outro. Estrelas-do-mar de cor <strong class="palavra-chave">avermelhada</strong> caminham devagar sobre a areia branca, como se tivessem todo o tempo do mundo. Polvos curiosos esticam seus <strong class="palavra-chave">tentáculos</strong> para explorar conchas, pedras e frestas escuras. De vez em quando, uma nuvem de areia sobe do fundo — sinal de que algum ser passou por ali e preferiu não ser visto.',
-      cena: '⭐🐙🐚',
       interacao: { tipo: 'escolha', pergunta: '🐙 O que a nuvem de areia no fundo indica?', opcoes: ['Que algum ser passou por ali sem querer ser visto.', 'Que uma tempestade está chegando na superfície.'], correta: 0 }
     },
     {
       texto: 'O fundo do mar não tem som da forma que conhecemos — mas não é silêncioso. Há o rangido suave dos corais, o farfalhar das algas, o movimento constante da água. É um <strong class="palavra-chave">silêncio cheio</strong>, como o de uma biblioteca grande onde todos estão muito ocupados. Quem mergulha fundo o suficiente entende: o mar não está vazio. Ele só guarda seus segredos com muito cuidado.',
-      cena: '🌊🐠🌊',
       interacao: { tipo: 'completar', pergunta: '✍️ O texto chama o som do fundo do mar de "silêncio ___"', resposta: 'cheio', dica: 'cheio' }
     }
   ],
@@ -273,17 +238,14 @@
   fases: [
     {
       texto: 'O jardim da <strong class="palavra-chave">vovó</strong> é cheio de flores! Tem rosas <strong class="palavra-chave">vermelhas</strong>, margaridas brancas e girassóis altos e amarelos. As cores são lindas! O cheiro é muito <strong class="palavra-chave">gostoso</strong>.',
-      cena: '🌹🌼🌻',
       interacao: { tipo: 'escolha', pergunta: '🌻 Que flores tem no jardim da vovó?', opcoes: ['Rosas, margaridas e girassóis.', 'Orquídeas e tulipas.'], correta: 0 }
     },
     {
       texto: 'As <strong class="palavra-chave">borboletas</strong> adoram esse jardim. Elas pousam nas flores e ficam quietinhas. Os passarinhos também vêm por aqui. Eles cantam alto e alegram o jardim todo.',
-      cena: '🦋🌸🐦',
       interacao: { tipo: 'escolha', pergunta: '🦋 Quais bichinhos visitam o jardim?', opcoes: ['Borboletas e passarinhos.', 'Abelhas e sapos.'], correta: 0 }
     },
     {
       texto: 'No meio do jardim tem um <strong class="palavra-chave">banco de madeira</strong>. Ele é velho e tem tinta descascada. A vovó senta ali toda tarde. Ela toma chá e fica olhando as flores. É o lugar mais <strong class="palavra-chave">tranquilo</strong> do mundo!',
-      cena: '🪑☕🌿',
       interacao: { tipo: 'completar', pergunta: '✍️ A vovó senta no banco e toma ___', resposta: 'chá', dica: 'chá' }
     }
   ],
@@ -299,12 +261,10 @@
        fases: [
          {
            texto: 'A luz do Sol parece branca, mas na verdade ela é formada por todas as <strong class="palavra-chave">cores do arco-íris</strong>! Quando essa luz atravessa a atmosfera da Terra, ela encontra partículas minúsculas de ar.',
-           cena: '☀️🌈🌍',
            interacao: { tipo: 'escolha', pergunta: '🌈 De que é formada a luz do Sol?', opcoes: ['De todas as cores do arco-íris.', 'Apenas da cor amarela.'], correta: 0 }
          },
          {
            texto: 'Essas partículas <strong class="palavra-chave">espalham</strong> a cor azul muito mais do que as outras cores. Por isso, onde quer que olhemos para o céu, vemos azul! À noite, sem a luz do Sol, o céu fica <strong class="palavra-chave">escuro</strong>.',
-           cena: '🔵💨🌙',
            interacao: { tipo: 'completar', pergunta: '✍️ As partículas ___ a cor azul', resposta: 'espalham', dica: 'espalham' }
          }
        ],
@@ -318,17 +278,14 @@
        fases: [
          {
            texto: 'A <strong class="palavra-chave">Floresta Amazônica</strong> é a maior floresta tropical do planeta. Ela cobre cerca de 5,5 milhões de km² e abrange nove países, sendo o Brasil o de maior extensão. Estima-se que ela abriga mais de 10% de todas as espécies de animais e plantas da Terra.',
-           cena: '🌳🌍🦜',
            interacao: { tipo: 'escolha', pergunta: '🌍 Qual país tem a maior parte da Amazônia?', opcoes: ['Brasil.', 'Peru.'], correta: 0 }
          },
          {
            texto: 'A Amazônia é chamada de "pulmão do mundo" porque suas árvores absorvem grandes quantidades de <strong class="palavra-chave">dióxido de carbono</strong> e liberam <strong class="palavra-chave">oxigênio</strong>. Isso ajuda a equilibrar o clima do planeta inteiro.',
-           cena: '🌿💨🌱',
            interacao: { tipo: 'completar', pergunta: '✍️ A floresta libera ___ para o ar', resposta: 'oxigênio', dica: 'oxigênio' }
          },
          {
            texto: 'Preservar a Amazônia é responsabilidade de todos. O <strong class="palavra-chave">desmatamento</strong> ameaça milhares de espécies e afeta o regime de chuvas de todo o Brasil. Pequenas ações como consumo consciente e apoio a projetos ambientais fazem diferença.',
-           cena: '🌱♻️🤝',
            interacao: { tipo: 'escolha', pergunta: '⚠️ O que ameaça a Amazônia?', opcoes: ['O desmatamento.', 'As chuvas.'], correta: 0 }
          }
        ],
@@ -2168,7 +2125,7 @@ const verificar = () => {
      tartaruga: '🐢', cobra: '🐍', lagarto: '🦎', crocodilo: '🐊',
      sol: '☀️', lua: '🌙', estrela: '⭐', estrelas: '⭐',
      nuvem: '☁️', nuvens: '☁️', chuva: '🌧️', vento: '💨', neve: '❄️',
-     arcoiris: '🌈', ceu: '☁️', noite: '🌙', dia: '☀️', manha: '🌅',
+     arcoiris: '🌈', ceu: '☁️', noite: '🌃', dia: '🌄', manha: '🌅',
      tarde: '🌇', floresta: '🌳', arvore: '🌳', arvores: '🌳', flor: '🌸',
      flores: '🌸', folha: '🍃', folhas: '🍃', grama: '🌿', campo: '🌾',
      mar: '🌊', rio: '🏞️', lago: '🏞️', praia: '🏖️', montanha: '⛰️',
@@ -2211,7 +2168,7 @@ const verificar = () => {
      tesouro: '💎', mapa: '🗺️', chave: '🔑', porta: '🚪',
      janela: '🪟', cama: '🛏️', travesseiro: '🛏️', cobertor: '🛏️',
      chapeu: '🎩', sapato: '👟', roupa: '👕', vestido: '👗',
-     chapeu: '🎩', oculos: '👓', relogio: '⌚', presente: '🎁',
+     oculos: '👓', relogio: '⌚', presente: '🎁',
      musica: '🎵', instrumento: '🎸', piano: '🎹', violao: '🎸',
      teatro: '🎭', cinema: '🎬', camera: '📷', televisao: '📺',
      computador: '💻', tablet: '📱', robo: '🤖',
