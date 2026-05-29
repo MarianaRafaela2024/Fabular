@@ -16,7 +16,8 @@ public record StoryGenerateRequest(
     string GeneroTextual,
     string PromptCrianca,
     int? CriancaId,
-    string? Tema
+    string? Tema,
+    int? ResponsavelId
 );
 
 public record StorySavePayload(
@@ -35,7 +36,8 @@ public record StorySaveRequest(
     int CriancaId,
     string PromptCrianca,
     string? Modelo,
-    StorySavePayload Story
+    StorySavePayload Story,
+    int? ResponsavelId
 );
 
 public record StorySummaryDto(
@@ -45,7 +47,8 @@ public record StorySummaryDto(
     int FaixaEtaria,
     string? Duracao,
     string? Emoji,
-    string? Cena
+    string? Cena,
+    int? CriancaId = null
 );
 
 public record StoryDetailDto(

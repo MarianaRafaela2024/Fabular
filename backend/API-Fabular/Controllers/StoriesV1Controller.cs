@@ -43,9 +43,10 @@ public class StoriesV1Controller : ControllerBase
     public async Task<ActionResult<IEnumerable<StorySummaryDto>>> List(
         [FromQuery] int? faixaEtaria,
         [FromQuery] string? genero,
-        [FromQuery] int? criancaId)
+        [FromQuery] int? criancaId,
+        [FromQuery] int? responsavelId)
     {
-        var result = await _storiesService.ListAsync(faixaEtaria, genero, criancaId);
+        var result = await _storiesService.ListAsync(faixaEtaria, genero, criancaId, responsavelId);
         return Ok(result.Value);
     }
 

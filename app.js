@@ -338,7 +338,42 @@
   
   const API_BASE = (window.API_BASE_URL || 'http://localhost:5275').replace(/\/$/, '');
   const CHAVE_VINCULOS = 'mundoHistorias_vinculos_crianca';
+  const CHAVE_HISTORIAS_CACHE = 'mundoHistorias_historias_ia_cache';
   let syncTimer = null;
+
+  // ── Cache local de histórias geradas pela IA ─────────────────
+  function salvarHistoriaNoCache(historiaCompleta) {
+    try {
+      const cache = carregarCacheHistorias();
+      // Remove duplicata pelo id antes de inserir
+      const idx = cache.findIndex(h => h.id === historiaCompleta.id);
+      if (idx >= 0) cache[idx] = historiaCompleta;
+      else cache.unshift(historiaCompleta);
+      // Mantém no máximo 50 histórias no cache
+      localStorage.setItem(CHAVE_HISTORIAS_CACHE, JSON.stringify(cache.slice(0, 50)));
+    } catch (_) {}
+  }
+
+  function carregarCacheHistorias() {
+    try {
+      const raw = localStorage.getItem(CHAVE_HISTORIAS_CACHE);
+      if (!raw) return [];
+      const lista = JSON.parse(raw);
+      return Array.isArray(lista) ? lista : [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  function mesclarHistoriasCache() {
+    const cache = carregarCacheHistorias();
+    if (!cache.length) return;
+    cache.forEach(h => {
+      if (!h || !h.id) return;
+      const existe = HISTORIAS.find(x => x.id === h.id);
+      if (!existe) HISTORIAS.unshift(h);
+    });
+  }
   
   async function apiGet(path) {
     const resp = await fetch(`${API_BASE}${path}`);
@@ -404,12 +439,17 @@
   }
 
   async function carregarHistoriasDaApi() {
+    // Sempre mescla o cache local primeiro (garante que histórias geradas apareçam mesmo offline)
+    mesclarHistoriasCache();
     try {
       const faixa = estado?.perfil?.faixa;
       const vinculo = obterVinculoCrianca();
+      const responsavelId = obterResponsavelId();
       const query = new URLSearchParams();
       if (faixa) query.set('faixaEtaria', String(faixa));
       if (vinculo?.criancaId) query.set('criancaId', String(vinculo.criancaId));
+      else if (responsavelId) query.set('responsavelId', String(responsavelId));
+      // Sem vinculação: tenta mesmo assim (API pode retornar vazio, mas não quebra)
       const list = await apiGet(`/api/v1/stories?${query.toString()}`);
       if (!Array.isArray(list) || list.length === 0) return;
       const mapped = list.map(mapStorySummaryToLegacy);
@@ -418,7 +458,14 @@
       const idsDetalhadas = new Set(detalhadasApi.map((h) => h.id));
       const resumosNovos = mapped.filter((h) => !idsDetalhadas.has(h.id));
       HISTORIAS.splice(0, HISTORIAS.length, ...manuais, ...detalhadasApi, ...resumosNovos);
-    } catch (_) {}
+      // Sincroniza o cache com o que veio da API (atualiza ids e dados)
+      mapped.forEach(h => {
+        const noCache = carregarCacheHistorias().find(c => c.id === h.id);
+        if (noCache) salvarHistoriaNoCache({ ...noCache, ...h });
+      });
+    } catch (_) {
+      // Falha silenciosa: o cache local já foi mesclado acima
+    }
   }
   
   async function carregarDetalheHistoriaDaApi(id) {
@@ -633,6 +680,15 @@
       return null;
     }
   }
+
+  function obterResponsavelId() {
+    try {
+      const sessao = JSON.parse(localStorage.getItem('mundoHistorias_responsavel_sessao') || 'null');
+      return sessao?.responsavelId || null;
+    } catch (_) {
+      return null;
+    }
+  }
   
   function agendarSyncProgresso() {
     clearTimeout(syncTimer);
@@ -658,12 +714,21 @@
     btn.disabled = true;
     try {
       const vinculo = obterVinculoCrianca();
+      if (!vinculo?.criancaId) {
+        if (errEl) {
+          errEl.textContent = 'Vincule o perfil da criança ao responsável para gerar histórias.';
+          errEl.classList.remove('oculto');
+        }
+        return;
+      }
+      const responsavelId = obterResponsavelId();
       const body = {
         faixaEtaria: estado.perfil.faixa || 1,
         generoTextual: estado.perfil.genero || 'narrativo',
         promptCrianca: prompt,
-        criancaId: vinculo && vinculo.criancaId ? vinculo.criancaId : null,
-        tema: null
+        criancaId: vinculo.criancaId,
+        tema: null,
+        responsavelId: responsavelId || null
       };
       await apiPost('/api/v1/stories/generate', body);
       ta.value = '';
@@ -1170,7 +1235,7 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
     return { tipo: String(tipo), pergunta: String(pergunta), dados };
   }
 
-  function montarBodySalvarHistoriaGroq(story, criancaId, prompt, modelo) {
+  function montarBodySalvarHistoriaGroq(story, criancaId, prompt, modelo, responsavelId) {
     const minigames = (story.minigames || story.Minigames || [])
       .map(mapMinigameGroqParaApi)
       .filter(Boolean);
@@ -1178,6 +1243,7 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
       criancaId,
       promptCrianca: prompt,
       modelo: modelo || 'llama-3.3-70b-versatile',
+      responsavelId: responsavelId || null,
       story: {
         titulo: story.titulo,
         genero: story.genero,
@@ -1197,7 +1263,9 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
       ? story.minigames
       : (Array.isArray(story?.Minigames) ? story.Minigames : []);
     const minigamesPreset = minigamesRaw.map(normalizarMinigamePreset).filter(Boolean);
-    const idApi = serverId != null ? `api-${serverId}` : `ia-bot-${Date.now()}`;
+    // Se não salvou no banco, gera um id local estável baseado no título+genero
+    const idLocal = `local-${btoa(encodeURIComponent((story?.titulo || '') + (story?.genero || ''))).replace(/[^a-z0-9]/gi, '').slice(0, 16)}-${Date.now()}`;
+    const idApi = serverId != null ? `api-${serverId}` : idLocal;
 
     return {
       id: idApi,
@@ -1287,28 +1355,44 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
       }
       story = normalizarStoryGroq(story, faixaSelecionada, generoSelecionado);
 
+      // Tenta salvar no banco — opcional (sem criancaId, pula silenciosamente)
+      let savedId = null;
       const vinculo = obterVinculoCrianca();
-      if (!vinculo?.criancaId) {
-        throw new Error('Vincule o perfil da criança ao responsável para salvar histórias da IA.');
+      if (vinculo?.criancaId) {
+        try {
+          const salva = await apiPost(
+            '/api/v1/stories/save',
+            montarBodySalvarHistoriaGroq(story, vinculo.criancaId, prompt, 'llama-3.3-70b-versatile', obterResponsavelId())
+          );
+          savedId = salva?.id ?? null;
+          // Mescla dados retornados pela API na história
+          if (savedId) Object.assign(story, salva);
+        } catch (_) {
+          // Banco indisponível ou sem vinculação — continua com cache local
+        }
       }
 
-      const salva = await apiPost(
-        '/api/v1/stories/save',
-        montarBodySalvarHistoriaGroq(story, vinculo.criancaId, prompt, 'llama-3.3-70b-versatile')
-      );
       promptEl.value = '';
 
+      // Constrói a historia completa para o frontend
       const historiaCompleta = mapStoryDetailToLegacy(
-        { ...story, ...salva, faixaEtaria: faixaSelecionada, genero: generoSelecionado },
-        salva.id
+        { ...story, faixaEtaria: faixaSelecionada, genero: generoSelecionado },
+        savedId
       );
+
+      // Salva no cache local SEMPRE (garante persistência entre recargas)
+      salvarHistoriaNoCache(historiaCompleta);
+
       garantirHistoriaNaBiblioteca(historiaCompleta);
       await carregarHistoriasDaApi();
       preservarDetalheHistoriaNaBiblioteca(historiaCompleta.id, historiaCompleta);
       renderizarBiblioteca();
 
       await iniciarHistoria(historiaCompleta.id, { irLeitura: true });
-      mostrarToast('História criada! Boa leitura 📖');
+      const avisoSalvo = savedId
+        ? 'História criada e salva no banco! Boa leitura 📖'
+        : 'História criada! (salva localmente) 📖';
+      mostrarToast(avisoSalvo);
     } catch (e) {
       if (errEl) {
         errEl.textContent = (e && e.message) || 'Não foi possível gerar a história agora.';
@@ -1452,9 +1536,12 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
      const main = document.getElementById('app-main');
      if (main) main.scrollTop = 0;
    
-     // Atualiza tela específica
-     if (nomeTela === 'progresso') atualizarTelaProgresso();
-   }
+    // Atualiza tela específica
+    if (nomeTela === 'progresso') atualizarTelaProgresso();
+    if (nomeTela === 'biblioteca') {
+      carregarHistoriasDaApi().then(() => renderizarBiblioteca()).catch(() => renderizarBiblioteca());
+    }
+  }
    
    // (Lógica de login movida para login.js)
    
@@ -1648,6 +1735,8 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
            <span class="hc-tag genero">${labelGenero(h.genero)}</span>
            <span class="hc-tag faixa">${labelFaixa(h.faixa)}</span>
            <span class="hc-tag duracao">⏱ ${h.duracao}</span>
+           ${String(h.id).startsWith('api-') ? '<span class="hc-tag ia-badge">🤖 IA</span>' : ''}
+           ${String(h.id).startsWith('local-') ? '<span class="hc-tag ia-badge ia-badge-local" title="Salva localmente — vincule o perfil ao responsável para sincronizar">🤖 IA · local</span>' : ''}
            ${concluida ? `<span class="hc-tag concluida">✅ Concluída</span>` : ''}
          </div>
          <div class="hc-rodape">
@@ -1787,9 +1876,12 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
         if (detalhe) {
           historia = detalhe;
           preservarDetalheHistoriaNaBiblioteca(id, detalhe);
+          // Atualiza cache local com dados mais recentes da API
+          salvarHistoriaNoCache(detalhe);
         }
       } catch (_) {}
     }
+    // ids 'local-' já têm o detalhe completo em HISTORIAS (vindos do cache)
 
     if (!historia) return;
 
@@ -3870,6 +3962,17 @@ const verificar = () => {
        }
        .ia-gerar-btn { margin-top: 12px; width: 100%; max-width: 280px; }
        .ia-gerar-erro { color: #B45309; font-size: 0.9rem; margin: 10px 0 0; }
+       .hc-tag.ia-badge {
+         background: linear-gradient(135deg, #7C3AED, #EC4899);
+         color: #fff;
+         font-weight: 700;
+         border: none;
+       }
+       .hc-tag.ia-badge-local {
+         background: linear-gradient(135deg, #D97706, #F59E0B);
+         color: #fff;
+         cursor: help;
+       }
      .bot-ia-wrap {
        padding: 10px 24px 24px;
        display: flex;

@@ -273,6 +273,54 @@
         }
       }
     },
+    "/api/v1/stories/save": {
+      "post": {
+        "tags": [
+          "StoriesV1"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StorySaveRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StorySaveRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StorySaveRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoryDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoryDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoryDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/stories": {
       "get": {
         "tags": [
@@ -292,6 +340,22 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "criancaId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "responsavelId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
             }
           }
         ],
@@ -338,6 +402,14 @@
             "name": "id",
             "in": "path",
             "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "criancaId",
+            "in": "query",
             "schema": {
               "type": "integer",
               "format": "int32"
@@ -646,6 +718,85 @@
           "tema": {
             "type": "string",
             "nullable": true
+          },
+          "responsavelId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StorySavePayload": {
+        "type": "object",
+        "properties": {
+          "titulo": {
+            "type": "string",
+            "nullable": true
+          },
+          "genero": {
+            "type": "string",
+            "nullable": true
+          },
+          "faixaEtaria": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "duracao": {
+            "type": "string",
+            "nullable": true
+          },
+          "emoji": {
+            "type": "string",
+            "nullable": true
+          },
+          "cena": {
+            "type": "string",
+            "nullable": true
+          },
+          "texto": {
+            "type": "string",
+            "nullable": true
+          },
+          "palavrasChave": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "minigames": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MinigameDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StorySaveRequest": {
+        "type": "object",
+        "properties": {
+          "criancaId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "promptCrianca": {
+            "type": "string",
+            "nullable": true
+          },
+          "modelo": {
+            "type": "string",
+            "nullable": true
+          },
+          "story": {
+            "$ref": "#/components/schemas/StorySavePayload"
+          },
+          "responsavelId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -679,6 +830,11 @@
           },
           "cena": {
             "type": "string",
+            "nullable": true
+          },
+          "criancaId": {
+            "type": "integer",
+            "format": "int32",
             "nullable": true
           }
         },

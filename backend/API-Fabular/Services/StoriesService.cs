@@ -19,21 +19,29 @@ public class StoriesService
 
     public async Task<ApplicationResult<StoryDetailDto>> GenerateAsync(StoryGenerateRequest request)
     {
-        var generated = _generator.Generate(request);
+        if (!request.CriancaId.HasValue || request.CriancaId.Value <= 0)
+            return ApplicationResult<StoryDetailDto>.BadRequest("Informe o perfil da criança para gerar a história.");
+
         await using var conn = _db.Create();
 
-        var id = await PersistStoryAsync(conn, generated, "ia");
-        if (request.CriancaId.HasValue && request.CriancaId.Value > 0)
+        if (request.ResponsavelId.HasValue && request.ResponsavelId.Value > 0)
         {
-            await LinkIaGeracaoAsync(
-                conn,
-                request.CriancaId.Value,
-                id,
-                request.PromptCrianca,
-                "local-template-v1",
-                JsonSerializer.Serialize(new { request.FaixaEtaria, request.GeneroTextual, request.Tema }),
-                JsonSerializer.Serialize(generated with { Id = id }));
+            var belongs = await CriancaBelongsToResponsavelAsync(conn, request.CriancaId.Value, request.ResponsavelId.Value);
+            if (!belongs)
+                return ApplicationResult<StoryDetailDto>.BadRequest("Criança não vinculada a este responsável.");
         }
+
+        var generated = _generator.Generate(request);
+        var id = await PersistStoryAsync(conn, generated, "ia");
+
+        await LinkIaGeracaoAsync(
+            conn,
+            request.CriancaId.Value,
+            id,
+            request.PromptCrianca,
+            "local-template-v1",
+            JsonSerializer.Serialize(new { request.FaixaEtaria, request.GeneroTextual, request.Tema }),
+            JsonSerializer.Serialize(generated with { Id = id }));
 
         return ApplicationResult<StoryDetailDto>.Ok(generated with { Id = id });
     }
@@ -41,13 +49,18 @@ public class StoriesService
     public async Task<ApplicationResult<StoryDetailDto>> SaveAsync(StorySaveRequest request)
     {
         if (request.CriancaId <= 0)
-        {
             return ApplicationResult<StoryDetailDto>.BadRequest("Informe o perfil da criança vinculado.");
-        }
 
         if (request.Story is null || string.IsNullOrWhiteSpace(request.Story.Titulo) || string.IsNullOrWhiteSpace(request.Story.Texto))
-        {
             return ApplicationResult<StoryDetailDto>.BadRequest("História inválida para salvar.");
+
+        await using var conn = _db.Create();
+
+        if (request.ResponsavelId.HasValue && request.ResponsavelId.Value > 0)
+        {
+            var belongs = await CriancaBelongsToResponsavelAsync(conn, request.CriancaId, request.ResponsavelId.Value);
+            if (!belongs)
+                return ApplicationResult<StoryDetailDto>.BadRequest("Criança não vinculada a este responsável.");
         }
 
         var faixa = Math.Clamp(request.Story.FaixaEtaria, 1, 3);
@@ -66,7 +79,6 @@ public class StoriesService
             request.Story.PalavrasChave ?? new List<string>(),
             minigames);
 
-        await using var conn = _db.Create();
         var id = await PersistStoryAsync(conn, detail, "ia");
         var payloadJson = JsonSerializer.Serialize(detail with { Id = id });
         var modelo = string.IsNullOrWhiteSpace(request.Modelo) ? "groq" : request.Modelo.Trim();
@@ -83,22 +95,29 @@ public class StoriesService
         return ApplicationResult<StoryDetailDto>.Ok(detail with { Id = id });
     }
 
-    public async Task<ApplicationResult<IEnumerable<StorySummaryDto>>> ListAsync(int? faixaEtaria, string? genero, int? criancaId)
+    public async Task<ApplicationResult<IEnumerable<StorySummaryDto>>> ListAsync(int? faixaEtaria, string? genero, int? criancaId, int? responsavelId)
     {
         await using var conn = _db.Create();
+
+        // Quando criancaId é fornecido: retorna apenas histórias geradas para aquela criança.
+        // Quando responsavelId é fornecido sem criancaId: retorna histórias de todas as crianças do responsável.
+        // Histórias de origem 'manual' (hardcoded no banco) são sempre excluídas da listagem dinâmica
+        // para que apenas histórias geradas pela IA vinculadas a uma criança apareçam.
         var sql = """
-                  SELECT h.Id, h.Titulo, h.Genero, h.FaixaEtaria, h.Duracao, h.Emoji, h.Cena
+                  SELECT h.Id, h.Titulo, h.Genero, h.FaixaEtaria, h.Duracao, h.Emoji, h.Cena,
+                         g.Id_Crianca AS CriancaId
                   FROM Historia h
+                  INNER JOIN IA_Geracao g ON g.Id_Historia = h.Id
                   WHERE (@Faixa IS NULL OR h.FaixaEtaria = @Faixa)
                     AND (@Genero IS NULL OR h.Genero = @Genero)
                     AND (
-                      h.Origem = 'manual'
+                      (@CriancaId IS NOT NULL AND g.Id_Crianca = @CriancaId)
                       OR (
-                        @CriancaId IS NOT NULL
+                        @CriancaId IS NULL
+                        AND @ResponsavelId IS NOT NULL
                         AND EXISTS (
-                          SELECT 1
-                          FROM IA_Geracao g
-                          WHERE g.Id_Historia = h.Id AND g.Id_Crianca = @CriancaId
+                          SELECT 1 FROM Responsavel_Crianca rc
+                          WHERE rc.Id_Responsavel = @ResponsavelId AND rc.Id_Crianca = g.Id_Crianca
                         )
                       )
                     )
@@ -109,7 +128,8 @@ public class StoriesService
         {
             Faixa = faixaEtaria,
             Genero = string.IsNullOrWhiteSpace(genero) ? null : genero.ToLowerInvariant(),
-            CriancaId = criancaId
+            CriancaId = criancaId,
+            ResponsavelId = responsavelId
         });
         return ApplicationResult<IEnumerable<StorySummaryDto>>.Ok(result);
     }
@@ -279,6 +299,18 @@ public class StoriesService
                 Modelo = modelo,
                 Payload = payloadJson
             });
+    }
+
+    private static async Task<bool> CriancaBelongsToResponsavelAsync(IDbConnection conn, int criancaId, int responsavelId)
+    {
+        return await conn.ExecuteScalarAsync<bool>(
+            """
+            SELECT CASE WHEN EXISTS (
+              SELECT 1 FROM Responsavel_Crianca
+              WHERE Id_Responsavel = @ResponsavelId AND Id_Crianca = @CriancaId
+            ) THEN 1 ELSE 0 END
+            """,
+            new { ResponsavelId = responsavelId, CriancaId = criancaId });
     }
 
     private static async Task<bool> ChildCanAccessStoryAsync(IDbConnection conn, int historiaId, int? criancaId)
