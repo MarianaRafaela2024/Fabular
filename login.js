@@ -106,8 +106,10 @@
         b.classList.remove('ativo');
         b.setAttribute('aria-pressed', 'false');
       });
+  
       btn.classList.add('ativo');
       btn.setAttribute('aria-pressed', 'true');
+  
       perfil.avatar = btn.dataset.av;
     });
   });
@@ -208,7 +210,7 @@
 
   function abrirPortao() {
     // Preenche badge com dados da criança
-    document.getElementById('pg-avatar').textContent       = perfil.avatar;
+    document.getElementById('pg-avatar').innerHTML =`<img src="${perfil.avatar}" alt="Avatar">`;
     document.getElementById('pg-nome-crianca').textContent = perfil.nome;
 
     // Verifica bloqueio ativo
@@ -604,7 +606,8 @@
     (resp.perfis || []).forEach((p, idx) => {
       const btn = document.createElement('button');
       btn.className = 'avatar-btn';
-      btn.innerHTML = `${p.avatar}<small style="display:block;font-size:.7rem">${p.nome}</small>`;
+      btn.innerHTML = `<img src="${p.avatar}" alt="Avatar" class="avatar-img">
+        <small style="display:block;font-size:.7rem">${p.nome}</small>`;
       btn.addEventListener('click', () => entrarComPerfil(resp, idx));
       lista.appendChild(btn);
     });

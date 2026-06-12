@@ -256,6 +256,14 @@ body.login-body {
   box-shadow: 0 4px 16px rgba(168,85,247,.3);
 }
 
+.avatar-btn img,
+#pg-avatar img,
+.avatar-img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+}
+
 /* Chips */
 .chip-grupo { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
