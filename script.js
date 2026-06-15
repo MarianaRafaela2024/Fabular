@@ -153,58 +153,50 @@ window.addEventListener('load', () => {
 });
 
 // ===== CONTATO (BREVO CRM + BACKEND API) =====
-const contatoForm = document.getElementById('footer-contato-form');
-if (contatoForm) {
-  const API_BASE = (window.API_BASE_URL || 'http://localhost:5275').replace(/\/$/, '');
-  const feedbackEl = document.getElementById('contato-feedback');
+const form = document.getElementById("footer-contato-form");
+const feedback = document.getElementById("contato-feedback");
 
-  const setFeedback = (mensagem, erro = false) => {
-    if (!feedbackEl) return;
-    feedbackEl.textContent = mensagem;
-    feedbackEl.style.color = erro ? '#FFD2D2' : 'rgba(255,255,255,0.9)';
-  };
+form.addEventListener("submit", async (e) => {
 
-  contatoForm.addEventListener('submit', async (event) => {
-    event.preventDefault();
+    e.preventDefault();
 
-    const nome = (document.getElementById('contato-nome')?.value || '').trim();
-    const email = (document.getElementById('contato-email')?.value || '').trim();
-    const assunto = (document.getElementById('contato-assunto')?.value || '').trim();
-    const mensagem = (document.getElementById('contato-mensagem')?.value || '').trim();
-    const btnEnviar = contatoForm.querySelector('.footer-btn-enviar');
-
-    if (!nome || !email || !assunto || !mensagem) {
-      setFeedback('Preencha todos os campos para enviar a mensagem.', true);
-      return;
-    }
-
-    if (btnEnviar) {
-      btnEnviar.disabled = true;
-      btnEnviar.textContent = 'Enviando...';
-    }
+    const dados = {
+        nome: document.getElementById("contato-nome").value,
+        email: document.getElementById("contato-email").value,
+        assunto: document.getElementById("contato-assunto").value,
+        mensagem: document.getElementById("contato-mensagem").value
+    };
 
     try {
-      const resposta = await fetch(`${API_BASE}/api/v1/contact/messages`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome, email, assunto, mensagem })
-      });
 
-      let dados = null;
-      try { dados = await resposta.json(); } catch (_) {}
-      if (!resposta.ok) {
-        throw new Error(dados?.message || 'Falha ao enviar contato.');
-      }
+        feedback.textContent = "Enviando...";
 
-      setFeedback('Mensagem enviada! Nossa equipe responderá em breve.');
-      contatoForm.reset();
-    } catch (error) {
-      setFeedback(error.message || 'Não foi possível enviar sua mensagem no momento.', true);
-    } finally {
-      if (btnEnviar) {
-        btnEnviar.disabled = false;
-        btnEnviar.textContent = 'Enviar mensagem';
-      }
+        const resposta = await fetch(
+            "https://localhost:7157/api/contato",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(dados)
+            }
+        );
+
+        if (!resposta.ok) {
+            throw new Error("Erro ao enviar");
+        }
+
+        feedback.textContent =
+            "Mensagem enviada com sucesso!";
+
+        form.reset();
+
     }
-  });
-}
+    catch (erro) {
+
+        console.error(erro);
+
+        feedback.textContent =
+            "Não foi possível enviar a mensagem.";
+    }
+});
