@@ -1248,7 +1248,7 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
       minigamesPreset
     };
   }
-
+/**/
   async function gerarHistoriaBotIa() {
     const promptEl = document.getElementById('bot-ia-prompt');
     const btn = document.getElementById('btn-bot-ia-gerar');
@@ -1383,6 +1383,90 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
       updatedAt: new Date().toISOString()
     });
   }
+
+  function recalcularTotalEstrelas() {
+    estado.totalEstrelas = (estado.historiasLidas || []).reduce(
+      (soma, r) => soma + (Number(r.estrelas) || 0),
+      0
+    );
+  }
+
+  function mesclarProgressoServidor(servidor) {
+    if (!servidor) return;
+    const remoto = Array.isArray(servidor.historiasLidas) ? servidor.historiasLidas : [];
+    const mapa = new Map();
+
+    (estado.historiasLidas || []).forEach((r) => {
+      if (!r || r.id == null) return;
+      mapa.set(String(r.id), {
+        id: String(r.id),
+        estrelas: Number(r.estrelas) || 0,
+        data: r.data || ''
+      });
+    });
+
+    remoto.forEach((r) => {
+      if (!r || r.id == null) return;
+      const id = String(r.id);
+      const atual = mapa.get(id);
+      const estrelasRemotas = Math.max(0, Math.min(3, Number(r.estrelas) || 0));
+      const estrelasAtuais = Number(atual?.estrelas) || 0;
+      if (!atual || estrelasRemotas > estrelasAtuais) {
+        mapa.set(id, {
+          id,
+          estrelas: Math.max(estrelasRemotas, estrelasAtuais),
+          data: r.data || atual?.data || new Date().toLocaleDateString('pt-BR')
+        });
+      }
+    });
+
+    estado.historiasLidas = Array.from(mapa.values());
+    recalcularTotalEstrelas();
+
+    if (servidor.tempoTotal != null) {
+      estado.tempoTotal = Math.max(Number(estado.tempoTotal) || 0, Number(servidor.tempoTotal) || 0);
+    }
+    if (servidor.minigamesJogados != null) {
+      estado.minigamesJogados = Math.max(Number(estado.minigamesJogados) || 0, Number(servidor.minigamesJogados) || 0);
+    }
+    if (servidor.tentativasReprovadas != null) {
+      estado.tentativasReprovadas = Math.max(Number(estado.tentativasReprovadas) || 0, Number(servidor.tentativasReprovadas) || 0);
+    }
+
+    const dados = {
+      perfil: estado.perfil,
+      portaoAprovado: true,
+      nivel: estado.nivel,
+      experiencia: estado.experiencia || 0,
+      totalEstrelas: estado.totalEstrelas,
+      historiasLidas: estado.historiasLidas,
+      tempoTotal: estado.tempoTotal,
+      minigamesJogados: estado.minigamesJogados,
+      tentativasReprovadas: estado.tentativasReprovadas,
+      relatorioEventos: estado.relatorioEventos,
+      relatorioResponsavelLiberado: !!estado.relatorioResponsavelLiberado
+    };
+    localStorage.setItem('mundoHistorias_estado', JSON.stringify(dados));
+  }
+
+  async function carregarProgressoDoServidor() {
+    const sessao = (() => {
+      try { return JSON.parse(localStorage.getItem('mundoHistorias_responsavel_sessao') || 'null'); } catch (_) { return null; }
+    })();
+    const vinculo = obterVinculoCrianca();
+    if (!sessao?.responsavelId || !vinculo?.criancaId) return;
+
+    try {
+      const query = new URLSearchParams({
+        responsavelId: String(sessao.responsavelId),
+        criancaId: String(vinculo.criancaId)
+      });
+      const data = await apiGet(`/api/v1/sync/progress?${query.toString()}`);
+      mesclarProgressoServidor(data);
+    } catch (_) {
+      // Mantém progresso local se a API estiver indisponível.
+    }
+  }
    
    // =============================================
    // 4. ACESSIBILIDADE
@@ -1494,9 +1578,12 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
      if (main) main.scrollTop = 0;
    
     // Atualiza tela específica
-    if (nomeTela === 'progresso') atualizarTelaProgresso();
+     if (nomeTela === 'progresso') atualizarTelaProgresso();
     if (nomeTela === 'biblioteca') {
-      carregarHistoriasDaApi().then(() => renderizarBiblioteca()).catch(() => renderizarBiblioteca());
+      carregarProgressoDoServidor()
+        .then(() => carregarHistoriasDaApi())
+        .then(() => renderizarBiblioteca())
+        .catch(() => renderizarBiblioteca());
     }
   }
    
@@ -3795,7 +3882,8 @@ const verificar = () => {
        window.location.href = 'login.html';
        return;
      }
-   
+
+    await carregarProgressoDoServidor();
     await carregarHistoriasDaApi();
     aplicarFaixaDoPerfilNosFiltros();
     // Carrega app

@@ -469,6 +469,51 @@
             "description": "Success"
           }
         }
+      },
+      "get": {
+        "tags": [
+          "Sync"
+        ],
+        "parameters": [
+          {
+            "name": "responsavelId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "criancaId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressResponseDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressResponseDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressResponseDto"
+                }
+              }
+            }
+          }
+        }
       }
     }
   },
@@ -490,6 +535,24 @@
             "nullable": true
           },
           "mensagem": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "HistoriaProgressoDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "estrelas": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "data": {
             "type": "string",
             "nullable": true
           }
@@ -638,6 +701,40 @@
           },
           "novaSenha": {
             "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProgressResponseDto": {
+        "type": "object",
+        "properties": {
+          "totalEstrelas": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "historiasLidas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HistoriaProgressoDto"
+            },
+            "nullable": true
+          },
+          "tempoTotal": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "minigamesJogados": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tentativasReprovadas": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
             "nullable": true
           }
         },

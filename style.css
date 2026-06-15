@@ -5,6 +5,7 @@
 /* ── RESET ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/*Variaveis de cores*/
 :root {
   --cor-primaria:   #FF6B35;
   --cor-secundaria: #4ECDC4;
@@ -638,6 +639,13 @@ body.login-body {
 .hc-tag.concluida{ color: #7c6000; background: rgba(255,230,109,.2); border-color: rgba(255,193,7,.5); }
 .hc-rodape { display: flex; align-items: center; justify-content: space-between; margin-top: auto; }
 .hc-estrelas { font-size: 1rem; }
+.hc-estrelas .estrela-preenchida {
+  color: #F59E0B;
+  text-shadow: 0 1px 6px rgba(245, 158, 11, .55);
+}
+.hc-estrelas .estrela-vazia {
+  color: #D1D5DB;
+}
 .estrelas-rating {
   display: inline-flex;
   align-items: center;

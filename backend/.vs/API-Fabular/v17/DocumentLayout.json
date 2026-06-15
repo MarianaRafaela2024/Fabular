@@ -1,9 +1,12 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "D:\\TCC\\Fabular-1\\backend\\",
+  "WorkspaceRootPath": "C:\\Users\\User\\Documents\\Fabular\\backend\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{911879F3-93B2-4587-8CDD-B057EDE96B72}|API-Fabular\\API-Fabular.csproj|d:\\tcc\\fabular-1\\backend\\api-fabular\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|ViewDataWindow_MSSQL__/_localdb__MSSQLLocalDB/Fabular/True/SqlTable/dbo.Responsavel.sql||{0058A1F7-65F3-4DB9-B3D0-CA7E64DD73CD}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{911879F3-93B2-4587-8CDD-B057EDE96B72}|API-Fabular\\API-Fabular.csproj|c:\\users\\user\\documents\\fabular\\backend\\api-fabular\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
       "RelativeMoniker": "D:0:0:{911879F3-93B2-4587-8CDD-B057EDE96B72}|API-Fabular\\API-Fabular.csproj|solutionrelative:api-fabular\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     }
   ],
@@ -14,19 +17,25 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": 0,
           "Children": [
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{cce594b6-0c39-4442-ba28-10c64ac7e89f}"
-            },
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "dbo.Responsavel [Dados]",
+              "DocumentMoniker": "ViewDataWindow_MSSQL__/_localdb__MSSQLLocalDB/Fabular/True/SqlTable/dbo.Responsavel.sql",
+              "ToolTip": "dbo.Responsavel [Dados]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2026-06-15T00:35:38.786Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
               "Title": "appsettings.json",
-              "DocumentMoniker": "D:\\TCC\\Fabular-1\\backend\\API-Fabular\\appsettings.json",
+              "DocumentMoniker": "C:\\Users\\User\\Documents\\Fabular\\backend\\API-Fabular\\appsettings.json",
               "RelativeDocumentMoniker": "API-Fabular\\appsettings.json",
-              "ToolTip": "D:\\TCC\\Fabular-1\\backend\\API-Fabular\\appsettings.json",
+              "ToolTip": "C:\\Users\\User\\Documents\\Fabular\\backend\\API-Fabular\\appsettings.json",
               "RelativeToolTip": "API-Fabular\\appsettings.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",

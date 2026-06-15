@@ -254,5 +254,36 @@
       }
     ],
     "ReturnTypes": []
+  },
+  {
+    "ContainingType": "API_Fabular.Controllers.SyncController",
+    "Method": "GetProgress",
+    "RelativePath": "api/v1/sync/progress",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "responsavelId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "criancaId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "API_Fabular.Contracts.ProgressResponseDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
   }
 ]

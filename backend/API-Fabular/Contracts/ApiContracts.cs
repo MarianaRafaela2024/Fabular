@@ -1,5 +1,5 @@
 namespace API_Fabular.Contracts;
-
+/**/
 public record ParentRegisterRequest(string Nome, string? Sobrenome, string Email, string Senha);
 public record ParentLoginRequest(string Email, string Senha);
 public record ParentAuthResponse(int ResponsavelId, string Email, string Nome);
@@ -77,4 +77,15 @@ public record SyncProgressRequest(
     object ProgressoHistorias,
     object ResumoMinigames,
     DateTime UpdatedAt
+);
+
+public record HistoriaProgressoDto(string Id, int Estrelas, string? Data);
+
+public record ProgressResponseDto(
+    int TotalEstrelas,
+    List<HistoriaProgressoDto> HistoriasLidas,
+    int TempoTotal,
+    int MinigamesJogados,
+    int TentativasReprovadas,
+    DateTime? UpdatedAt
 );
