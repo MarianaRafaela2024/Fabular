@@ -297,6 +297,7 @@
   const CHAVE_VINCULOS = 'mundoHistorias_vinculos_crianca';
   const CHAVE_HISTORIAS_CACHE = 'mundoHistorias_historias_ia_cache';
   let syncTimer = null;
+  let calendarioMesAtual = new Date();
 
   // ── Cache local de histórias geradas pela IA ─────────────────
   function salvarHistoriaNoCache(historiaCompleta) {
@@ -1391,6 +1392,126 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
     );
   }
 
+  function obterDataConclusaoAtual() {
+    const agora = new Date();
+    return {
+      data: agora.toLocaleDateString('pt-BR'),
+      dataIso: agora.toISOString().slice(0, 10)
+    };
+  }
+
+  function obterDataIsoHistoria(registro) {
+    if (!registro) return null;
+    if (registro.dataIso && /^\d{4}-\d{2}-\d{2}$/.test(registro.dataIso)) return registro.dataIso;
+    if (!registro.data) return null;
+    const m = String(registro.data).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (!m) return null;
+    return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+  }
+
+  function agruparAtividadePorDia() {
+    const mapa = {};
+    (estado.historiasLidas || []).forEach((r) => {
+      const iso = obterDataIsoHistoria(r);
+      if (!iso || !(Number(r.estrelas) > 0)) return;
+      mapa[iso] = (mapa[iso] || 0) + 1;
+    });
+    if (Array.isArray(estado.atividadeDiaria)) {
+      estado.atividadeDiaria.forEach((a) => {
+        if (!a || !a.data) return;
+        const qtd = Number(a.quantidade) || 0;
+        if (qtd > 0) mapa[a.data] = Math.max(mapa[a.data] || 0, qtd);
+      });
+    }
+    return mapa;
+  }
+
+  function nivelAtividadeDia(qtd) {
+    if (!qtd) return 0;
+    if (qtd === 1) return 1;
+    if (qtd === 2) return 2;
+    if (qtd === 3) return 3;
+    return 4;
+  }
+
+  function renderizarCalendarioAtividade() {
+    const el = document.getElementById('calendario-atividade');
+    if (!el) return;
+
+    const MESES_PT = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+    const DIAS_SEMANA = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+    const atividade = agruparAtividadePorDia();
+    const ano = calendarioMesAtual.getFullYear();
+    const mes = calendarioMesAtual.getMonth();
+    const hojeIso = new Date().toISOString().slice(0, 10);
+    const offset = new Date(ano, mes, 1).getDay();
+    const diasNoMes = new Date(ano, mes + 1, 0).getDate();
+
+    let grade = '';
+    let totalMes = 0;
+    for (let i = 0; i < offset; i++) {
+      grade += '<div class="cal-dia cal-dia-vazio" aria-hidden="true"></div>';
+    }
+    for (let dia = 1; dia <= diasNoMes; dia++) {
+      const iso = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+      const qtd = atividade[iso] || 0;
+      totalMes += qtd;
+      const nivel = nivelAtividadeDia(qtd);
+      const futuro = iso > hojeIso;
+      const hoje = iso === hojeIso;
+      const classes = [
+        'cal-dia',
+        nivel ? `cal-dia-nivel-${nivel}` : '',
+        futuro ? 'cal-dia-futuro' : '',
+        hoje ? 'cal-dia-hoje' : ''
+      ].filter(Boolean).join(' ');
+      const label = qtd
+        ? `${dia} — ${qtd} história${qtd > 1 ? 's' : ''} concluída${qtd > 1 ? 's' : ''}`
+        : `${dia} — sem atividade`;
+      grade += `<div class="${classes}" role="gridcell" aria-label="${label}" title="${label}">${dia}</div>`;
+    }
+
+    const tituloMes = `${MESES_PT[mes]} ${ano}`;
+    el.innerHTML = `
+      <div class="calendario-header">
+        <div class="calendario-titulo">${tituloMes}</div>
+        <div class="calendario-nav">
+          <button type="button" class="calendario-nav-btn" id="cal-prev" aria-label="Mês anterior">‹</button>
+          <button type="button" class="calendario-nav-btn" id="cal-prox" aria-label="Próximo mês">›</button>
+        </div>
+      </div>
+      <div class="calendario-semana" aria-hidden="true">
+        ${DIAS_SEMANA.map((d) => `<span class="calendario-dia-semana">${d}</span>`).join('')}
+      </div>
+      <div class="calendario-grade" role="grid" aria-label="Calendário de histórias concluídas em ${tituloMes}">
+        ${grade}
+      </div>
+      <div class="calendario-legenda">
+        <span>Menos</span>
+        <div class="calendario-legenda-cores">
+          <span class="cal-legenda-amostra" style="background:#F3F4F6"></span>
+          <span class="cal-legenda-amostra cal-dia-nivel-1"></span>
+          <span class="cal-legenda-amostra cal-dia-nivel-2"></span>
+          <span class="cal-legenda-amostra cal-dia-nivel-3"></span>
+          <span class="cal-legenda-amostra cal-dia-nivel-4"></span>
+        </div>
+        <span>Mais</span>
+      </div>
+      <p class="calendario-resumo">${totalMes > 0
+        ? `${totalMes} história${totalMes > 1 ? 's' : ''} concluída${totalMes > 1 ? 's' : ''} neste mês`
+        : 'Nenhuma história concluída neste mês ainda'}</p>
+    `;
+
+    document.getElementById('cal-prev')?.addEventListener('click', () => {
+      calendarioMesAtual = new Date(ano, mes - 1, 1);
+      renderizarCalendarioAtividade();
+    });
+    document.getElementById('cal-prox')?.addEventListener('click', () => {
+      calendarioMesAtual = new Date(ano, mes + 1, 1);
+      renderizarCalendarioAtividade();
+    });
+  }
+
   function mesclarProgressoServidor(servidor) {
     if (!servidor) return;
     const remoto = Array.isArray(servidor.historiasLidas) ? servidor.historiasLidas : [];
@@ -1401,7 +1522,8 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
       mapa.set(String(r.id), {
         id: String(r.id),
         estrelas: Number(r.estrelas) || 0,
-        data: r.data || ''
+        data: r.data || '',
+        dataIso: r.dataIso || obterDataIsoHistoria(r) || ''
       });
     });
 
@@ -1411,17 +1533,24 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
       const atual = mapa.get(id);
       const estrelasRemotas = Math.max(0, Math.min(3, Number(r.estrelas) || 0));
       const estrelasAtuais = Number(atual?.estrelas) || 0;
+      const dataRemota = r.data || atual?.data || new Date().toLocaleDateString('pt-BR');
+      const dataIsoRemota = r.dataIso || atual?.dataIso || obterDataIsoHistoria({ data: dataRemota }) || '';
       if (!atual || estrelasRemotas > estrelasAtuais) {
         mapa.set(id, {
           id,
           estrelas: Math.max(estrelasRemotas, estrelasAtuais),
-          data: r.data || atual?.data || new Date().toLocaleDateString('pt-BR')
+          data: dataRemota,
+          dataIso: dataIsoRemota
         });
       }
     });
 
     estado.historiasLidas = Array.from(mapa.values());
     recalcularTotalEstrelas();
+
+    if (Array.isArray(servidor.atividadeDiaria)) {
+      estado.atividadeDiaria = servidor.atividadeDiaria;
+    }
 
     if (servidor.tempoTotal != null) {
       estado.tempoTotal = Math.max(Number(estado.tempoTotal) || 0, Number(servidor.tempoTotal) || 0);
@@ -1818,12 +1947,15 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
      const id = estado.historiaAtual && estado.historiaAtual.id;
      if (!id) return;
      const novas = Math.max(0, Math.min(3, Number(estrelasNovas) || 0));
+     const { data, dataIso } = obterDataConclusaoAtual();
      const idx = estado.historiasLidas.findIndex(r => r.id === id);
      if (idx >= 0) {
        const antigas = Number(estado.historiasLidas[idx].estrelas) || 0;
        if (novas > antigas) {
          estado.totalEstrelas += novas - antigas;
          estado.historiasLidas[idx].estrelas = novas;
+         estado.historiasLidas[idx].data = data;
+         estado.historiasLidas[idx].dataIso = dataIso;
          salvarEstado();
          atualizarHeader();
          renderizarBiblioteca();
@@ -1832,7 +1964,8 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
        estado.historiasLidas.push({
          id,
          estrelas: novas,
-         data: new Date().toLocaleDateString('pt-BR')
+         data,
+         dataIso
        });
        estado.totalEstrelas += novas;
        salvarEstado();
@@ -2545,7 +2678,9 @@ const verificar = () => {
      const id = estado.historiaAtual.id;
      const idx = estado.historiasLidas.findIndex(r => r.id === id);
      if (idx >= 0) {
-       estado.historiasLidas[idx].data = new Date().toLocaleDateString('pt-BR');
+       const { data, dataIso } = obterDataConclusaoAtual();
+       estado.historiasLidas[idx].data = data;
+       estado.historiasLidas[idx].dataIso = dataIso;
      }
    
      adicionarExperiencia(28, 'historia');
@@ -3793,6 +3928,8 @@ const verificar = () => {
          cont.appendChild(item);
        });
      }
+
+     renderizarCalendarioAtividade();
    
      // Stats
      document.getElementById('prog-historias').textContent = estado.historiasLidas.length;

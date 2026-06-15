@@ -59,6 +59,7 @@ public class ProgressSyncService
         }
 
         await PersistirEstrelasPorHistoriaAsync(conn, request.CriancaId, request.ProgressoHistorias);
+        await PersistirAtividadeDiariaAsync(conn, request.CriancaId, request.ProgressoHistorias);
 
         return ApplicationResult<object>.Ok(new { syncStatus = "ok", lastServerStateVersion = DateTime.UtcNow.Ticks });
     }
@@ -131,13 +132,18 @@ public class ProgressSyncService
                     historiasMap[id] = existente with
                     {
                         Estrelas = estrelas,
-                        Data = sessao.CriadoEm.ToString("dd/MM/yyyy")
+                        Data = sessao.CriadoEm.ToString("dd/MM/yyyy"),
+                        DataIso = sessao.CriadoEm.ToString("yyyy-MM-dd")
                     };
                 }
             }
             else
             {
-                historiasMap[id] = new HistoriaProgressoDto(id, estrelas, sessao.CriadoEm.ToString("dd/MM/yyyy"));
+                historiasMap[id] = new HistoriaProgressoDto(
+                    id,
+                    estrelas,
+                    sessao.CriadoEm.ToString("dd/MM/yyyy"),
+                    sessao.CriadoEm.ToString("yyyy-MM-dd"));
             }
         }
 
@@ -155,12 +161,15 @@ public class ProgressSyncService
             }
         }
 
+        var atividadeDiaria = await CarregarAtividadeDiariaAsync(conn, criancaId, historiasLidas);
+
         return ApplicationResult<ProgressResponseDto>.Ok(new ProgressResponseDto(
             totalEstrelas,
             historiasLidas,
             tempoTotal,
             minigamesJogados,
             tentativasReprovadas,
+            atividadeDiaria,
             updatedAt));
     }
 
@@ -215,6 +224,123 @@ public class ProgressSyncService
         {
             // Payload inválido não impede retorno parcial via Sessao_Leitura.
         }
+    }
+
+    private async Task PersistirAtividadeDiariaAsync(System.Data.Common.DbConnection conn, int criancaId, object progressoHistorias)
+    {
+        var atividade = AgruparAtividadeDiaria(ExtrairHistoriasLidas(progressoHistorias));
+        if (atividade.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var (data, quantidade) in atividade)
+        {
+            await conn.ExecuteAsync(
+                """
+                MERGE Atividade_Diaria AS alvo
+                USING (SELECT @CriancaId AS Id_Crianca, @Data AS Data, @Quantidade AS HistoriasConcluidas) AS origem
+                ON alvo.Id_Crianca = origem.Id_Crianca AND alvo.Data = origem.Data
+                WHEN MATCHED AND origem.HistoriasConcluidas > alvo.HistoriasConcluidas THEN
+                    UPDATE SET HistoriasConcluidas = origem.HistoriasConcluidas
+                WHEN NOT MATCHED THEN
+                    INSERT (Id_Crianca, Data, HistoriasConcluidas)
+                    VALUES (origem.Id_Crianca, origem.Data, origem.HistoriasConcluidas);
+                """,
+                new
+                {
+                    CriancaId = criancaId,
+                    Data = data,
+                    Quantidade = quantidade
+                });
+        }
+    }
+
+    private async Task<List<AtividadeDiariaDto>> CarregarAtividadeDiariaAsync(
+        System.Data.Common.DbConnection conn,
+        int criancaId,
+        List<HistoriaProgressoDto> historiasLidas)
+    {
+        var mapa = new Dictionary<string, int>(StringComparer.Ordinal);
+
+        try
+        {
+            var linhas = await conn.QueryAsync<(DateTime Data, int HistoriasConcluidas)>(
+                """
+                SELECT Data, HistoriasConcluidas
+                FROM Atividade_Diaria
+                WHERE Id_Crianca = @CriancaId
+                ORDER BY Data DESC
+                """,
+                new { CriancaId = criancaId });
+
+            foreach (var linha in linhas)
+            {
+                var chave = linha.Data.ToString("yyyy-MM-dd");
+                mapa[chave] = Math.Max(mapa.GetValueOrDefault(chave), linha.HistoriasConcluidas);
+            }
+        }
+        catch
+        {
+            // Tabela pode não existir em bancos antigos — usa fallback das histórias lidas.
+        }
+
+        foreach (var (data, quantidade) in AgruparAtividadeDiaria(historiasLidas))
+        {
+            mapa[data] = Math.Max(mapa.GetValueOrDefault(data), quantidade);
+        }
+
+        return mapa
+            .OrderByDescending(kv => kv.Key)
+            .Select(kv => new AtividadeDiariaDto(kv.Key, kv.Value))
+            .ToList();
+    }
+
+    private static Dictionary<string, int> AgruparAtividadeDiaria(IEnumerable<HistoriaProgressoDto> historias)
+    {
+        var mapa = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var historia in historias)
+        {
+            if (historia.Estrelas <= 0)
+            {
+                continue;
+            }
+
+            var dataIso = NormalizarDataIso(historia.DataIso, historia.Data);
+            if (dataIso is null)
+            {
+                continue;
+            }
+
+            mapa[dataIso] = mapa.GetValueOrDefault(dataIso) + 1;
+        }
+
+        return mapa;
+    }
+
+    private static string? NormalizarDataIso(string? dataIso, string? data)
+    {
+        if (!string.IsNullOrWhiteSpace(dataIso) &&
+            DateTime.TryParseExact(dataIso, "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.None, out _))
+        {
+            return dataIso;
+        }
+
+        if (string.IsNullOrWhiteSpace(data))
+        {
+            return null;
+        }
+
+        var partes = data.Split('/');
+        if (partes.Length == 3 &&
+            int.TryParse(partes[0], out var dia) &&
+            int.TryParse(partes[1], out var mes) &&
+            int.TryParse(partes[2], out var ano))
+        {
+            return new DateTime(ano, mes, dia).ToString("yyyy-MM-dd");
+        }
+
+        return null;
     }
 
     private async Task PersistirEstrelasPorHistoriaAsync(System.Data.Common.DbConnection conn, int criancaId, object progressoHistorias)
@@ -323,8 +449,10 @@ public class ProgressSyncService
 
                 var data = item.TryGetProperty("data", out var dataEl) ? dataEl.GetString()
                     : item.TryGetProperty("Data", out dataEl) ? dataEl.GetString() : null;
+                var dataIso = item.TryGetProperty("dataIso", out var dataIsoEl) ? dataIsoEl.GetString()
+                    : item.TryGetProperty("DataIso", out dataIsoEl) ? dataIsoEl.GetString() : null;
 
-                resultado.Add(new HistoriaProgressoDto(id, estrelas, data));
+                resultado.Add(new HistoriaProgressoDto(id, estrelas, data, dataIso));
             }
         }
         catch

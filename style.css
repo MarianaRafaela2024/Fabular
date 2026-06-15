@@ -1237,6 +1237,125 @@ body.login-body {
 }
 
 .historias-concluidas { display: flex; flex-direction: column; gap: 10px; }
+.progresso-historias-layout {
+  display: grid;
+  grid-template-columns: 1fr minmax(260px, 340px);
+  gap: 20px;
+  align-items: start;
+}
+.historias-concluidas-wrap {
+  min-width: 0;
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.calendario-atividade {
+  background: var(--bg-card);
+  border: 1.5px solid rgba(229,231,235,.6);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+.calendario-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.calendario-titulo {
+  font-family: 'Baloo 2', cursive;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--texto);
+  text-transform: capitalize;
+}
+.calendario-nav {
+  display: flex;
+  gap: 6px;
+}
+.calendario-nav-btn {
+  width: 30px;
+  height: 30px;
+  border: 1.5px solid rgba(229,231,235,.8);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--texto);
+  font-weight: 800;
+  cursor: pointer;
+  transition: background var(--trans), border-color var(--trans);
+}
+.calendario-nav-btn:hover {
+  background: rgba(78,205,196,.12);
+  border-color: rgba(78,205,196,.45);
+}
+.calendario-semana {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.calendario-dia-semana {
+  text-align: center;
+  font-size: .68rem;
+  font-weight: 800;
+  color: var(--texto-sub);
+  text-transform: uppercase;
+}
+.calendario-grade {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.cal-dia {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .72rem;
+  font-weight: 800;
+  color: var(--texto-sub);
+  background: #F3F4F6;
+  border: 1px solid transparent;
+  transition: transform var(--trans);
+}
+.cal-dia-vazio { background: transparent; border: none; }
+.cal-dia-futuro { opacity: .35; }
+.cal-dia-hoje {
+  border-color: var(--cor-primaria);
+  box-shadow: 0 0 0 2px rgba(124,58,237,.15);
+}
+.cal-dia-nivel-1 { background: #D1FAE5; color: #065F46; }
+.cal-dia-nivel-2 { background: #6EE7B7; color: #064E3B; }
+.cal-dia-nivel-3 { background: #34D399; color: #022C22; }
+.cal-dia-nivel-4 { background: #059669; color: #ECFDF5; }
+.calendario-legenda {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: .68rem;
+  font-weight: 700;
+  color: var(--texto-sub);
+}
+.calendario-legenda-cores {
+  display: flex;
+  gap: 4px;
+}
+.cal-legenda-amostra {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+}
+.calendario-resumo {
+  margin-top: 10px;
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--texto-sub);
+  text-align: center;
+}
 .historia-concluida-item {
   background: var(--bg-card); border-radius: var(--radius-sm);
   padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;
@@ -2369,6 +2488,12 @@ body.alto-contraste .historia-concluida-item {
   .progresso-secoes {
     padding-left: 14px;
     padding-right: 14px;
+  }
+  .progresso-historias-layout {
+    grid-template-columns: 1fr;
+  }
+  .historias-concluidas-wrap {
+    max-height: none;
   }
   .historias-grid {
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));

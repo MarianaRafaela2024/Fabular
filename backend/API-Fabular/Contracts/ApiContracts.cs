@@ -79,7 +79,9 @@ public record SyncProgressRequest(
     DateTime UpdatedAt
 );
 
-public record HistoriaProgressoDto(string Id, int Estrelas, string? Data);
+public record HistoriaProgressoDto(string Id, int Estrelas, string? Data, string? DataIso = null);
+
+public record AtividadeDiariaDto(string Data, int Quantidade);
 
 public record ProgressResponseDto(
     int TotalEstrelas,
@@ -87,5 +89,6 @@ public record ProgressResponseDto(
     int TempoTotal,
     int MinigamesJogados,
     int TentativasReprovadas,
+    List<AtividadeDiariaDto> AtividadeDiaria,
     DateTime? UpdatedAt
 );

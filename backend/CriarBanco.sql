@@ -122,10 +122,20 @@ CREATE TABLE Sincronizacao_Progresso (
     CONSTRAINT FK_SP_Crianca FOREIGN KEY (Id_Crianca) REFERENCES Crianca(Id)
 );
 
+CREATE TABLE Atividade_Diaria (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    Id_Crianca INT NOT NULL,
+    Data DATE NOT NULL,
+    HistoriasConcluidas INT NOT NULL DEFAULT 0,
+    CONSTRAINT FK_AD_Crianca FOREIGN KEY (Id_Crianca) REFERENCES Crianca(Id) ON DELETE CASCADE,
+    CONSTRAINT UQ_AD_CriancaData UNIQUE (Id_Crianca, Data)
+);
+
 CREATE INDEX IX_Responsavel_Email ON Responsavel(Email);
 CREATE INDEX IX_Crianca_LocalKey ON Crianca(LocalChildKey);
 CREATE INDEX IX_Historia_FaixaGenero ON Historia(FaixaEtaria, Genero);
 CREATE INDEX IX_SL_Crianca ON Sessao_Leitura(Id_Crianca, CriadoEm DESC);
 CREATE INDEX IX_SP_ResponsavelCrianca ON Sincronizacao_Progresso(Id_Responsavel, Id_Crianca, UpdatedAt DESC);
+CREATE INDEX IX_AD_CriancaData ON Atividade_Diaria(Id_Crianca, Data DESC);
 
 INSERT INTO Genero (Nome) VALUES ('Narrativo'), ('Poetico'), ('Instrucional'), ('Descritivo'), ('Informativo');

@@ -519,6 +519,20 @@
   },
   "components": {
     "schemas": {
+      "AtividadeDiariaDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "string",
+            "nullable": true
+          },
+          "quantidade": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
       "ContactMessageRequest": {
         "type": "object",
         "properties": {
@@ -553,6 +567,10 @@
             "format": "int32"
           },
           "data": {
+            "type": "string",
+            "nullable": true
+          },
+          "dataIso": {
             "type": "string",
             "nullable": true
           }
@@ -731,6 +749,13 @@
           "tentativasReprovadas": {
             "type": "integer",
             "format": "int32"
+          },
+          "atividadeDiaria": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AtividadeDiariaDto"
+            },
+            "nullable": true
           },
           "updatedAt": {
             "type": "string",
