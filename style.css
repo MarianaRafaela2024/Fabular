@@ -63,6 +63,64 @@ body.alto-contraste {
   --glass-border: rgba(255,255,0,0.3);
 }
 
+/*Variváveis de icon*/
+
+.icon{
+  width:32px;
+  height:32px;
+  display:inline-block;
+  background-size:contain;
+  background-repeat:no-repeat;
+  background-position:center;
+  transition:all .25s ease;
+}
+
+.nav-item.ativo .icon{
+  animation:pop .3s ease;
+  transform:scale(1.2);
+}
+@keyframes pop{
+  0%{
+      transform:scale(1);
+  }
+  50%{
+      transform:scale(1.35);
+  }
+  100%{
+      transform:scale(1.2);
+  }
+}
+
+.home{
+  background-image:url("midia/home.png");
+}
+.icon-book{
+  background-image:url("midia/open-book.png");
+}
+.award{
+  background-image:url("midia/award.png");
+}
+.bot{
+  background-image: url("midia/bot.png");
+}
+
+.nav-item.ativo .home{
+  background-image:url("midia/home-active.png");
+}
+
+.nav-item.ativo .icon-book{
+  background-image:url("midia/book-active.png");
+}
+
+.nav-item.ativo .award{
+  background-image:url("midia/award-active.png");
+}
+
+.nav-item.ativo .bot{
+  background-image:url("midia/bot-active.png");
+}
+
+
 html { font-size: 16px; scroll-behavior: smooth; }
 body {
   font-family: 'Nunito', sans-serif;
@@ -521,6 +579,7 @@ body.login-body {
   background: linear-gradient(135deg, rgba(255,107,53,.12), rgba(255,142,83,.06));
   color: var(--cor-primaria);
   box-shadow: inset 3px 0 0 var(--cor-primaria);
+  
 }
 .nav-item .nav-icon {
   font-size: 1.3rem; flex-shrink: 0;
