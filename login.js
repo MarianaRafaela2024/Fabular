@@ -172,8 +172,8 @@
     const estadoFinal = Object.assign({}, estadoExistente, { perfil });
     localStorage.setItem(CHAVE_ESTADO, JSON.stringify(estadoFinal));
 
-    // Animação de saída do card de login, depois abre o portão
-    document.querySelector('.login-card').style.animation = 'slideUp .28s ease reverse forwards';
+    // Animação de saída do card de cadastro, depois abre o portão
+    document.getElementById('crianca-card').style.animation = 'slideUp .28s ease reverse forwards';
     setTimeout(() => abrirPortao(), 250);
   }
 
@@ -258,10 +258,9 @@
     gerarConta();
   });
 
-  // Botão voltar (trocar perfil)
+  // Botão voltar (trocar perfil / cancelar cadastro)
   document.getElementById('pg-btn-voltar').addEventListener('click', () => {
     document.getElementById('portao-overlay').classList.remove('visivel');
-    // Limpa perfil do localStorage
     try {
       const raw = localStorage.getItem(CHAVE_ESTADO);
       if (raw) {
@@ -271,10 +270,10 @@
         localStorage.setItem(CHAVE_ESTADO, JSON.stringify(d));
       }
     } catch (_) {}
-    // Restaura card de login
-    document.querySelector('.login-card').style.animation = '';
+    document.getElementById('crianca-card').style.animation = '';
     document.getElementById('input-nome').value = '';
     document.getElementById('input-nome').focus();
+    mostrarCard('#crianca-card');
   });
 
   function confirmarPortao() {
@@ -306,7 +305,7 @@
         requestAnimationFrame(() => {
           document.getElementById('pg-barra').style.width = '100%';
         });
-        setTimeout(() => { posPortaoFlow(); }, 450);
+        setTimeout(() => { finalizarCadastroCrianca(); }, 450);
       }, 600);
 
     } else {
@@ -408,7 +407,7 @@
   ───────────────────────────────────────── */
 
   function mostrarCard(id) {
-    ['.login-card', '#responsavel-card', '#perfis-card'].forEach(sel => {
+    ['#crianca-card', '#responsavel-card', '#perfis-card'].forEach(sel => {
       const el = document.querySelector(sel);
       if (!el) return;
       if (sel === id) el.classList.remove('oculto');
@@ -428,8 +427,7 @@
     salvarJSON(CHAVE_CONTAS, contas);
   }
 
-  function posPortaoFlow() {
-    // Fecha o overlay do portão para liberar telas seguintes
+  async function finalizarCadastroCrianca() {
     const overlay = document.getElementById('portao-overlay');
     if (overlay) overlay.classList.remove('visivel');
     document.getElementById('pg-barra').style.width = '0%';
@@ -441,29 +439,77 @@
       mostrarCard('#responsavel-card');
       return;
     }
-    abrirSelecaoPerfis(sessao.email);
+
+    const contas = getContas();
+    const resp = contas.responsaveis.find(r => r.email === sessao.email);
+    if (!resp) {
+      localStorage.removeItem(CHAVE_SESSAO);
+      configurarCardResponsavel();
+      mostrarCard('#responsavel-card');
+      return;
+    }
+
+    const nomeNovo = perfil.nome.trim().toLowerCase();
+    const avatarNovo = perfil.avatar;
+    const duplicado = (resp.perfis || []).some((p) =>
+      String(p.nome || '').trim().toLowerCase() === nomeNovo &&
+      String(p.avatar || '') === avatarNovo
+    );
+    if (!duplicado) {
+      const novo = Object.assign({}, perfil);
+      resp.perfis = resp.perfis || [];
+      resp.perfis.push(novo);
+      salvarContas(contas);
+    }
+
+    try {
+      await sincronizarCriancasPendentes(sessao);
+    } catch (_) {}
+
+    const estado = carregarJSON(CHAVE_ESTADO, {});
+    estado.perfil = Object.assign({}, perfil);
+    estado.portaoAprovado = true;
+    salvarJSON(CHAVE_ESTADO, estado);
+
+    window.location.href = 'index.html';
   }
 
   function configurarCardResponsavel() {
-    const modoBtns = document.querySelectorAll('#resp-modo .chip');
     const authBox = document.getElementById('resp-auth-box');
     const recuperarBox = document.getElementById('resp-recuperar-box');
-    const subtitulo = document.getElementById('resp-subtitulo');
     const btnEsqueciSenha = document.getElementById('btn-esqueci-senha');
     const btnEnviarCodigo = document.getElementById('btn-enviar-codigo');
     const btnResetarSenha = document.getElementById('btn-resetar-senha');
     const btnCancelarReset = document.getElementById('btn-cancelar-reset');
     const erro = document.getElementById('resp-erro');
+    const camposCadastro = document.getElementById('resp-campos-cadastro');
+    const campoConfirmarSenha = document.getElementById('resp-campo-confirmar-senha');
+    const linkAlternar = document.getElementById('resp-link-alterar');
+    const linkEsqueci = document.getElementById('resp-link-esqueci');
+    const titulo = document.getElementById('resp-titulo');
+
+    function atualizarCamposPorModo() {
+      const isCadastro = responsavelModo === 'cadastro';
+      camposCadastro.classList.toggle('oculto', !isCadastro);
+      campoConfirmarSenha.classList.toggle('oculto', !isCadastro);
+      if (linkEsqueci) linkEsqueci.classList.toggle('oculto', isCadastro);
+      if (titulo) titulo.textContent = isCadastro ? '📝 Criar conta' : '👤 Entrar';
+      if (linkAlternar) {
+        if (isCadastro) {
+          linkAlternar.innerHTML = 'Já tem uma conta? <button class="link-inline" id="btn-ir-login" type="button">Entrar</button>';
+          document.getElementById('btn-ir-login').onclick = () => { responsavelModo = 'login'; atualizarCamposPorModo(); setErro(''); };
+        } else {
+          linkAlternar.innerHTML = 'Não tem uma conta? <button class="link-inline" id="btn-ir-cadastro" type="button">Criar conta</button>';
+          document.getElementById('btn-ir-cadastro').onclick = () => { responsavelModo = 'cadastro'; atualizarCamposPorModo(); setErro(''); };
+        }
+      }
+    }
+    atualizarCamposPorModo();
 
     function alternarRecuperacao(visivel) {
       if (!recuperarBox || !authBox) return;
       authBox.classList.toggle('oculto', visivel);
       recuperarBox.classList.toggle('oculto', !visivel);
-      if (subtitulo) {
-        subtitulo.textContent = visivel
-          ? 'Redefina sua senha para voltar ao login.'
-          : 'Faça login/cadastro para continuar.';
-      }
     }
 
     function setErro(msg) {
@@ -521,27 +567,13 @@
         document.getElementById('resp-nova-senha').value = '';
         document.getElementById('resp-senha').value = '';
         responsavelModo = 'login';
-        modoBtns.forEach(b => {
-          const ativo = b.dataset.modo === 'login';
-          b.classList.toggle('ativo', ativo);
-          b.setAttribute('aria-pressed', ativo ? 'true' : 'false');
-        });
         alternarRecuperacao(false);
+        atualizarCamposPorModo();
         setErro('Senha redefinida com sucesso. Agora faça login.');
       } catch (e) {
         setErro(e.message || 'Não foi possível redefinir a senha.');
       }
     };
-
-    modoBtns.forEach(btn => {
-      btn.onclick = () => {
-        modoBtns.forEach(b => { b.classList.remove('ativo'); b.setAttribute('aria-pressed', 'false'); });
-        btn.classList.add('ativo');
-        btn.setAttribute('aria-pressed', 'true');
-        responsavelModo = btn.dataset.modo;
-        alternarRecuperacao(false);
-      };
-    });
     document.getElementById('btn-resp-continuar').onclick = async () => {
       const nome = document.getElementById('resp-nome').value.trim();
       const sobrenome = document.getElementById('resp-sobrenome').value.trim();
@@ -551,6 +583,13 @@
       if (!email || !senha || (responsavelModo === 'cadastro' && !nome)) {
         setErro('Preencha os campos obrigatórios.');
         return;
+      }
+      if (responsavelModo === 'cadastro') {
+        const confirmar = document.getElementById('resp-confirmar-senha').value.trim();
+        if (senha !== confirmar) {
+          setErro('As senhas não coincidem.');
+          return;
+        }
       }
       const existente = contas.responsaveis.find(r => r.email === email);
       try {
@@ -612,23 +651,32 @@
       lista.appendChild(btn);
     });
     document.getElementById('btn-add-crianca').onclick = () => {
-      if (!perfil.nome) return;
-      const nomeNovo = perfil.nome.trim().toLowerCase();
-      const avatarNovo = perfil.avatar;
-      const duplicado = (resp.perfis || []).some((p) =>
-        String(p.nome || '').trim().toLowerCase() === nomeNovo &&
-        String(p.avatar || '') === avatarNovo
-      );
-      if (duplicado) {
-        erroPerfis.textContent = 'Já existe um perfil com o mesmo nome e avatar nesta conta.';
-        erroPerfis.classList.remove('oculto');
-        return;
-      }
-      const novo = Object.assign({}, perfil);
-      resp.perfis = resp.perfis || [];
-      resp.perfis.push(novo);
-      salvarContas(contas);
-      abrirSelecaoPerfis(email);
+      erroPerfis.classList.add('oculto');
+      erroPerfis.textContent = '';
+      perfil.nome = '';
+      perfil.avatar = 'midia/lion.png';
+      perfil.faixa = 1;
+      perfil.genero = 'narrativo';
+      document.getElementById('input-nome').value = '';
+      document.getElementById('erro-nome').classList.add('oculto');
+      document.querySelectorAll('#avatar-grid .avatar-btn').forEach(b => {
+        const ativo = b.dataset.av === 'midia/lion.png';
+        b.classList.toggle('ativo', ativo);
+        b.setAttribute('aria-pressed', ativo ? 'true' : 'false');
+      });
+      document.querySelectorAll('#faixa-grupo .chip').forEach(b => {
+        const ativo = b.dataset.faixa === '1';
+        b.classList.toggle('ativo', ativo);
+        b.setAttribute('aria-pressed', ativo ? 'true' : 'false');
+      });
+      document.querySelectorAll('#genero-grupo .chip').forEach(b => {
+        const ativo = b.dataset.genero === 'narrativo';
+        b.classList.toggle('ativo', ativo);
+        b.setAttribute('aria-pressed', ativo ? 'true' : 'false');
+      });
+      document.getElementById('crianca-card').style.animation = '';
+      mostrarCard('#crianca-card');
+      document.getElementById('input-nome').focus();
     };
     document.getElementById('btn-logout-resp').onclick = () => {
       const ok = confirm('Deseja realmente sair da conta do responsável?');
@@ -636,8 +684,10 @@
       localStorage.removeItem(CHAVE_SESSAO);
       const d = carregarJSON(CHAVE_ESTADO, {});
       delete d.portaoAprovado;
+      delete d.perfil;
       salvarJSON(CHAVE_ESTADO, d);
-      window.location.reload();
+      configurarCardResponsavel();
+      mostrarCard('#responsavel-card');
     };
   }
 
@@ -653,26 +703,22 @@
 
 
   /* ─────────────────────────────────────────
-     PARTE 4 — AUTO-REDIRECT / RETORNO
-     Se já tem perfil salvo, abre portão direto
+     PARTE 4 — INICIALIZAÇÃO
+     Responsável primeiro; perfis se já logado
   ───────────────────────────────────────── */
-  try {
-    const raw = localStorage.getItem(CHAVE_ESTADO);
-    if (raw) {
-      const dados = JSON.parse(raw);
-      if (dados.perfil && dados.perfil.nome) {
-        Object.assign(perfil, dados.perfil);
-        // Se portão já aprovado, segue fluxo de responsável/perfis
-        if (dados.portaoAprovado) {
-          const sessao = getSessaoResponsavel();
-          if (sessao && sessao.email) abrirSelecaoPerfis(sessao.email);
-          else configurarCardResponsavel(), mostrarCard('#responsavel-card');
-        } else {
-          // Abre portão automaticamente
-          abrirPortao();
-        }
-      }
-    }
-  } catch (_) {}
+  configurarCardResponsavel();
+
+  document.getElementById('btn-voltar-perfis').addEventListener('click', () => {
+    const sessao = getSessaoResponsavel();
+    if (sessao && sessao.email) abrirSelecaoPerfis(sessao.email);
+    else mostrarCard('#responsavel-card');
+  });
+
+  const sessaoInicial = getSessaoResponsavel();
+  if (sessaoInicial && sessaoInicial.email) {
+    abrirSelecaoPerfis(sessaoInicial.email);
+  } else {
+    mostrarCard('#responsavel-card');
+  }
 
 })();

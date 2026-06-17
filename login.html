@@ -137,7 +137,7 @@
         <p class="login-subtitulo">Aventuras de leitura feitas pra você!</p>
       </div>
 
-      <div class="login-card" role="main">
+      <div class="login-card oculto" id="crianca-card" role="main">
         <h2 class="login-card-titulo">👋 Quem é você?</h2>
 
         <!-- Nome -->
@@ -196,23 +196,21 @@
         <button class="btn-principal btn-entrar" id="btn-iniciar" aria-label="Iniciar aventura">
           🚀 Iniciar Aventura!
         </button>
+        <button class="btn-secundario" id="btn-voltar-perfis" type="button">← Voltar para seleção de perfil</button>
       </div>
 
-      <div class="login-card oculto" id="responsavel-card" role="region" aria-label="Login do responsável">
-        <h2 class="login-card-titulo">👤 Área do Responsável</h2>
-        <p class="tela-sub" id="resp-subtitulo">Faça login/cadastro para continuar.</p>
+      <div class="login-card" id="responsavel-card" role="region" aria-label="Login do responsável">
+        <h2 class="login-card-titulo" id="resp-titulo">👤 Entrar</h2>
         <div id="resp-auth-box">
-          <div class="chip-grupo" id="resp-modo">
-            <button class="chip ativo" data-modo="login" aria-pressed="true">Entrar</button>
-            <button class="chip" data-modo="cadastro" aria-pressed="false">Cadastrar</button>
-          </div>
-          <div class="campo-grupo">
-            <label class="campo-label" for="resp-nome">Nome</label>
-            <input type="text" id="resp-nome" class="campo-input" placeholder="Nome do responsável" />
-          </div>
-          <div class="campo-grupo">
-            <label class="campo-label" for="resp-sobrenome">Sobrenome</label>
-            <input type="text" id="resp-sobrenome" class="campo-input" placeholder="Sobrenome" />
+          <div id="resp-campos-cadastro" class="oculto">
+            <div class="campo-grupo">
+              <label class="campo-label" for="resp-nome">Nome</label>
+              <input type="text" id="resp-nome" class="campo-input" placeholder="Nome do responsável" />
+            </div>
+            <div class="campo-grupo">
+              <label class="campo-label" for="resp-sobrenome">Sobrenome</label>
+              <input type="text" id="resp-sobrenome" class="campo-input" placeholder="Sobrenome" />
+            </div>
           </div>
           <div class="campo-grupo">
             <label class="campo-label" for="resp-email">E-mail</label>
@@ -222,8 +220,13 @@
             <label class="campo-label" for="resp-senha">Senha</label>
             <input type="password" id="resp-senha" class="campo-input" placeholder="••••••••" />
           </div>
-          <button class="btn-secundario" id="btn-esqueci-senha" type="button">Esqueci minha senha</button>
+          <div id="resp-campo-confirmar-senha" class="campo-grupo oculto">
+            <label class="campo-label" for="resp-confirmar-senha">Confirmar senha</label>
+            <input type="password" id="resp-confirmar-senha" class="campo-input" placeholder="••••••••" />
+          </div>
           <button class="btn-principal" id="btn-resp-continuar">Continuar</button>
+          <p class="resp-link-texto" id="resp-link-esqueci"><button class="link-inline" id="btn-esqueci-senha" type="button">Esqueci minha senha</button></p>
+          <p class="resp-link-texto" id="resp-link-alterar"></p>
         </div>
         <div id="resp-recuperar-box" class="oculto">
           <div class="campo-grupo">
@@ -240,7 +243,7 @@
           </div>
           <button class="btn-secundario" id="btn-enviar-codigo" type="button">Enviar código por e-mail</button>
           <button class="btn-principal" id="btn-resetar-senha" type="button">Redefinir senha</button>
-          <button class="btn-secundario" id="btn-cancelar-reset" type="button">Voltar para login</button>
+          <button class="link-inline" id="btn-cancelar-reset" type="button">Voltar para login</button>
         </div>
         <span class="campo-erro oculto" id="resp-erro" role="alert"></span>
       </div>
@@ -249,13 +252,33 @@
         <h2 class="login-card-titulo">👨‍👩‍👧 Seleção de Perfil</h2>
         <p class="tela-sub">Escolha uma criança para entrar no sistema.</p>
         <div id="perfis-lista" class="avatar-grid"></div>
-        <button class="btn-secundario" id="btn-add-crianca">+ Adicionar criança atual</button>
+        <button class="btn-secundario" id="btn-add-crianca">+ Adicionar criança</button>
         <button class="btn-principal" id="btn-logout-resp">Sair da conta do responsável</button>
       </div>
 
     </div>
   </div>
 
+  <style>
+    .link-inline {
+      background: none;
+      border: none;
+      padding: 0;
+      font: inherit;
+      font-size: .85rem;
+      color: var(--laranja, #f97316);
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .link-inline:hover { opacity: .75; }
+    .resp-link-texto {
+      margin: .5rem 0 0;
+      text-align: center;
+      font-size: .82rem;
+      color: #888;
+    }
+  </style>
   <script src="login.js"></script>
 </body>
 </html>
