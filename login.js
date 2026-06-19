@@ -1,5 +1,5 @@
 /* =============================================
-   login.js — Login da criança + Portão Parental
+   login.js — Login da criança + responsável/perfis
    ============================================= */
 'use strict';
 
@@ -158,252 +158,24 @@
     erroEl.classList.add('oculto');
     perfil.nome = nome;
 
-    // Salva perfil temporário (sem portaoAprovado ainda)
     let estadoExistente = {};
     try {
       const raw = localStorage.getItem(CHAVE_ESTADO);
       if (raw) estadoExistente = JSON.parse(raw);
     } catch (_) {}
 
-    // Remove aprovação anterior ao trocar de perfil
-    delete estadoExistente.portaoAprovado;
     const pendente = registrarCriancaPendente(perfil);
     perfil.localChildKey = pendente.localChildKey;
     const estadoFinal = Object.assign({}, estadoExistente, { perfil });
     localStorage.setItem(CHAVE_ESTADO, JSON.stringify(estadoFinal));
 
-    // Animação de saída do card de cadastro, depois abre o portão
     document.getElementById('crianca-card').style.animation = 'slideUp .28s ease reverse forwards';
-    setTimeout(() => abrirPortao(), 250);
+    setTimeout(() => finalizarCadastroCrianca(), 250);
   }
 
 
   /* ─────────────────────────────────────────
-     PARTE 2 — PORTÃO PARENTAL
-  ───────────────────────────────────────── */
-
-  const MAX_TENTATIVAS = 3;
-  const BLOQUEIO_SEG   = 30;
-  let contaAtual  = null;
-  let tentativas  = 0;
-
-  // Operações adultas — adição, subtração, multiplicação e divisão
-  const OPERACOES = [
-    () => { const a = rnd(1, 30), b = rnd(1, 30); return { eq: `${a} + ${b} = ?`, res: a + b }; },
-    () => { const a = rnd(5, 30), b = rnd(1, a); return { eq: `${a} − ${b} = ?`, res: a - b }; },
-    () => { const a = rnd(4,12),  b = rnd(3,9);  return { eq: `${a} × ${b} = ?`,   res: a * b }; },
-    () => { const a = rnd(6,15),  b = rnd(4,12); return { eq: `${a} × ${b} = ?`,   res: a * b }; },
-    () => { const a = rnd(8,12),  b = rnd(2,10); return { eq: `${a} × ${b} = ?`,   res: a * b }; },
-    () => { const b = rnd(2,10),  r = rnd(3,12); return { eq: `${b*r} ÷ ${b} = ?`, res: r     }; },
-    () => { const b = rnd(3,10),  r = rnd(2,12); return { eq: `${b*r} ÷ ${b} = ?`, res: r     }; },
-  ];
-  function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-
-  function gerarConta() {
-    const op = OPERACOES[Math.floor(Math.random() * OPERACOES.length)];
-    contaAtual = op();
-    document.getElementById('pg-equacao').textContent = contaAtual.eq;
-    document.getElementById('pg-input').value = '';
-    esconderFeedback();
-    document.getElementById('pg-input').focus();
-  }
-
-  function abrirPortao() {
-    // Preenche badge com dados da criança
-    document.getElementById('pg-avatar').innerHTML =`<img src="${perfil.avatar}" alt="Avatar">`;
-    document.getElementById('pg-nome-crianca').textContent = perfil.nome;
-
-    // Verifica bloqueio ativo
-    if (verificarBloqueioAtivo()) {
-      mostrarEstado('bloqueio');
-    } else {
-      tentativas = 0;
-      atualizarDots();
-      gerarConta();
-      mostrarEstado('form');
-    }
-
-    // Exibe overlay
-    const overlay = document.getElementById('portao-overlay');
-    overlay.classList.add('visivel');
-    setTimeout(() => document.getElementById('pg-input').focus(), 400);
-  }
-
-  // Teclado virtual
-  document.querySelectorAll('.pg-tecla').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const input = document.getElementById('pg-input');
-      const v = btn.dataset.val;
-      if (v === 'del') {
-        input.value = input.value.slice(0, -1);
-      } else {
-        if (input.value.length < 4) input.value += v;
-      }
-    });
-  });
-
-  // Enter no input
-  document.getElementById('pg-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') confirmarPortao();
-  });
-
-  // Botão confirmar
-  document.getElementById('pg-btn-confirmar').addEventListener('click', confirmarPortao);
-
-  // Botão nova conta
-  document.getElementById('pg-btn-nova').addEventListener('click', () => {
-    tentativas = 0;
-    atualizarDots();
-    esconderFeedback();
-    gerarConta();
-  });
-
-  // Botão voltar (trocar perfil / cancelar cadastro)
-  document.getElementById('pg-btn-voltar').addEventListener('click', () => {
-    document.getElementById('portao-overlay').classList.remove('visivel');
-    try {
-      const raw = localStorage.getItem(CHAVE_ESTADO);
-      if (raw) {
-        const d = JSON.parse(raw);
-        delete d.perfil;
-        delete d.portaoAprovado;
-        localStorage.setItem(CHAVE_ESTADO, JSON.stringify(d));
-      }
-    } catch (_) {}
-    document.getElementById('crianca-card').style.animation = '';
-    document.getElementById('input-nome').value = '';
-    document.getElementById('input-nome').focus();
-    mostrarCard('#crianca-card');
-  });
-
-  function confirmarPortao() {
-    const input = document.getElementById('pg-input');
-    const resp  = parseInt(input.value.trim(), 10);
-
-    if (isNaN(resp) || input.value.trim() === '') {
-      mostrarFeedback('erro', '✏️', 'Digite um número antes de confirmar!');
-      input.classList.add('pg-erro');
-      setTimeout(() => input.classList.remove('pg-erro'), 700);
-      return;
-    }
-
-    if (resp === contaAtual.res) {
-      // ✅ Correto — marca aprovação e redireciona
-      input.classList.add('pg-acerto');
-      mostrarFeedback('ok', '✅', `Correto! Bem-vindo, ${perfil.nome}!`);
-
-      // Salva flag de portão aprovado
-      try {
-        const raw  = localStorage.getItem(CHAVE_ESTADO);
-        const dado = raw ? JSON.parse(raw) : {};
-        dado.portaoAprovado = true;
-        localStorage.setItem(CHAVE_ESTADO, JSON.stringify(dado));
-      } catch (_) {}
-
-      setTimeout(() => {
-        mostrarEstado('sucesso');
-        requestAnimationFrame(() => {
-          document.getElementById('pg-barra').style.width = '100%';
-        });
-        setTimeout(() => { finalizarCadastroCrianca(); }, 450);
-      }, 600);
-
-    } else {
-      // ❌ Errado
-      tentativas++;
-      try {
-        const s = carregarJSON(CHAVE_ESTADO, {});
-        s.tentativasReprovadas = (s.tentativasReprovadas || 0) + 1;
-        salvarJSON(CHAVE_ESTADO, s);
-      } catch (_) {}
-      input.classList.add('pg-erro');
-      setTimeout(() => { input.classList.remove('pg-erro'); input.value = ''; }, 700);
-      atualizarDots();
-
-      if (tentativas >= MAX_TENTATIVAS) {
-        const ate = Date.now() + BLOQUEIO_SEG * 1000;
-        try { localStorage.setItem('portao_bloqueio', JSON.stringify({ ate })); } catch (_) {}
-        mostrarEstado('bloqueio');
-        iniciarCountdown(BLOQUEIO_SEG);
-      } else {
-        const restam = MAX_TENTATIVAS - tentativas;
-        mostrarFeedback('erro', '❌', `Resposta errada! Ainda ${restam} tentativa${restam > 1 ? 's' : ''}.`);
-        gerarConta();
-        input.focus();
-      }
-    }
-  }
-
-  // ── Dots de tentativas ──
-  function atualizarDots() {
-    for (let i = 1; i <= MAX_TENTATIVAS; i++) {
-      document.getElementById(`pg-dot-${i}`)
-        ?.classList.toggle('usada', i <= tentativas);
-    }
-  }
-
-  // ── Controla qual estado mostra no card ──
-  function mostrarEstado(estado) {
-    document.getElementById('pg-form').style.display = estado === 'form' ? '' : 'none';
-    document.getElementById('pg-sucesso').classList.toggle('visivel', estado === 'sucesso');
-    document.getElementById('pg-bloqueio').classList.toggle('visivel', estado === 'bloqueio');
-  }
-
-  // ── Feedback inline ──
-  function mostrarFeedback(tipo, icon, msg) {
-    const el  = document.getElementById('pg-feedback');
-    const cls = tipo === 'ok' ? 'pg-fb-ok' : 'pg-fb-erro';
-    el.className = `pg-feedback visivel ${cls}`;
-    document.getElementById('pg-fb-icon').textContent  = icon;
-    document.getElementById('pg-fb-texto').textContent = msg;
-  }
-  function esconderFeedback() {
-    document.getElementById('pg-feedback').className = 'pg-feedback';
-  }
-
-  // ── Verifica bloqueio no localStorage ──
-  function verificarBloqueioAtivo() {
-    try {
-      const raw = localStorage.getItem('portao_bloqueio');
-      if (!raw) return false;
-      const { ate } = JSON.parse(raw);
-      if (Date.now() < ate) {
-        iniciarCountdown(Math.ceil((ate - Date.now()) / 1000));
-        return true;
-      }
-      localStorage.removeItem('portao_bloqueio');
-    } catch (_) {}
-    return false;
-  }
-
-  // ── Countdown do bloqueio ──
-  function iniciarCountdown(segundos) {
-    const timerEl = document.getElementById('pg-timer');
-    let restam = segundos;
-
-    function tick() {
-      const m = String(Math.floor(restam / 60)).padStart(2, '0');
-      const s = String(restam % 60).padStart(2, '0');
-      timerEl.textContent = `${m}:${s}`;
-    }
-    tick();
-
-    const iv = setInterval(() => {
-      restam--;
-      tick();
-      if (restam <= 0) {
-        clearInterval(iv);
-        localStorage.removeItem('portao_bloqueio');
-        tentativas = 0;
-        atualizarDots();
-        gerarConta();
-        mostrarEstado('form');
-      }
-    }, 1000);
-  }
-
-  /* ─────────────────────────────────────────
-     PARTE 3 — RESPONSÁVEL + PERFIS
+     PARTE 2 — RESPONSÁVEL + PERFIS
   ───────────────────────────────────────── */
 
   function mostrarCard(id) {
@@ -428,11 +200,6 @@
   }
 
   async function finalizarCadastroCrianca() {
-    const overlay = document.getElementById('portao-overlay');
-    if (overlay) overlay.classList.remove('visivel');
-    document.getElementById('pg-barra').style.width = '0%';
-    mostrarEstado('form');
-
     const sessao = getSessaoResponsavel();
     if (!sessao || !sessao.email) {
       configurarCardResponsavel();
@@ -468,7 +235,6 @@
 
     const estado = carregarJSON(CHAVE_ESTADO, {});
     estado.perfil = Object.assign({}, perfil);
-    estado.portaoAprovado = true;
     salvarJSON(CHAVE_ESTADO, estado);
 
     window.location.href = 'index.html';
@@ -683,7 +449,6 @@
       if (!ok) return;
       localStorage.removeItem(CHAVE_SESSAO);
       const d = carregarJSON(CHAVE_ESTADO, {});
-      delete d.portaoAprovado;
       delete d.perfil;
       salvarJSON(CHAVE_ESTADO, d);
       configurarCardResponsavel();
@@ -696,14 +461,13 @@
     if (!p) return;
     const estado = carregarJSON(CHAVE_ESTADO, {});
     estado.perfil = p;
-    estado.portaoAprovado = true;
     salvarJSON(CHAVE_ESTADO, estado);
     window.location.href = 'index.html';
   }
 
 
   /* ─────────────────────────────────────────
-     PARTE 4 — INICIALIZAÇÃO
+     PARTE 3 — INICIALIZAÇÃO
      Responsável primeiro; perfis se já logado
   ───────────────────────────────────────── */
   configurarCardResponsavel();

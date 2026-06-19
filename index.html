@@ -16,8 +16,8 @@
     
         var sessaoRaw = localStorage.getItem('mundoHistorias_responsavel_sessao');
         var sessao = sessaoRaw ? JSON.parse(sessaoRaw) : null;
-        // Sem responsável logado, sem perfil ou sem portão aprovado → volta pro login
-        if (!sessao || !dados.perfil || !dados.perfil.nome || !dados.portaoAprovado) {
+        // Sem responsável logado ou sem perfil → volta pro login
+        if (!sessao || !dados.perfil || !dados.perfil.nome) {
           window.location.replace('login.html');
         }
       } catch (_) {

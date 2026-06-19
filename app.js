@@ -604,7 +604,6 @@
    function salvarEstado() {
      const dados = {
        perfil: estado.perfil,
-      portaoAprovado: true,
        nivel: estado.nivel,
        experiencia: estado.experiencia || 0,
        totalEstrelas: estado.totalEstrelas,
@@ -612,8 +611,7 @@
        tempoTotal: estado.tempoTotal,
       minigamesJogados: estado.minigamesJogados,
       tentativasReprovadas: estado.tentativasReprovadas,
-      relatorioEventos: estado.relatorioEventos,
-      relatorioResponsavelLiberado: !!estado.relatorioResponsavelLiberado
+      relatorioEventos: estado.relatorioEventos
      };
      localStorage.setItem('mundoHistorias_estado', JSON.stringify(dados));
     agendarSyncProgresso();
@@ -1564,7 +1562,6 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
 
     const dados = {
       perfil: estado.perfil,
-      portaoAprovado: true,
       nivel: estado.nivel,
       experiencia: estado.experiencia || 0,
       totalEstrelas: estado.totalEstrelas,
@@ -1572,8 +1569,7 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
       tempoTotal: estado.tempoTotal,
       minigamesJogados: estado.minigamesJogados,
       tentativasReprovadas: estado.tentativasReprovadas,
-      relatorioEventos: estado.relatorioEventos,
-      relatorioResponsavelLiberado: !!estado.relatorioResponsavelLiberado
+      relatorioEventos: estado.relatorioEventos
     };
     localStorage.setItem('mundoHistorias_estado', JSON.stringify(dados));
   }
@@ -3965,31 +3961,6 @@ const verificar = () => {
       return;
     }
 
-    const liberado = !!estado.relatorioResponsavelLiberado;
-    if (!liberado) {
-      bloco.innerHTML = `
-        <h3>🔒 Área do Responsável</h3>
-        <button class="btn-secundario" id="btn-libera-relatorio">Ver relatório do responsável</button>
-      `;
-      const btn = document.getElementById('btn-libera-relatorio');
-      if (btn) {
-        btn.addEventListener('click', () => {
-          const a = Math.floor(Math.random() * 7) + 3;
-          const b = Math.floor(Math.random() * 7) + 2;
-          const resp = prompt(`Verificação parental: quanto é ${a} + ${b}?`);
-          if (resp === null) return;
-          if (parseInt(resp, 10) === (a + b)) {
-            estado.relatorioResponsavelLiberado = true;
-            salvarEstado();
-            atualizarTelaProgresso();
-          } else {
-            mostrarToast('Verificação incorreta.');
-          }
-        });
-      }
-      return;
-    }
-
     bloco.innerHTML = `
       <h3>📄 Relatório do Responsável</h3>
       <div class="stats-grid" id="stats-relatorio-grid">
@@ -4014,7 +3985,6 @@ const verificar = () => {
      carregarEstado();
     if (estado.experiencia == null) estado.experiencia = 0;
     estado.nivel = calcularNivelPorXp(estado.experiencia);
-    estado.relatorioResponsavelLiberado = false;
      if (!estado.perfil || !estado.perfil.nome) {
        window.location.href = 'login.html';
        return;
