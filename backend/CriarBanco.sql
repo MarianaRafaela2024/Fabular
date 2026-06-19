@@ -4,6 +4,7 @@ USE Fabular;
 GO
 
 IF OBJECT_ID('Evento_Minigame') IS NOT NULL DROP TABLE Evento_Minigame;
+IF OBJECT_ID('Relatorio_Crianca') IS NOT NULL DROP TABLE Relatorio_Crianca;
 IF OBJECT_ID('Sessao_Leitura') IS NOT NULL DROP TABLE Sessao_Leitura;
 IF OBJECT_ID('IA_Geracao') IS NOT NULL DROP TABLE IA_Geracao;
 IF OBJECT_ID('Historia_Minigame') IS NOT NULL DROP TABLE Historia_Minigame;
@@ -99,6 +100,16 @@ CREATE TABLE Sessao_Leitura (
     CriadoEm DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
     CONSTRAINT FK_SL_Crianca FOREIGN KEY (Id_Crianca) REFERENCES Crianca(Id),
     CONSTRAINT FK_SL_Historia FOREIGN KEY (Id_Historia) REFERENCES Historia(Id)
+);
+
+CREATE TABLE Relatorio_Crianca (
+    Id_Crianca INT NOT NULL PRIMARY KEY,
+    TentativasReprovadas INT NOT NULL DEFAULT 0,
+    AcertosMG INT NOT NULL DEFAULT 0,
+    ErrosMG INT NOT NULL DEFAULT 0,
+    NaoConsigoOuvir INT NOT NULL DEFAULT 0,
+    UpdatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    CONSTRAINT FK_RelCrianca_Crianca FOREIGN KEY (Id_Crianca) REFERENCES Crianca(Id) ON DELETE CASCADE
 );
 
 CREATE TABLE Evento_Minigame (

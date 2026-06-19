@@ -581,6 +581,9 @@
      tempoTotal: 0,       // minutos
      minigamesJogados: 0,
     tentativasReprovadas: 0,
+    acertosMG: 0,
+    errosMG: 0,
+    naoConsigoOuvir: 0,
      historiaAtual: null,
      faseAtual: 0,
      acertos: 0,
@@ -611,6 +614,9 @@
        tempoTotal: estado.tempoTotal,
       minigamesJogados: estado.minigamesJogados,
       tentativasReprovadas: estado.tentativasReprovadas,
+      acertosMG: estado.acertosMG || 0,
+      errosMG: estado.errosMG || 0,
+      naoConsigoOuvir: estado.naoConsigoOuvir || 0,
       relatorioEventos: estado.relatorioEventos
      };
      localStorage.setItem('mundoHistorias_estado', JSON.stringify(dados));
@@ -623,8 +629,20 @@
      try {
        const dados = JSON.parse(raw);
        Object.assign(estado, dados);
+       garantirContadoresRelatorio();
      } catch (e) { /* ignora */ }
    }
+
+  function garantirContadoresRelatorio() {
+    const eventos = estado.relatorioEventos || [];
+    if (!eventos.length) return;
+    const acertosEventos = eventos.filter(e => e.acao === 'acerto').length;
+    const errosEventos = eventos.filter(e => e.acao === 'erro').length;
+    const naoOucoEventos = eventos.filter(e => e.acao === 'nao_consigo_ouvir').length;
+    estado.acertosMG = Math.max(Number(estado.acertosMG) || 0, acertosEventos);
+    estado.errosMG = Math.max(Number(estado.errosMG) || 0, errosEventos);
+    estado.naoConsigoOuvir = Math.max(Number(estado.naoConsigoOuvir) || 0, naoOucoEventos);
+  }
   
   function obterVinculoCrianca() {
     try {
@@ -1377,7 +1395,10 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
       },
       resumoMinigames: {
         minigamesJogados: estado.minigamesJogados,
-        tentativasReprovadas: estado.tentativasReprovadas
+        tentativasReprovadas: estado.tentativasReprovadas,
+        acertosMG: estado.acertosMG || 0,
+        errosMG: estado.errosMG || 0,
+        naoConsigoOuvir: estado.naoConsigoOuvir || 0
       },
       updatedAt: new Date().toISOString()
     });
@@ -1559,6 +1580,15 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
     if (servidor.tentativasReprovadas != null) {
       estado.tentativasReprovadas = Math.max(Number(estado.tentativasReprovadas) || 0, Number(servidor.tentativasReprovadas) || 0);
     }
+    if (servidor.acertosMG != null) {
+      estado.acertosMG = Math.max(Number(estado.acertosMG) || 0, Number(servidor.acertosMG) || 0);
+    }
+    if (servidor.errosMG != null) {
+      estado.errosMG = Math.max(Number(estado.errosMG) || 0, Number(servidor.errosMG) || 0);
+    }
+    if (servidor.naoConsigoOuvir != null) {
+      estado.naoConsigoOuvir = Math.max(Number(estado.naoConsigoOuvir) || 0, Number(servidor.naoConsigoOuvir) || 0);
+    }
 
     const dados = {
       perfil: estado.perfil,
@@ -1569,6 +1599,9 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
       tempoTotal: estado.tempoTotal,
       minigamesJogados: estado.minigamesJogados,
       tentativasReprovadas: estado.tentativasReprovadas,
+      acertosMG: estado.acertosMG || 0,
+      errosMG: estado.errosMG || 0,
+      naoConsigoOuvir: estado.naoConsigoOuvir || 0,
       relatorioEventos: estado.relatorioEventos
     };
     localStorage.setItem('mundoHistorias_estado', JSON.stringify(dados));
@@ -2892,10 +2925,13 @@ const verificar = () => {
       historiaId: estado.historiaAtual ? estado.historiaAtual.id : null,
       em: new Date().toISOString()
     });
-    // Evita crescer indefinidamente no localStorage
+    if (acao === 'acerto') estado.acertosMG = (Number(estado.acertosMG) || 0) + 1;
+    else if (acao === 'erro') estado.errosMG = (Number(estado.errosMG) || 0) + 1;
+    else if (acao === 'nao_consigo_ouvir') estado.naoConsigoOuvir = (Number(estado.naoConsigoOuvir) || 0) + 1;
     if (estado.relatorioEventos.length > 400) {
       estado.relatorioEventos = estado.relatorioEventos.slice(-400);
     }
+    salvarEstado();
   }
 
   function renderCompletarMG(fase, corpo, spec) {
@@ -3892,9 +3928,9 @@ const verificar = () => {
      document.getElementById('pp-nome').textContent = p.nome;
      document.getElementById('pp-nivel-badge').textContent = labelNivel(estado.nivel);
      document.getElementById('pp-total').textContent = estado.totalEstrelas + ' ⭐';
-    const acertosMG = (estado.relatorioEventos || []).filter(e => e.acao === 'acerto').length;
-    const errosMG = (estado.relatorioEventos || []).filter(e => e.acao === 'erro').length;
-    const naoOuco = (estado.relatorioEventos || []).filter(e => e.acao === 'nao_consigo_ouvir').length;
+    const acertosMG = Number(estado.acertosMG) || 0;
+    const errosMG = Number(estado.errosMG) || 0;
+    const naoOuco = Number(estado.naoConsigoOuvir) || 0;
      document.getElementById('progresso-sub').textContent =
       `Olá, ${p.nome}! Você tem ${estado.experiencia || 0} XP — continue com calma, cada fase conta!`;
    

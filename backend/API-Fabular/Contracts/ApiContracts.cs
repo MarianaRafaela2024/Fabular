@@ -89,6 +89,9 @@ public record ProgressResponseDto(
     int TempoTotal,
     int MinigamesJogados,
     int TentativasReprovadas,
+    int AcertosMG,
+    int ErrosMG,
+    int NaoConsigoOuvir,
     List<AtividadeDiariaDto> AtividadeDiaria,
     DateTime? UpdatedAt
 );

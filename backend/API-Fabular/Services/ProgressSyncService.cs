@@ -60,6 +60,7 @@ public class ProgressSyncService
 
         await PersistirEstrelasPorHistoriaAsync(conn, request.CriancaId, request.ProgressoHistorias);
         await PersistirAtividadeDiariaAsync(conn, request.CriancaId, request.ProgressoHistorias);
+        await PersistirRelatorioCriancaAsync(conn, request.CriancaId, request.ResumoMinigames);
 
         return ApplicationResult<object>.Ok(new { syncStatus = "ok", lastServerStateVersion = DateTime.UtcNow.Ticks });
     }
@@ -90,6 +91,9 @@ public class ProgressSyncService
         var tempoTotal = 0;
         var minigamesJogados = 0;
         var tentativasReprovadas = 0;
+        var acertosMG = 0;
+        var errosMG = 0;
+        var naoConsigoOuvir = 0;
         DateTime? updatedAt = null;
 
         var payloadRow = await conn.QueryFirstOrDefaultAsync<(string PayloadJson, DateTime UpdatedAt)?>(
@@ -104,7 +108,19 @@ public class ProgressSyncService
         if (payloadRow.HasValue)
         {
             updatedAt = payloadRow.Value.UpdatedAt;
-            MesclarPayloadNoMapa(payloadRow.Value.PayloadJson, historiasMap, ref tempoTotal, ref minigamesJogados, ref tentativasReprovadas);
+            MesclarPayloadNoMapa(payloadRow.Value.PayloadJson, historiasMap, ref tempoTotal, ref minigamesJogados, ref tentativasReprovadas, ref acertosMG, ref errosMG, ref naoConsigoOuvir);
+        }
+
+        var relatorioDb = await CarregarRelatorioCriancaAsync(conn, criancaId);
+        if (relatorioDb.HasValue)
+        {
+            tentativasReprovadas = Math.Max(tentativasReprovadas, relatorioDb.Value.TentativasReprovadas);
+            acertosMG = Math.Max(acertosMG, relatorioDb.Value.AcertosMG);
+            errosMG = Math.Max(errosMG, relatorioDb.Value.ErrosMG);
+            naoConsigoOuvir = Math.Max(naoConsigoOuvir, relatorioDb.Value.NaoConsigoOuvir);
+            updatedAt = updatedAt.HasValue
+                ? (relatorioDb.Value.UpdatedAt > updatedAt.Value ? relatorioDb.Value.UpdatedAt : updatedAt)
+                : relatorioDb.Value.UpdatedAt;
         }
 
         var sessoes = await conn.QueryAsync<(int IdHistoria, int Estrelas, DateTime CriadoEm)>(
@@ -169,6 +185,9 @@ public class ProgressSyncService
             tempoTotal,
             minigamesJogados,
             tentativasReprovadas,
+            acertosMG,
+            errosMG,
+            naoConsigoOuvir,
             atividadeDiaria,
             updatedAt));
     }
@@ -178,7 +197,10 @@ public class ProgressSyncService
         Dictionary<string, HistoriaProgressoDto> historiasMap,
         ref int tempoTotal,
         ref int minigamesJogados,
-        ref int tentativasReprovadas)
+        ref int tentativasReprovadas,
+        ref int acertosMG,
+        ref int errosMG,
+        ref int naoConsigoOuvir)
     {
         try
         {
@@ -218,11 +240,104 @@ public class ProgressSyncService
             {
                 minigamesJogados = Math.Max(minigamesJogados, ExtrairInt(resumoEl, "minigamesJogados"));
                 tentativasReprovadas = Math.Max(tentativasReprovadas, ExtrairInt(resumoEl, "tentativasReprovadas"));
+                acertosMG = Math.Max(acertosMG, ExtrairInt(resumoEl, "acertosMG"));
+                errosMG = Math.Max(errosMG, ExtrairInt(resumoEl, "errosMG"));
+                naoConsigoOuvir = Math.Max(naoConsigoOuvir, ExtrairInt(resumoEl, "naoConsigoOuvir"));
             }
         }
         catch
         {
             // Payload inválido não impede retorno parcial via Sessao_Leitura.
+        }
+    }
+
+    private async Task PersistirRelatorioCriancaAsync(System.Data.Common.DbConnection conn, int criancaId, object resumoMinigames)
+    {
+        var resumo = ExtrairResumoMinigames(resumoMinigames);
+        if (resumo.TentativasReprovadas == 0 &&
+            resumo.AcertosMG == 0 &&
+            resumo.ErrosMG == 0 &&
+            resumo.NaoConsigoOuvir == 0 &&
+            resumo.MinigamesJogados == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            await conn.ExecuteAsync(
+                """
+                MERGE Relatorio_Crianca AS alvo
+                USING (SELECT @CriancaId AS Id_Crianca) AS origem
+                ON alvo.Id_Crianca = origem.Id_Crianca
+                WHEN MATCHED THEN
+                    UPDATE SET
+                        TentativasReprovadas = CASE WHEN @TentativasReprovadas > alvo.TentativasReprovadas THEN @TentativasReprovadas ELSE alvo.TentativasReprovadas END,
+                        AcertosMG = CASE WHEN @AcertosMG > alvo.AcertosMG THEN @AcertosMG ELSE alvo.AcertosMG END,
+                        ErrosMG = CASE WHEN @ErrosMG > alvo.ErrosMG THEN @ErrosMG ELSE alvo.ErrosMG END,
+                        NaoConsigoOuvir = CASE WHEN @NaoConsigoOuvir > alvo.NaoConsigoOuvir THEN @NaoConsigoOuvir ELSE alvo.NaoConsigoOuvir END,
+                        UpdatedAt = SYSUTCDATETIME()
+                WHEN NOT MATCHED THEN
+                    INSERT (Id_Crianca, TentativasReprovadas, AcertosMG, ErrosMG, NaoConsigoOuvir, UpdatedAt)
+                    VALUES (@CriancaId, @TentativasReprovadas, @AcertosMG, @ErrosMG, @NaoConsigoOuvir, SYSUTCDATETIME());
+                """,
+                new
+                {
+                    CriancaId = criancaId,
+                    resumo.TentativasReprovadas,
+                    resumo.AcertosMG,
+                    resumo.ErrosMG,
+                    resumo.NaoConsigoOuvir
+                });
+        }
+        catch
+        {
+            // Tabela pode não existir em bancos antigos — payload JSON ainda é salvo.
+        }
+    }
+
+    private async Task<(int TentativasReprovadas, int AcertosMG, int ErrosMG, int NaoConsigoOuvir, DateTime UpdatedAt)?> CarregarRelatorioCriancaAsync(
+        System.Data.Common.DbConnection conn,
+        int criancaId)
+    {
+        try
+        {
+            return await conn.QueryFirstOrDefaultAsync<(int TentativasReprovadas, int AcertosMG, int ErrosMG, int NaoConsigoOuvir, DateTime UpdatedAt)?>(
+                """
+                SELECT TentativasReprovadas, AcertosMG, ErrosMG, NaoConsigoOuvir, UpdatedAt
+                FROM Relatorio_Crianca
+                WHERE Id_Crianca = @CriancaId
+                """,
+                new { CriancaId = criancaId });
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static (int MinigamesJogados, int TentativasReprovadas, int AcertosMG, int ErrosMG, int NaoConsigoOuvir) ExtrairResumoMinigames(object resumoMinigames)
+    {
+        try
+        {
+            var json = JsonSerializer.Serialize(resumoMinigames);
+            using var doc = JsonDocument.Parse(json);
+            if (doc.RootElement.ValueKind != JsonValueKind.Object)
+            {
+                return (0, 0, 0, 0, 0);
+            }
+
+            var root = doc.RootElement;
+            return (
+                ExtrairInt(root, "minigamesJogados"),
+                ExtrairInt(root, "tentativasReprovadas"),
+                ExtrairInt(root, "acertosMG"),
+                ExtrairInt(root, "errosMG"),
+                ExtrairInt(root, "naoConsigoOuvir"));
+        }
+        catch
+        {
+            return (0, 0, 0, 0, 0);
         }
     }
 
