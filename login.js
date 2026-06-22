@@ -274,89 +274,169 @@
 
     function alternarRecuperacao(visivel) {
       if (!recuperarBox || !authBox) return;
+    
       authBox.classList.toggle('oculto', visivel);
       recuperarBox.classList.toggle('oculto', !visivel);
     }
-
+    
     function setErro(msg) {
       if (!msg) {
         erro.textContent = '';
         erro.classList.add('oculto');
         return;
       }
+    
       erro.textContent = msg;
       erro.classList.remove('oculto');
     }
-
+    
     btnEsqueciSenha.onclick = () => {
       alternarRecuperacao(true);
       setErro('');
     };
+    
     btnCancelarReset.onclick = () => {
       alternarRecuperacao(false);
       setErro('');
     };
-
+    
     btnEnviarCodigo.onclick = async () => {
-      const email = document.getElementById('resp-email-reset').value.trim().toLowerCase();
+    
+      const email = document
+        .getElementById('resp-email-reset')
+        .value
+        .trim()
+        .toLowerCase();
+    
       if (!email) {
-        setErro('Digite o e-mail para recuperar a senha.');
+        setErro('Digite seu e-mail.');
         return;
       }
+    
       try {
-        await apiRequest('/api/v1/parents/forgot-password', 'POST', { email });
-        setErro('Código enviado (se o e-mail estiver cadastrado). Verifique sua caixa de entrada.');
+    
+        setErro('Enviando código...');
+    
+        const resposta = await fetch(
+          'https://localhost:7157/api/v1/parents/forgot-password',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              email
+            })
+          }
+        );
+    
+        const dados = await resposta.json();
+    
+        if (!resposta.ok) {
+          throw new Error(
+            dados.message ||
+            'Não foi possível enviar o código.'
+          );
+        }
+    
+        setErro(
+          'Código enviado com sucesso. Verifique sua caixa de entrada.'
+        );
+    
       } catch (e) {
-        setErro(e.message || 'Não foi possível enviar o código.');
+    
+        console.error(e);
+    
+        setErro(
+          e.message ||
+          'Não foi possível enviar o código.'
+        );
       }
     };
-
+    
     btnResetarSenha.onclick = async () => {
-      const email = document.getElementById('resp-email-reset').value.trim().toLowerCase();
-      const codigo = document.getElementById('resp-codigo-reset').value.trim();
-      const novaSenha = document.getElementById('resp-nova-senha').value.trim();
+    
+      const email = document
+        .getElementById('resp-email-reset')
+        .value
+        .trim()
+        .toLowerCase();
+    
+      const codigo = document
+        .getElementById('resp-codigo-reset')
+        .value
+        .trim();
+    
+      const novaSenha = document
+        .getElementById('resp-nova-senha')
+        .value
+        .trim();
+    
       if (!email || !codigo || !novaSenha) {
-        setErro('Preencha e-mail, código e nova senha.');
+        setErro(
+          'Preencha e-mail, código e nova senha.'
+        );
         return;
       }
+    
       try {
-        await apiRequest('/api/v1/parents/reset-password', 'POST', { email, codigo, novaSenha });
-        const contas = getContas();
-        const localResp = contas.responsaveis.find(r => r.email === email);
-        if (localResp) {
-          localResp.senha = novaSenha;
-          salvarContas(contas);
+    
+        setErro('Redefinindo senha...');
+    
+        const resposta = await fetch(
+          'https://localhost:7157/api/v1/parents/reset-password',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              email,
+              codigo,
+              novaSenha
+            })
+          }
+        );
+    
+        const dados = await resposta.json();
+    
+        if (!resposta.ok) {
+          throw new Error(
+            dados.message ||
+            'Não foi possível redefinir a senha.'
+          );
         }
+    
         document.getElementById('resp-email').value = email;
+    
         document.getElementById('resp-email-reset').value = '';
         document.getElementById('resp-codigo-reset').value = '';
         document.getElementById('resp-nova-senha').value = '';
         document.getElementById('resp-senha').value = '';
+    
         responsavelModo = 'login';
+    
         alternarRecuperacao(false);
-        atualizarCamposPorModo();
-        setErro('Senha redefinida com sucesso. Agora faça login.');
-      } catch (e) {
-        setErro(e.message || 'Não foi possível redefinir a senha.');
-      }
-    };
-    document.getElementById('btn-resp-continuar').onclick = async () => {
-      const nome = document.getElementById('resp-nome').value.trim();
-      const sobrenome = document.getElementById('resp-sobrenome').value.trim();
-      const email = document.getElementById('resp-email').value.trim().toLowerCase();
-      const senha = document.getElementById('resp-senha').value.trim();
-      const contas = getContas();
-      if (!email || !senha || (responsavelModo === 'cadastro' && !nome)) {
-        setErro('Preencha os campos obrigatórios.');
-        return;
-      }
-      if (responsavelModo === 'cadastro') {
-        const confirmar = document.getElementById('resp-confirmar-senha').value.trim();
-        if (senha !== confirmar) {
-          setErro('As senhas não coincidem.');
-          return;
+    
+        if (typeof atualizarCamposPorModo === 'function') {
+          atualizarCamposPorModo();
         }
+    
+        setErro(
+          'Senha redefinida com sucesso. Agora faça login.'
+        );
+    
+      } catch (e) {
+    
+        console.error(e);
+    
+        setErro(
+          e.message ||
+          'Não foi possível redefinir a senha.'
+        );
       }
+    
+    
       const existente = contas.responsaveis.find(r => r.email === email);
       try {
         let sessaoApi = null;

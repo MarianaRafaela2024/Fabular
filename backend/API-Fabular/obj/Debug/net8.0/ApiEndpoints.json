@@ -1,5 +1,21 @@
 [
   {
+    "ContainingType": "API_Fabular.Controllers.ContatoController",
+    "Method": "Enviar",
+    "RelativePath": "api/contato",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "API_Fabular.Contracts.ContatoRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "API_Fabular.Controllers.ChildrenController",
     "Method": "LinkLocal",
     "RelativePath": "api/v1/children/link-local",

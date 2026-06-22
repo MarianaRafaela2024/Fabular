@@ -1,5 +1,3 @@
-using System.Net;
-using System.Net.Mail;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
@@ -8,123 +6,198 @@ namespace API_Fabular.Services;
 
 public class BrevoEmailService
 {
-    private const string BrevoApiBaseUrl = "https://api.brevo.com/v3";
+    private readonly HttpClient _httpClient;
     private readonly BrevoEmailOptions _options;
     private readonly ILogger<BrevoEmailService> _logger;
 
-    public BrevoEmailService(IOptions<BrevoEmailOptions> options, ILogger<BrevoEmailService> logger)
+    public BrevoEmailService(
+        HttpClient httpClient,
+        IOptions<BrevoEmailOptions> options,
+        ILogger<BrevoEmailService> logger)
     {
+        _httpClient = httpClient;
         _options = options.Value;
         _logger = logger;
     }
 
     public bool IsConfigured()
     {
-        var smtpPassword = GetSmtpPassword();
-        return !string.IsNullOrWhiteSpace(_options.SmtpHost)
-               && _options.SmtpPort > 0
-               && !string.IsNullOrWhiteSpace(_options.SmtpUser)
-               && !string.IsNullOrWhiteSpace(smtpPassword)
+        _logger.LogInformation(
+            "ApiKey: {ApiKey} | FromEmail: {FromEmail}",
+            _options.ApiKey,
+            _options.FromEmail);
+
+        return !string.IsNullOrWhiteSpace(_options.ApiKey)
                && !string.IsNullOrWhiteSpace(_options.FromEmail);
     }
 
-    public bool IsCrmConfigured() => !string.IsNullOrWhiteSpace(_options.ApiKey);
+    public bool IsCrmConfigured()
+    {
+        return !string.IsNullOrWhiteSpace(_options.ApiKey);
+    }
 
-    public async Task UpsertContactInCrmAsync(string email, string? nome, string? assunto)
+    public async Task SendPasswordResetCodeAsync(
+        string email,
+        string codigo)
+    {
+        var body = new
+        {
+            sender = new
+            {
+                name = _options.FromName,
+                email = _options.FromEmail
+            },
+
+            to = new[]
+            {
+                new
+                {
+                    email
+                }
+            },
+
+            subject = "Recuperação de Senha - FABULAR",
+
+            htmlContent = $@"
+                <h2>Recuperação de Senha</h2>
+                <p>Seu código de recuperação é:</p>
+                <h1>{codigo}</h1>
+                <p>O código expira em 10 minutos.</p>"
+        };
+
+        await SendEmailAsync(body);
+    }
+
+    public async Task SendContactMessageToSupportAsync(
+        string nome,
+        string email,
+        string assunto,
+        string mensagem)
+    {
+        var body = new
+        {
+            sender = new
+            {
+                name = _options.FromName,
+                email = _options.FromEmail
+            },
+
+            to = new[]
+            {
+                new
+                {
+                    email = _options.SupportEmail
+                }
+            },
+
+            replyTo = new
+            {
+                email,
+                name = nome
+            },
+
+            subject = $"[Contato Site] {assunto}",
+
+            htmlContent = $@"
+                <h3>Nova mensagem de contato</h3>
+
+                <p><strong>Nome:</strong> {nome}</p>
+
+                <p><strong>Email:</strong> {email}</p>
+
+                <p><strong>Assunto:</strong> {assunto}</p>
+
+                <p><strong>Mensagem:</strong></p>
+
+                <p>{mensagem}</p>"
+        };
+
+        await SendEmailAsync(body);
+    }
+
+    public async Task UpsertContactInCrmAsync(
+        string email,
+        string nome,
+        string assunto)
     {
         if (!IsCrmConfigured())
-        {
-            _logger.LogWarning("Brevo CRM não configurado. Contato {Email} não foi sincronizado.", email);
             return;
-        }
 
-        var payload = new
+        var body = new
         {
             email,
-            updateEnabled = true,
+
             attributes = new
             {
-                NOME = nome ?? string.Empty,
-                ASSUNTO = assunto ?? string.Empty
-            }
+                FIRSTNAME = nome,
+                ASSUNTO = assunto
+            },
+
+            updateEnabled = true
         };
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, $"{BrevoApiBaseUrl}/contacts");
-        request.Headers.TryAddWithoutValidation("api-key", _options.ApiKey);
-        request.Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+        _httpClient.DefaultRequestHeaders.Clear();
 
-        using var http = new HttpClient();
-        var response = await http.SendAsync(request);
+        _httpClient.DefaultRequestHeaders.Add(
+            "api-key",
+            _options.ApiKey);
+
+        var content = new StringContent(
+            JsonSerializer.Serialize(body),
+            Encoding.UTF8,
+            "application/json");
+
+        var response = await _httpClient.PostAsync(
+            "https://api.brevo.com/v3/contacts",
+            content);
+
         if (!response.IsSuccessStatusCode)
         {
-            var body = await response.Content.ReadAsStringAsync();
-            _logger.LogWarning("Brevo CRM retornou erro ao sincronizar {Email}. Status: {Status}. Body: {Body}", email, (int)response.StatusCode, body);
+            var erro =
+                await response.Content.ReadAsStringAsync();
+
+            _logger.LogWarning(
+                "Falha ao sincronizar contato no CRM Brevo: {Erro}",
+                erro);
         }
     }
 
-    public async Task SendPasswordResetCodeAsync(string emailDestino, string codigo)
+    private async Task SendEmailAsync(object body)
     {
         if (!IsConfigured())
         {
-            _logger.LogError("Brevo SMTP não configurado. E-mail de recuperação não pode ser enviado para {Email}.", emailDestino);
-            throw new InvalidOperationException("Serviço de e-mail Brevo não configurado.");
+            throw new InvalidOperationException(
+                "Brevo não configurado.");
         }
 
-        using var message = new MailMessage();
-        message.From = new MailAddress(_options.FromEmail!, _options.FromName ?? "Mundo das Historias");
-        message.To.Add(emailDestino);
-        message.Subject = "Recuperacao de senha - Mundo das Historias";
-        message.Body = $"Seu codigo de recuperacao e: {codigo}\n\nEsse codigo expira em 10 minutos.";
+        _httpClient.DefaultRequestHeaders.Clear();
 
-        using var client = new SmtpClient(_options.SmtpHost!, _options.SmtpPort)
+        _httpClient.DefaultRequestHeaders.Add(
+            "api-key",
+            _options.ApiKey);
+
+        var content = new StringContent(
+            JsonSerializer.Serialize(body),
+            Encoding.UTF8,
+            "application/json");
+
+        var response = await _httpClient.PostAsync(
+            "https://api.brevo.com/v3/smtp/email",
+            content);
+
+        var responseBody =
+            await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
         {
-            EnableSsl = _options.EnableSsl,
-            Credentials = new NetworkCredential(_options.SmtpUser, GetSmtpPassword())
-        };
+            _logger.LogError(
+                "Erro Brevo: {Status} - {Body}",
+                response.StatusCode,
+                responseBody);
 
-        await client.SendMailAsync(message);
-    }
-
-    public async Task SendContactMessageToSupportAsync(string nome, string email, string assunto, string mensagem)
-    {
-        if (!IsConfigured())
-        {
-            _logger.LogError("Brevo SMTP não configurado. Mensagem de contato não pode ser enviada.");
-            throw new InvalidOperationException("Serviço de e-mail Brevo não configurado.");
+            throw new Exception(
+                $"Erro Brevo: {response.StatusCode} - {responseBody}");
         }
-
-        var supportEmail = _options.SupportEmail ?? _options.FromEmail!;
-        using var message = new MailMessage();
-        message.From = new MailAddress(_options.FromEmail!, _options.FromName ?? "Mundo das Historias");
-        message.To.Add(supportEmail);
-        message.ReplyToList.Add(new MailAddress(email, nome));
-        message.Subject = $"[Contato Site] {assunto}";
-        message.Body = $"Nome: {nome}\nEmail: {email}\nAssunto: {assunto}\n\nMensagem:\n{mensagem}";
-
-        using var client = new SmtpClient(_options.SmtpHost!, _options.SmtpPort)
-        {
-            EnableSsl = _options.EnableSsl,
-            Credentials = new NetworkCredential(_options.SmtpUser, GetSmtpPassword())
-        };
-
-        await client.SendMailAsync(message);
-    }
-
-    private string GetSmtpPassword()
-    {
-        return _options.SmtpPassword ?? string.Empty;
     }
 }
 
-public class BrevoEmailOptions
-{
-    public string? ApiKey { get; set; }
-    public string? SmtpHost { get; set; }
-    public int SmtpPort { get; set; } = 587;
-    public string? SmtpUser { get; set; }
-    public string? SmtpPassword { get; set; }
-    public string? FromEmail { get; set; }
-    public string? FromName { get; set; }
-    public string? SupportEmail { get; set; }
-    public bool EnableSsl { get; set; } = true;
-}

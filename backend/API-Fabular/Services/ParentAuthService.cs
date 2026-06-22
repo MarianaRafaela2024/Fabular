@@ -99,7 +99,16 @@ public class ParentAuthService
         }
 
         var codigo = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
-        _memoryCache.Set(GetResetKey(email), Hash(codigo), TimeSpan.FromMinutes(10));
+
+        _logger.LogInformation(
+            "Código gerado para {Email}: {Codigo}",
+            email,
+            codigo);
+
+        _memoryCache.Set(
+            GetResetKey(email),
+            Hash(codigo),
+            TimeSpan.FromMinutes(10));
 
         try
         {
@@ -108,8 +117,12 @@ public class ParentAuthService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Falha ao enviar e-mail de recuperação para {Email}", email);
-            return ApplicationResult<bool>.InternalError("Falha ao enviar código de recuperação.");
+            _logger.LogError(ex,
+                "Falha ao enviar e-mail de recuperação para {Email}",
+                email);
+
+            return ApplicationResult<bool>.InternalError(
+                ex.ToString());
         }
     }
 
