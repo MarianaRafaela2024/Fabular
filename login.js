@@ -353,7 +353,51 @@
         );
       }
     };
-    
+    document.getElementById('btn-resp-continuar').onclick = async () => {
+      const nome = document.getElementById('resp-nome').value.trim();
+      const sobrenome = document.getElementById('resp-sobrenome').value.trim();
+      const email = document.getElementById('resp-email').value.trim().toLowerCase();
+      const senha = document.getElementById('resp-senha').value.trim();
+      const contas = getContas();
+      if (!email || !senha || (responsavelModo === 'cadastro' && !nome)) {
+        setErro('Preencha os campos obrigatórios.');
+        return;
+      }
+      if (responsavelModo === 'cadastro') {
+        const confirmar = document.getElementById('resp-confirmar-senha').value.trim();
+        if (senha !== confirmar) {
+          setErro('As senhas não coincidem.');
+          return;
+        }
+      }
+      const existente = contas.responsaveis.find(r => r.email === email);
+      try {
+        let sessaoApi = null;
+        if (responsavelModo === 'cadastro') {
+          if (existente) {
+            setErro('E-mail já cadastrado.');
+            return;
+          }
+          contas.responsaveis.push({ nome, sobrenome, email, senha, perfis: [] });
+          salvarContas(contas);
+          sessaoApi = await apiRequest('/api/v1/parents/register', 'POST', { nome, sobrenome, email, senha });
+        } else {
+          if (!existente || existente.senha !== senha) {
+            setErro('E-mail ou senha inválidos.');
+            return;
+          }
+          sessaoApi = await apiRequest('/api/v1/parents/login', 'POST', { email, senha });
+        }
+
+        const sessao = { email, em: Date.now(), responsavelId: sessaoApi.responsavelId };
+        setErro('');
+        salvarJSON(CHAVE_SESSAO, sessao);
+        await sincronizarCriancasPendentes(sessao);
+        abrirSelecaoPerfis(email);
+      } catch (e) {
+        setErro(e.message || 'Falha ao conectar com a API.');
+      }
+    };
     btnResetarSenha.onclick = async () => {
     
       const email = document
