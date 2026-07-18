@@ -20,22 +20,23 @@ public class ContatoController : ControllerBase
     public async Task<IActionResult> Enviar(
         [FromBody] ContatoRequest request)
     {
-        var sucesso =
-            await _brevoService.EnviarContato(
-                request.Nome,
-                request.Email,
-                request.Assunto,
-                request.Mensagem);
-
-        if (!sucesso)
+        try
         {
-            return BadRequest(
-                "Erro ao enviar email");
+            var sucesso =
+                await _brevoService.EnviarContato(
+                    request.Nome,
+                    request.Email,
+                    request.Assunto,
+                    request.Mensagem);
+
+            return Ok(new
+            {
+                sucesso
+            });
         }
-
-        return Ok(new
+        catch (Exception ex)
         {
-            mensagem = "Contato enviado"
-        });
+            return BadRequest(ex.ToString());
+        }
     }
 }
