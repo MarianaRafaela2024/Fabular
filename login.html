@@ -86,6 +86,14 @@
             <button class="chip"       data-genero="informativo"  aria-pressed="false">💡 Informativo</button>
           </div>
         </div>
+        <div class="campo-grupo">
+          <label class="campo-label" for="input-horario"> ⏰ Qual horário você mais gosta de brincar no Fabular?</label>
+          <input
+            type="time"
+            id="input-horario"
+            class="campo-input"
+            aria-label="Horário preferido para jogar"/>
+        </div>
 
         <button class="btn-principal btn-entrar" id="btn-iniciar" aria-label="Iniciar aventura">
           🚀 Iniciar Aventura!
@@ -126,6 +134,7 @@
           <div class="campo-grupo">
             <label class="campo-label" for="resp-email-reset">E-mail</label>
             <input type="email" id="resp-email-reset" class="campo-input" placeholder="email@exemplo.com" />
+            <button class="btn-secundario" id="btn-enviar-codigo" type="button">Enviar código por e-mail</button>
           </div>
           <div class="campo-grupo">
             <label class="campo-label" for="resp-codigo-reset">Código recebido no e-mail</label>
@@ -135,7 +144,7 @@
             <label class="campo-label" for="resp-nova-senha">Nova senha</label>
             <input type="password" id="resp-nova-senha" class="campo-input" placeholder="Digite a nova senha" />
           </div>
-          <button class="btn-secundario" id="btn-enviar-codigo" type="button">Enviar código por e-mail</button>
+          
           <button class="btn-principal" id="btn-resetar-senha" type="button">Redefinir senha</button>
           <button class="link-inline" id="btn-cancelar-reset" type="button">Voltar para login</button>
         </div>
