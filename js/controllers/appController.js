@@ -105,6 +105,7 @@ async function inicializar() {
     const texto = estado.modoLeituraCompleta
       ? obterTextoCompletoHistoria(h)
       : document.getElementById('historia-texto').innerHTML;
+
     ouvirTexto(texto);
   });
   

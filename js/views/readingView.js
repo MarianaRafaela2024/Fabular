@@ -15,7 +15,7 @@ async function iniciarHistoria(id, opcoes) {
         preservarDetalheHistoriaNaBiblioteca(id, detalhe);
         salvarHistoriaNoCache(detalhe);
       }
-    } catch (_) {}
+    } catch (_) { }
   }
 
   if (!historia) return;
@@ -69,10 +69,6 @@ function lerTextoCompletoHistoria(opcoes) {
   ocultarFeedback();
 
   if (opts.somenteExibir) return;
-
-  if (opts.autoOuvir || estado.perfil.faixa === 1) {
-    setTimeout(() => ouvirTexto(textoCompleto), opts.autoOuvir ? 400 : 800);
-  }
 }
 
 function setUiLeituraModoCompleto(completo) {
@@ -130,10 +126,6 @@ function renderizarFase() {
 
   ocultarFeedback();
   document.getElementById('btn-continuar').style.display = 'none';
-
-  if (estado.perfil.faixa === 1) {
-    setTimeout(() => ouvirTexto(fase.texto), 800);
-  }
 }
 
 function renderizarInteracao(inter) {
@@ -222,20 +214,20 @@ function mostrarFeedbackFase(ok) {
   const area = document.getElementById('feedback-area');
   const card = document.getElementById('feedback-card');
   const emoji = document.getElementById('feedback-emoji');
-  const msg   = document.getElementById('feedback-msg');
+  const msg = document.getElementById('feedback-msg');
 
   area.classList.remove('oculto');
   if (ok) {
     card.style.background = 'linear-gradient(135deg,#DCFCE7,#D1FAE5)';
     card.style.borderColor = 'var(--cor-verde)';
-    emoji.textContent = ['🎉','⭐','🌟','🚀','💫'][Math.floor(Math.random()*5)];
-    msg.textContent = MSGS_ACERTO[Math.floor(Math.random()*MSGS_ACERTO.length)];
+    emoji.textContent = ['🎉', '⭐', '🌟', '🚀', '💫'][Math.floor(Math.random() * 5)];
+    msg.textContent = MSGS_ACERTO[Math.floor(Math.random() * MSGS_ACERTO.length)];
     msg.style.color = '#166534';
   } else {
     card.style.background = 'linear-gradient(135deg,#FEF3C7,#FDE68A)';
     card.style.borderColor = '#F59E0B';
     emoji.textContent = '💛';
-    msg.textContent = MSGS_ERRO[Math.floor(Math.random()*MSGS_ERRO.length)];
+    msg.textContent = MSGS_ERRO[Math.floor(Math.random() * MSGS_ERRO.length)];
     msg.style.color = '#92400E';
   }
 
