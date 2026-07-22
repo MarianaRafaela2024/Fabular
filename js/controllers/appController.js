@@ -1,0 +1,481 @@
+/* =============================================
+   MUNDO DAS HISTÓRIAS — appController.js (Controller)
+   ============================================= */
+
+'use strict';
+
+function irParaTela(nomeTela) {
+  document.querySelectorAll('.tela-app').forEach(t => t.classList.remove('ativa'));
+  const alvo = document.getElementById('tela-' + nomeTela);
+  if (alvo) alvo.classList.add('ativa');
+
+  document.querySelectorAll('.nav-item').forEach(b => {
+    const ativo = b.dataset.tela === nomeTela;
+    b.classList.toggle('ativo', ativo);
+    b.setAttribute('aria-current', ativo ? 'page' : 'false');
+  });
+
+  const main = document.getElementById('app-main');
+  if (main) main.scrollTop = 0;
+
+  if (nomeTela === 'progresso') atualizarTelaProgresso();
+  if (nomeTela === 'biblioteca') {
+    carregarProgressoDoServidor()
+      .then(() => carregarHistoriasDaApi())
+      .then(() => renderizarBiblioteca())
+      .catch(() => renderizarBiblioteca());
+  }
+}
+
+function atualizarHeader() {
+  const avatarDisp = document.getElementById('avatar-display');
+  const headerNome = document.getElementById('header-nome');
+  const headerNivel = document.getElementById('header-nivel');
+  const totalEstrelas = document.getElementById('total-estrelas');
+  
+  if (avatarDisp) avatarDisp.textContent = estado.perfil.avatar;
+  if (headerNome) headerNome.textContent = estado.perfil.nome;
+  if (headerNivel) headerNivel.textContent = labelNivel(estado.nivel);
+  if (totalEstrelas) totalEstrelas.textContent = estado.totalEstrelas;
+}
+
+async function inicializar() {
+  carregarEstado();
+  if (estado.experiencia == null) estado.experiencia = 0;
+  estado.nivel = calcularNivelPorXp(estado.experiencia);
+  if (!estado.perfil || !estado.perfil.nome) {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  await carregarProgressoDoServidor();
+  await carregarHistoriasDaApi();
+  aplicarFaixaDoPerfilNosFiltros();
+  
+  atualizarHeader();
+  atualizarBarraExperiencia();
+  renderizarBiblioteca();
+  irParaTela('biblioteca');
+
+  inicializarFiltros();
+
+  const btnGerar = document.getElementById('btn-gerar-historia');
+  if (btnGerar) btnGerar.addEventListener('click', () => gerarHistoriaIa().catch(() => {}));
+  const btnBotIaGerar = document.getElementById('btn-bot-ia-gerar');
+  if (btnBotIaGerar) btnBotIaGerar.addEventListener('click', () => gerarHistoriaBotIa().catch(() => {}));
+  inicializarGeneroBotIa();
+
+  carregarModoNoturno();
+
+  document.getElementById('btn-contraste').addEventListener('click', toggleContraste);
+  document.getElementById('btn-fonte-mais').addEventListener('click', () => ajustarFonte(2));
+  document.getElementById('btn-fonte-menos').addEventListener('click', () => ajustarFonte(-2));
+
+  document.getElementById('btn-sair').addEventListener('click', () => {
+    if (confirm('Deseja encerrar a sessão do responsável neste dispositivo?')) {
+      localStorage.removeItem('mundoHistorias_responsavel_sessao');
+      localStorage.removeItem('mundoHistorias_estado');
+      window.location.href = 'login.html';
+    }
+  });
+
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tela = btn.dataset.tela;
+      if (tela === 'leitura' && !estado.historiaAtual) {
+        mostrarToast('Escolha uma história primeiro! 📚');
+        return;
+      }
+      irParaTela(tela);
+    });
+  });
+
+  document.getElementById('btn-ouvir').addEventListener('click', () => {
+    const h = estado.historiaAtual;
+    if (!h) {
+      mostrarToast('Escolha uma história primeiro! 📚');
+      return;
+    }
+    if (ttsAtivo) {
+      window.speechSynthesis.cancel();
+      ttsAtivo = false;
+      document.getElementById('btn-ouvir').classList.remove('ativo');
+      return;
+    }
+    const texto = estado.modoLeituraCompleta
+      ? obterTextoCompletoHistoria(h)
+      : document.getElementById('historia-texto').innerHTML;
+    ouvirTexto(texto);
+  });
+  
+  document.getElementById('btn-destaque').addEventListener('click', () => {
+    estado.destaqueAtivo = !estado.destaqueAtivo;
+    document.getElementById('btn-destaque').classList.toggle('ativo', estado.destaqueAtivo);
+    document.getElementById('historia-texto').classList.toggle('sem-destaque', !estado.destaqueAtivo);
+    mostrarToast(estado.destaqueAtivo ? 'Palavras-chave destacadas! 🔍' : 'Destaque removido');
+  });
+  
+  document.getElementById('btn-continuar').addEventListener('click', () => {
+    if (estado.modoLeituraCompleta) iniciarSequenciaMinigames();
+    else avancarFase();
+  });
+  
+  document.getElementById('btn-pular-fase').addEventListener('click', pularFase);
+  document.getElementById('btn-voltar-biblioteca').addEventListener('click', () => irParaTela('biblioteca'));
+
+  document.getElementById('btn-proximo-mg').addEventListener('click', proximoMinigame);
+  document.getElementById('btn-finalizar-mg').addEventListener('click', finalizarMinigames);
+  document.getElementById('btn-voltar-leitura').addEventListener('click', () => {
+    if (estado.modoLeituraCompleta) mostrarLeituraCompleta();
+    else { irParaTela('leitura'); renderizarFase(); }
+  });
+  
+  document.getElementById('btn-ouvir-mg').addEventListener('click', () => {
+    const enunc = document.querySelector('#minigame-corpo .mg-enunciado');
+    if (enunc) ouvirTexto(enunc.textContent);
+  });
+
+  document.getElementById('btn-refazer-atividade').addEventListener('click', refazerAtividade);
+  document.getElementById('btn-jogar-novamente').addEventListener('click', () => irParaTela('biblioteca'));
+  document.getElementById('btn-ver-progresso').addEventListener('click', () => irParaTela('progresso'));
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  injetarEstilosNovos();
+  inicializar();
+});
+
+function injetarEstilosNovos() {
+  const css = `
+    .ia-gerar-wrap {
+      margin: 16px 0 20px;
+      padding: 16px 18px;
+      border-radius: 16px;
+      border: 2px solid var(--borda, #E5E7EB);
+      background: var(--card-bg, #fff);
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    }
+    .ia-gerar-titulo { font-size: 1.1rem; margin: 0 0 6px; color: var(--texto, #1F2937); }
+    .ia-gerar-sub { font-size: 0.9rem; color: #6B7280; margin: 0 0 12px; line-height: 1.45; }
+    .ia-gerar-label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; }
+    .ia-gerar-textarea {
+      width: 100%; box-sizing: border-box; border-radius: 12px; border: 2px solid #E5E7EB;
+      padding: 10px 12px; font-family: inherit; font-size: 1rem; resize: vertical; min-height: 72px;
+    }
+    .ia-gerar-btn { margin-top: 12px; width: 100%; max-width: 280px; }
+    .ia-gerar-erro { color: #B45309; font-size: 0.9rem; margin: 10px 0 0; }
+    .hc-tag.ia-badge {
+      background: linear-gradient(135deg, #7C3AED, #EC4899);
+      color: #fff;
+      font-weight: 700;
+      border: none;
+    }
+    .hc-tag.ia-badge-local {
+      background: linear-gradient(135deg, #D97706, #F59E0B);
+      color: #fff;
+      cursor: help;
+    }
+    .bot-ia-wrap {
+      padding: 10px 24px 24px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .bot-ia-card {
+      max-width: 780px;
+      width: 100%;
+      background: linear-gradient(180deg, #FFFFFF, #FAF7FF);
+      border: 1.5px solid rgba(167,139,250,.3);
+      border-radius: 20px;
+      box-shadow: 0 12px 32px rgba(100,70,200,.12);
+      padding: 18px;
+    }
+    .bot-chat {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .bot-chat-msg {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .bot-chat-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #EDE9FE;
+      font-size: .95rem;
+      flex: 0 0 32px;
+    }
+    .bot-chat-bubble {
+      background: #F5F3FF;
+      border: 1px solid #DDD6FE;
+      border-radius: 14px 14px 14px 6px;
+      padding: 10px 12px;
+      color: #4C1D95;
+      font-weight: 600;
+      line-height: 1.45;
+      font-size: .92rem;
+    }
+    .bot-ia-genero-grupo {
+      margin-bottom: 10px;
+    }
+    .bot-ia-label {
+      display: block;
+      margin-top: 8px;
+      margin-bottom: 6px;
+      font-weight: 700;
+      font-size: .95rem;
+    }
+    .bot-ia-textarea {
+      width: 100%;
+      border: 2px solid #E5E7EB;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 1rem;
+      resize: vertical;
+    }
+    .bot-ia-btn {
+      margin-top: 12px;
+      width: 100%;
+    }
+    .bot-ia-erro {
+      margin-top: 10px;
+      color: #B45309;
+      font-size: .9rem;
+      font-weight: 700;
+    }
+    .resumo-historia-wrap {
+      text-align: center;
+      padding: 8px 0 16px;
+    }
+    .resumo-cena {
+      font-size: 3rem;
+      margin-bottom: 8px;
+      animation: pulse 1.5s ease infinite;
+    }
+    @keyframes pulse {
+      0%,100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    .resumo-titulo {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--cor-primaria, #7C3AED);
+      margin-bottom: 14px;
+    }
+    .resumo-texto {
+      background: var(--card-bg, #fff);
+      border: 2px solid var(--borda, #E5E7EB);
+      border-radius: 16px;
+      padding: 16px 18px;
+      font-size: 1rem;
+      line-height: 1.75;
+      text-align: left;
+      color: var(--texto, #1F2937);
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    }
+    .resumo-texto strong.palavra-chave {
+      color: var(--cor-primaria, #7C3AED);
+      font-weight: 700;
+      background: rgba(124,58,237,.08);
+      border-radius: 4px;
+      padding: 0 3px;
+    }
+    .resumo-aviso {
+      background: linear-gradient(135deg,#FEF9C3,#FDE68A);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: .95rem;
+      color: #78350F;
+      margin-bottom: 16px;
+    }
+    .resumo-btn-iniciar {
+      font-size: 1.1rem;
+      padding: 14px 32px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--cor-primaria,#7C3AED), var(--cor-acento,#EC4899));
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+      box-shadow: 0 4px 16px rgba(124,58,237,.3);
+      transition: transform .15s, box-shadow .15s;
+    }
+    .resumo-btn-iniciar:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(124,58,237,.4); }
+
+    .mg-texto-contexto {
+      background: linear-gradient(135deg,#F5F3FF,#EDE9FE);
+      border-left: 4px solid var(--cor-primaria,#7C3AED);
+      border-radius: 0 12px 12px 0;
+      padding: 12px 14px;
+      font-size: .95rem;
+      line-height: 1.7;
+      color: var(--texto,#1F2937);
+      margin-bottom: 14px;
+    }
+    .mg-texto-contexto strong.palavra-chave {
+      color: var(--cor-primaria,#7C3AED);
+      font-weight: 700;
+    }
+
+    .mem-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 10px;
+      margin: 16px 0;
+    }
+    .mem-card {
+      height: 80px;
+      perspective: 600px;
+      cursor: pointer;
+    }
+    .mem-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform .5s cubic-bezier(.4,0,.2,1);
+      transform-style: preserve-3d;
+    }
+    .mem-card.mem-virado .mem-inner,
+    .mem-card.mem-acertado .mem-inner {
+      transform: rotateY(180deg);
+    }
+    .mem-frente, .mem-verso {
+      position: absolute;
+      inset: 0;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,.12);
+      transition: background .3s;
+    }
+    .mem-frente {
+      background: linear-gradient(135deg, var(--cor-primaria,#7C3AED), #A78BFA);
+      color: #fff;
+      font-size: 1.6rem;
+      border: 3px solid rgba(255,255,255,.3);
+    }
+    .mem-verso {
+      background: linear-gradient(135deg,#ECFDF5,#D1FAE5);
+      border: 3px solid #34D399;
+      color: var(--texto,#1F2937);
+      font-size: 0.88rem;
+      transform: rotateY(180deg);
+      text-align: center;
+      padding: 4px;
+    }
+    .mem-card.mem-acertado .mem-frente,
+    .mem-card.mem-acertado .mem-verso {
+      background: linear-gradient(135deg,#DCFCE7,#BBF7D0) !important;
+      border-color: #22C55E !important;
+      box-shadow: 0 0 0 3px rgba(34,197,94,.3);
+    }
+    .mem-card.mem-erro-flash .mem-inner {
+      animation: erroBlink .4s ease;
+    }
+    @keyframes erroBlink {
+      0%,100% { filter: none; }
+      40% { filter: brightness(.7) saturate(0); }
+    }
+    .mem-status {
+      text-align: center;
+      font-size: .95rem;
+      color: #6B7280;
+      padding: 4px 0;
+    }
+    .mem-status strong { color: var(--cor-primaria,#7C3AED); }
+
+    .cp-cel {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--borda,#E5E7EB);
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: background .1s, transform .1s, color .1s;
+      background: var(--card-bg,#fff);
+      color: var(--texto,#1F2937);
+    }
+    .cp-cel:hover {
+      background: #F3F4F6;
+      transform: scale(1.08);
+    }
+    .cp-cel.cp-sel {
+      background: var(--cor-primaria,#7C3AED) !important;
+      color: #fff !important;
+      border-color: transparent;
+      transform: scale(1.12);
+    }
+    .cp-cel.cp-preview {
+      background: var(--preview-color, #FBBF24) !important;
+      color: #1F2937 !important;
+      border-color: transparent;
+      transform: scale(1.07);
+    }
+    .cp-cel.cp-found {
+      background: var(--found-color, #22C55E) !important;
+      color: #fff !important;
+      border-color: transparent;
+      font-weight: 900;
+      box-shadow: 0 1px 4px rgba(34,197,94,.4);
+      cursor: default;
+    }
+    .cp-cel.cp-missed {
+      background: #FDE68A !important;
+      color: #78350F !important;
+      border-color: #F59E0B;
+      animation: pulseYellow .6s ease;
+    }
+    @keyframes pulseYellow {
+      0%,100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    .cp-cel.cp-wrong {
+      animation: shakeRed .3s ease;
+      background: #FEE2E2 !important;
+      color: #991B1B !important;
+    }
+    @keyframes shakeRed {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-3px); }
+      75% { transform: translateX(3px); }
+    }
+    .cp-alvo {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 999px;
+      border: 2px solid var(--cor-palavra, var(--cor-primaria,#7C3AED));
+      color: var(--cor-palavra, var(--cor-primaria,#7C3AED));
+      font-weight: 700;
+      font-size: .88rem;
+      margin: 3px;
+      background: rgba(124,58,237,.06);
+      transition: all .3s;
+    }
+    .cp-alvo.cp-alvo-found {
+      background: var(--cor-palavra, var(--cor-primaria,#7C3AED));
+      color: #fff !important;
+      text-decoration: line-through;
+      opacity: .8;
+    }
+  `;
+  const style = document.createElement('style');
+  style.id = 'estilos-novos-mg';
+  style.textContent = css;
+  document.head.appendChild(style);
+}

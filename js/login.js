@@ -7,7 +7,7 @@
 
   /* ─────────────────────────────────────────
      PARTE 1 — PERFIL DA CRIANÇA
-  ───────────────────────────────────────── */
+   ───────────────────────────────────────── */
 
   const perfil = { nome: '', avatar: '🦁', faixa: 1, genero: 'narrativo' };
   const CHAVE_ESTADO = 'mundoHistorias_estado';
@@ -301,7 +301,6 @@
     };
     
     btnEnviarCodigo.onclick = async () => {
-    
       const email = document
         .getElementById('resp-email-reset')
         .value
@@ -314,9 +313,7 @@
       }
     
       try {
-    
         setErro('Enviando código...');
-    
         const resposta = await fetch(
           'https://localhost:7157/api/v1/parents/forgot-password',
           {
@@ -331,7 +328,6 @@
         );
     
         const dados = await resposta.json();
-    
         if (!resposta.ok) {
           throw new Error(
             dados.message ||
@@ -342,17 +338,15 @@
         setErro(
           'Código enviado com sucesso. Verifique sua caixa de entrada.'
         );
-    
       } catch (e) {
-    
         console.error(e);
-    
         setErro(
           e.message ||
           'Não foi possível enviar o código.'
         );
       }
     };
+
     document.getElementById('btn-resp-continuar').onclick = async () => {
       const nome = document.getElementById('resp-nome').value.trim();
       const sobrenome = document.getElementById('resp-sobrenome').value.trim();
@@ -398,8 +392,8 @@
         setErro(e.message || 'Falha ao conectar com a API.');
       }
     };
+
     btnResetarSenha.onclick = async () => {
-    
       const email = document
         .getElementById('resp-email-reset')
         .value
@@ -424,9 +418,7 @@
       }
     
       try {
-    
         setErro('Redefinindo senha...');
-    
         const resposta = await fetch(
           'https://localhost:7157/api/v1/parents/reset-password',
           {
@@ -443,7 +435,6 @@
         );
     
         const dados = await resposta.json();
-    
         if (!resposta.ok) {
           throw new Error(
             dados.message ||
@@ -452,14 +443,12 @@
         }
     
         document.getElementById('resp-email').value = email;
-    
         document.getElementById('resp-email-reset').value = '';
         document.getElementById('resp-codigo-reset').value = '';
         document.getElementById('resp-nova-senha').value = '';
         document.getElementById('resp-senha').value = '';
     
         responsavelModo = 'login';
-    
         alternarRecuperacao(false);
     
         if (typeof atualizarCamposPorModo === 'function') {
@@ -469,44 +458,12 @@
         setErro(
           'Senha redefinida com sucesso. Agora faça login.'
         );
-    
       } catch (e) {
-    
         console.error(e);
-    
         setErro(
           e.message ||
           'Não foi possível redefinir a senha.'
         );
-      }
-    
-    
-      const existente = contas.responsaveis.find(r => r.email === email);
-      try {
-        let sessaoApi = null;
-        if (responsavelModo === 'cadastro') {
-          if (existente) {
-            setErro('E-mail já cadastrado.');
-            return;
-          }
-          contas.responsaveis.push({ nome, sobrenome, email, senha, perfis: [] });
-          salvarContas(contas);
-          sessaoApi = await apiRequest('/api/v1/parents/register', 'POST', { nome, sobrenome, email, senha });
-        } else {
-          if (!existente || existente.senha !== senha) {
-            setErro('E-mail ou senha inválidos.');
-            return;
-          }
-          sessaoApi = await apiRequest('/api/v1/parents/login', 'POST', { email, senha });
-        }
-
-        const sessao = { email, em: Date.now(), responsavelId: sessaoApi.responsavelId };
-        setErro('');
-        salvarJSON(CHAVE_SESSAO, sessao);
-        await sincronizarCriancasPendentes(sessao);
-        abrirSelecaoPerfis(email);
-      } catch (e) {
-        setErro(e.message || 'Falha ao conectar com a API.');
       }
     };
   }

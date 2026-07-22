@@ -3,30 +3,32 @@ const navbar = document.getElementById('navbar');
 const hamburger = document.getElementById('hamburger');
 const mobileMenu = document.getElementById('mobile-menu');
 
-window.addEventListener('scroll', () => {
-  if (window.scrollY > 50) {
-    navbar.classList.add('scrolled');
-  } else {
-    navbar.classList.remove('scrolled');
-  }
-});
-
-hamburger.addEventListener('click', () => {
-  mobileMenu.classList.toggle('open');
-});
-
-// Close mobile menu when link is clicked
-mobileMenu.querySelectorAll('a').forEach(link => {
-  link.addEventListener('click', () => {
-    mobileMenu.classList.remove('open');
+if (navbar) {
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 50) {
+      navbar.classList.add('scrolled');
+    } else {
+      navbar.classList.remove('scrolled');
+    }
   });
-});
+}
+
+if (hamburger && mobileMenu) {
+  hamburger.addEventListener('click', () => {
+    mobileMenu.classList.toggle('open');
+  });
+
+  mobileMenu.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      mobileMenu.classList.remove('open');
+    });
+  });
+}
 
 // ===== REVEAL ON SCROLL =====
 const revealObserver = new IntersectionObserver((entries) => {
   entries.forEach((entry, i) => {
     if (entry.isIntersecting) {
-      // Stagger children if parent has children
       const el = entry.target;
       el.style.transitionDelay = `${(el.dataset.delay || 0)}ms`;
       el.classList.add('visible');
@@ -38,12 +40,10 @@ const revealObserver = new IntersectionObserver((entries) => {
   rootMargin: '0px 0px -40px 0px'
 });
 
-// Observe all .reveal elements
 document.querySelectorAll('.reveal').forEach((el, index) => {
   revealObserver.observe(el);
 });
 
-// Stagger cards and grid items
 function staggerChildren(parentSelector, childSelector, delayStep = 100) {
   document.querySelectorAll(parentSelector).forEach(parent => {
     parent.querySelectorAll(childSelector).forEach((child, i) => {
@@ -99,7 +99,7 @@ if (progressFill) {
 
 // ===== HERO FLOATING CARDS MOUSE PARALLAX =====
 const heroIllustration = document.querySelector('.hero-illustration');
-if (heroIllustration) {
+if (heroIllustration && document.querySelector('.hero')) {
   document.querySelector('.hero').addEventListener('mousemove', (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width - 0.5;
@@ -124,7 +124,6 @@ if (heroIllustration) {
 }
 
 // ===== COUNTER ANIMATION (STATS) =====
-// (Simple pulse on stat cards for delight)
 document.querySelectorAll('.stat').forEach((stat, i) => {
   setTimeout(() => {
     stat.style.transition = 'transform 0.3s, background 0.3s';
@@ -139,10 +138,8 @@ document.querySelectorAll('.stat').forEach((stat, i) => {
   }, i * 100);
 });
 
-// ===== INIT: Trigger initial reveals for hero (already visible) =====
 window.dispatchEvent(new Event('scroll'));
 
-// Fire reveal check on load
 window.addEventListener('load', () => {
   document.querySelectorAll('.reveal').forEach(el => {
     const rect = el.getBoundingClientRect();
@@ -156,47 +153,41 @@ window.addEventListener('load', () => {
 const form = document.getElementById("footer-contato-form");
 const feedback = document.getElementById("contato-feedback");
 
-form.addEventListener("submit", async (e) => {
-
+if (form) {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const dados = {
-        nome: document.getElementById("contato-nome").value,
-        email: document.getElementById("contato-email").value,
-        assunto: document.getElementById("contato-assunto").value,
-        mensagem: document.getElementById("contato-mensagem").value
+      nome: document.getElementById("contato-nome").value,
+      email: document.getElementById("contato-email").value,
+      assunto: document.getElementById("contato-assunto").value,
+      mensagem: document.getElementById("contato-mensagem").value
     };
 
     try {
+      if (feedback) feedback.textContent = "Enviando...";
 
-        feedback.textContent = "Enviando...";
-
-        const resposta = await fetch(
-            "https://localhost:7157/api/contato",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(dados)
-            }
-        );
-
-        if (!resposta.ok) {
-            throw new Error("Erro ao enviar");
+      const resposta = await fetch(
+        "https://localhost:7157/api/contato",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(dados)
         }
+      );
 
-        feedback.textContent =
-            "Mensagem enviada com sucesso!";
+      if (!resposta.ok) {
+        throw new Error("Erro ao enviar");
+      }
 
-        form.reset();
-
+      if (feedback) feedback.textContent = "Mensagem enviada com sucesso!";
+      form.reset();
     }
     catch (erro) {
-
-        console.error(erro);
-
-        feedback.textContent =
-            "Não foi possível enviar a mensagem.";
+      console.error(erro);
+      if (feedback) feedback.textContent = "Não foi possível enviar a mensagem.";
     }
-});
+  });
+}
