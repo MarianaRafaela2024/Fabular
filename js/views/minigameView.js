@@ -6,13 +6,23 @@
 
 function iniciarMinigames() {
   const h = estado.historiaAtual;
+  if (!h) {
+    mostrarToast('Escolha uma história primeiro! 📚');
+    return;
+  }
   prepararMinigamesPreset(h);
   estado.minigameAtual = 0;
   estado.mgAcertos = 0;
+  estado.modoLeituraCompleta = true;
   mostrarLeituraCompleta();
 }
 
 function iniciarSequenciaMinigames() {
+  if (!estado.historiaAtual) {
+    mostrarToast('Escolha uma história primeiro! 📚');
+    return;
+  }
+  estado.modoLeituraCompleta = true;
   irParaTela('minigame');
   renderizarMinigame();
 }
@@ -85,6 +95,30 @@ function renderizarMinigame() {
   }
 }
 
+function limparRespostaEsperada(container) {
+  const alvo = container || document.getElementById('minigame-corpo');
+  if (!alvo) return;
+  alvo.querySelectorAll('.mg-resposta-esperada').forEach((el) => el.remove());
+}
+
+function mostrarRespostaEsperada(texto, container) {
+  const alvo = container || document.getElementById('minigame-corpo');
+  if (!alvo) return;
+  const textoLimpo = String(texto || '').trim();
+  if (!textoLimpo) return;
+  limparRespostaEsperada(alvo);
+  const el = document.createElement('div');
+  el.className = 'mg-resposta-esperada';
+  const strong = document.createElement('strong');
+  strong.textContent = 'Resposta esperada:';
+  const span = document.createElement('span');
+  span.textContent = textoLimpo;
+  el.appendChild(strong);
+  el.appendChild(document.createTextNode(' '));
+  el.appendChild(span);
+  alvo.appendChild(el);
+}
+
 function mostrarFeedbackMG(ok, mostrarProximo = true) {
   if (ok) estado.mgAcertos++;
   else estado.tentativasReprovadas++;
@@ -133,6 +167,35 @@ function proximoMinigame() {
   document.getElementById('app-main').scrollTop = 0;
 }
 
+function mostrarResultado(estrelas, tempoMin, acertosTotal) {
+  const estrelasExibidas = Math.max(0, Math.min(3, Number(estrelas) || 0));
+  const mensagens = MSGS_RESULTADO[estrelasExibidas] || MSGS_RESULTADO[0] || ['Parabéns!'];
+  const msg = mensagens[Math.floor(Math.random() * mensagens.length)];
+
+  const resultadoEstrelas = document.getElementById('resultado-estrelas');
+  if (resultadoEstrelas) resultadoEstrelas.innerHTML = renderEstrelas(estrelasExibidas, 3);
+
+  const resultadoTitulo = document.getElementById('resultado-titulo');
+  if (resultadoTitulo) resultadoTitulo.textContent = estrelasExibidas >= 3 ? 'Incrível!' : estrelasExibidas === 2 ? 'Muito bem!' : 'Parabéns!';
+
+  const resultadoMsg = document.getElementById('resultado-msg');
+  if (resultadoMsg) resultadoMsg.textContent = msg;
+
+  const statTempo = document.getElementById('stat-tempo');
+  if (statTempo) statTempo.textContent = `${tempoMin} min`;
+
+  const statAcertos = document.getElementById('stat-acertos');
+  if (statAcertos) statAcertos.textContent = acertosTotal;
+
+  const statNivel = document.getElementById('stat-nivel');
+  if (statNivel) statNivel.textContent = estado.nivel || 'Iniciante';
+
+  const resultadoAviso = document.getElementById('resultado-aviso');
+  if (resultadoAviso) resultadoAviso.classList.add('oculto');
+
+  irParaTela('resultado');
+}
+
 function finalizarMinigames() {
   const tempoMin = Math.max(1, Math.round((Date.now() - (estado.iniciouEm || Date.now())) / 60000));
   estado.tempoTotal += tempoMin;
@@ -167,15 +230,6 @@ function embaralhar(arr) {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
-}
-
-function normalizarChavePalavra(palavra) {
-  return String(palavra || '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim();
 }
 
 function prepararMinigamesPreset(h) {
@@ -471,7 +525,12 @@ function renderSomPalavra(fase, corpo, spec) {
         b.disabled = true;
         if (b.dataset.palavra === alvo) b.classList.add('correta');
       });
-      if (!ok) btn.classList.add('errada');
+      if (!ok) {
+        btn.classList.add('errada');
+        mostrarRespostaEsperada(alvo, wrap);
+      } else {
+        limparRespostaEsperada(wrap);
+      }
       mostrarFeedbackMG(ok);
     });
   });
@@ -508,7 +567,12 @@ function renderEscolhaMG(fase, corpo, spec) {
         b.disabled = true;
         if (parseInt(b.dataset.idx, 10) === correta) b.classList.add('correta');
       });
-      if (!ok) btn.classList.add('errada');
+      if (!ok) {
+        btn.classList.add('errada');
+        mostrarRespostaEsperada(opcoes[correta] || 'Opção correta', wrap);
+      } else {
+        limparRespostaEsperada(wrap);
+      }
       mostrarFeedbackMG(ok);
     });
   });
@@ -537,14 +601,20 @@ function renderCompletarMG(fase, corpo, spec) {
   const validar = () => {
     const v = norm(input.value);
     const c = norm(resposta);
-    const ok = v === c || (v.length >= 2 && (c.includes(v) || v.includes(c)));
-    registrarEventoMG('completar', ok ? 'acerto' : 'erro');
+    const completo = v === c;
+    const parcial = Boolean(v && (c.includes(v) || v.includes(c)));
+    const temAcerto = completo || parcial;
+    registrarEventoMG('completar', temAcerto ? 'acerto' : 'erro');
     input.disabled = true;
     btn.disabled = true;
     input.value = resposta;
-    input.classList.add('correta');
-    if (!ok) input.classList.add('errada');
-    mostrarFeedbackMG(ok);
+    input.classList.add(temAcerto ? 'correta' : 'errada');
+    if (completo) {
+      limparRespostaEsperada(wrap);
+    } else {
+      mostrarRespostaEsperada(resposta, wrap);
+    }
+    mostrarFeedbackMG(completo);
   };
   btn.addEventListener('click', validar);
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') validar(); });
@@ -596,6 +666,11 @@ function renderColorirMG(h, corpo, spec) {
       else if (selecionadas.has(idx)) btn.classList.add('errada');
     });
     document.getElementById('btnConfColorir').disabled = true;
+    if (ok) {
+      limparRespostaEsperada(wrap);
+    } else {
+      mostrarRespostaEsperada(alvo.join(', '), wrap);
+    }
     mostrarFeedbackMG(ok);
   });
 }
@@ -653,6 +728,11 @@ function renderMontaFrase(fase, corpo, spec) {
       document.getElementById('btnConfMF').disabled = true;
       revelarMontaFraseCorreta(palavrasCorretas);
       registrarEventoMG('monta_frase', ok ? 'acerto' : 'erro');
+      if (ok) {
+        limparRespostaEsperada(wrap);
+      } else {
+        mostrarRespostaEsperada(palavrasCorretas.join(' '), wrap);
+      }
       mostrarFeedbackMG(ok);
     });
     return;
@@ -720,6 +800,11 @@ function renderMontaFrase(fase, corpo, spec) {
     document.getElementById('btnConfMF').disabled = true;
     revelarMontaFraseCorreta(palavrasCorretas);
     registrarEventoMG('monta_frase', ok ? 'acerto' : 'erro');
+    if (ok) {
+      limparRespostaEsperada(wrap);
+    } else {
+      mostrarRespostaEsperada(palavrasCorretas.join(' '), wrap);
+    }
     mostrarFeedbackMG(ok);
   });
 }
@@ -763,7 +848,12 @@ function renderVerdadeiroFalso(fase, h, corpo, spec) {
     document.getElementById('tfF').disabled = true;
     const btnCorreto = item.correta ? document.getElementById('tfV') : document.getElementById('tfF');
     btnCorreto.classList.add('correta');
-    if (!ok) (resp ? document.getElementById('tfV') : document.getElementById('tfF')).classList.add('errada');
+    if (!ok) {
+      (resp ? document.getElementById('tfV') : document.getElementById('tfF')).classList.add('errada');
+      mostrarRespostaEsperada(item.correta ? 'Verdadeiro' : 'Falso', wrap);
+    } else {
+      limparRespostaEsperada(wrap);
+    }
     registrarEventoMG('verdadeiro_falso', ok ? 'acerto' : 'erro');
     mostrarFeedbackMG(ok);
   };
@@ -1043,6 +1133,11 @@ function renderCacaPalavras(fase, h, corpo) {
     });
     const ok = encontradas.size >= palavrasAlvo.length;
     registrarEventoMG('caca_palavras', ok ? 'acerto' : 'erro');
+    if (ok) {
+      limparRespostaEsperada(wrap);
+    } else {
+      mostrarRespostaEsperada(palavrasAlvo.join(', '), wrap);
+    }
     mostrarFeedbackMG(ok);
   });
 }
@@ -1221,11 +1316,15 @@ function renderLigarPontos(fase, h, corpo) {
       }
     });
     requestAnimationFrame(() => redrawSvg());
-    mostrarFeedbackMG(acertos > 0, true);
+    const ok = acertos >= pares.length;
+    if (ok) {
+      limparRespostaEsperada(wrap);
+    } else {
+      const expectativa = pares.map(par => `${par.palavra} → ${par.def}`).join(' | ');
+      mostrarRespostaEsperada(expectativa, wrap);
+    }
+    mostrarFeedbackMG(ok, true);
   });
-
-  const onResize = () => requestAnimationFrame(() => redrawSvg());
-  window.addEventListener('resize', onResize);
 }
 
 // ─── 7. RIMA ────────────────────────────────────────────────────────────────
@@ -1274,7 +1373,12 @@ function renderRima(h, corpo, spec) {
         b.disabled = true;
         if (b.dataset.rima === par.rima) b.classList.add('correta');
       });
-      if (!ok) btn.classList.add('errada');
+      if (!ok) {
+        btn.classList.add('errada');
+        mostrarRespostaEsperada(par.rima, wrap);
+      } else {
+        limparRespostaEsperada(wrap);
+      }
       mostrarFeedbackMG(ok);
     });
   });
@@ -1321,7 +1425,12 @@ function renderQuemDisse(fase, h, corpo, spec) {
         b.disabled = true;
         if (b.dataset.nome === alvo) b.classList.add('correta');
       });
-      if (!ok) btn.classList.add('errada');
+      if (!ok) {
+        btn.classList.add('errada');
+        mostrarRespostaEsperada(alvo, wrap);
+      } else {
+        limparRespostaEsperada(wrap);
+      }
       mostrarFeedbackMG(ok);
     });
   });
@@ -1388,13 +1497,21 @@ function renderOrdenarPassos(h, corpo, spec) {
 
   document.getElementById('btnConfOP').addEventListener('click', () => {
     const correta = passos.map((_, i) => i);
+    const ordemOriginal = [...ordem];
     const ok = JSON.stringify(ordem) === JSON.stringify(correta);
     ordem = [...correta];
     renderLista();
-    document.querySelectorAll('.op-item').forEach(li => li.classList.add('correta'));
+    document.querySelectorAll('.op-item').forEach((li, idx) => {
+      li.classList.add(ordemOriginal[idx] === correta[idx] ? 'correta' : 'errada');
+    });
     document.querySelectorAll('.op-seta').forEach(b => b.disabled = true);
     document.getElementById('btnConfOP').disabled = true;
     registrarEventoMG('ordenar_passos', ok ? 'acerto' : 'erro');
+    if (ok) {
+      limparRespostaEsperada(wrap);
+    } else {
+      mostrarRespostaEsperada(passos.map((p, i) => `${i + 1}. ${p.texto}`).join(' • '), wrap);
+    }
     mostrarFeedbackMG(ok);
   });
 }

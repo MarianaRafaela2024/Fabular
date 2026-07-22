@@ -39,6 +39,27 @@ function atualizarHeader() {
   if (totalEstrelas) totalEstrelas.textContent = estado.totalEstrelas;
 }
 
+function refazerAtividade() {
+  if (!estado.historiaAtual) {
+    irParaTela('biblioteca');
+    mostrarToast('Escolha uma história primeiro! 📚');
+    return;
+  }
+
+  estado.faseAtual = 0;
+  estado.acertos = 0;
+  estado.ajudas = 0;
+  estado.minigameAtual = 0;
+  estado.mgAcertos = 0;
+  estado.modoLeituraCompleta = false;
+  estado.minigamesLista = [];
+  estado.minigamesPreset = null;
+  estado.iniciouEm = Date.now();
+
+  irParaTela('leitura');
+  renderizarFase();
+}
+
 async function inicializar() {
   carregarEstado();
   if (estado.experiencia == null) estado.experiencia = 0;
@@ -117,8 +138,16 @@ async function inicializar() {
   });
   
   document.getElementById('btn-continuar').addEventListener('click', () => {
-    if (estado.modoLeituraCompleta) iniciarSequenciaMinigames();
-    else avancarFase();
+    const btn = document.getElementById('btn-continuar');
+    const textoBtn = (btn?.textContent || '').toLowerCase();
+    const deveIniciarMinigames = estado.modoLeituraCompleta || textoBtn.includes('vamos jogar') || textoBtn.includes('minigame');
+
+    if (deveIniciarMinigames) {
+      estado.modoLeituraCompleta = true;
+      iniciarSequenciaMinigames();
+    } else {
+      avancarFase();
+    }
   });
   
   document.getElementById('btn-pular-fase').addEventListener('click', pularFase);
