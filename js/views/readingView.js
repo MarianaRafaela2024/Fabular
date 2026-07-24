@@ -21,7 +21,6 @@ async function iniciarHistoria(id, opcoes) {
   if (!historia) return;
 
   estado.historiaAtual = historia;
-  estado.faseAtual = 0;
   estado.acertos = 0;
   estado.ajudas = 0;
   estado.iniciouEm = Date.now();
@@ -29,7 +28,7 @@ async function iniciarHistoria(id, opcoes) {
   if (opcoes && opcoes.irLeitura) {
     prepararMinigamesPreset(historia);
     irParaTela('leitura');
-    renderizarFase();
+    mostrarLeituraCompleta();
     return;
   }
 
@@ -38,8 +37,17 @@ async function iniciarHistoria(id, opcoes) {
 }
 
 function obterTextoCompletoHistoria(h) {
-  if (!h || !Array.isArray(h.fases)) return '';
-  return h.fases.map((f) => f.texto || '').filter(Boolean).join(' ');
+  if (!h) return '';
+  if (typeof h.textoCompleto === 'string' && h.textoCompleto.trim()) {
+    return h.textoCompleto.trim();
+  }
+  if (typeof h.texto === 'string' && h.texto.trim()) {
+    return h.texto.trim();
+  }
+  if (Array.isArray(h.fases)) {
+    return h.fases.map((f) => f.texto || '').filter(Boolean).join(' ');
+  }
+  return '';
 }
 
 function lerTextoCompletoHistoria(opcoes) {
@@ -66,8 +74,6 @@ function lerTextoCompletoHistoria(opcoes) {
   textoEl.classList.toggle('sem-destaque', !estado.destaqueAtivo);
   textoEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  ocultarFeedback();
-
   if (opts.somenteExibir) return;
 }
 
@@ -86,6 +92,8 @@ function setUiLeituraModoCompleto(completo) {
 function mostrarLeituraCompleta() {
   const h = estado.historiaAtual;
   if (!h) return;
+
+  estado.modoLeituraCompleta = true;
   lerTextoCompletoHistoria({ autoOuvir: estado.perfil.faixa === 1 });
 
   const n = estado.minigamesLista.length;
@@ -96,158 +104,12 @@ function mostrarLeituraCompleta() {
 
 function renderizarFase() {
   const h = estado.historiaAtual;
-  const fi = estado.faseAtual;
-  const fase = h.fases[fi];
-  const totalFases = h.fases.length;
-
-  setUiLeituraModoCompleto(false);
-
-  document.getElementById('leitura-titulo-badge').textContent = h.titulo;
-  document.getElementById('fase-atual-label').textContent = `Fase ${fi + 1}`;
-
-  const dots = document.getElementById('fase-dots');
-  dots.innerHTML = '';
-  for (let i = 0; i < totalFases; i++) {
-    const d = document.createElement('div');
-    d.className = 'fase-dot ' + (i < fi ? 'concluida' : i === fi ? 'atual' : '');
-    dots.appendChild(d);
-  }
-
-  const pct = ((fi) / totalFases * 100);
-  document.getElementById('barra-fase-fill').style.width = pct + '%';
-
-  document.getElementById('historia-emoji-cena').textContent = fase.cena || h.cena;
-
-  const textoEl = document.getElementById('historia-texto');
-  textoEl.innerHTML = fase.texto;
-  textoEl.classList.toggle('sem-destaque', !estado.destaqueAtivo);
-
-  renderizarInteracao(fase.interacao);
-
-  ocultarFeedback();
-  document.getElementById('btn-continuar').style.display = 'none';
-}
-
-function renderizarInteracao(inter) {
-  const area = document.getElementById('interacao-area');
-  area.innerHTML = '';
-
-  if (!inter) return;
-
-  const div = document.createElement('div');
-
-  if (inter.tipo === 'escolha') {
-    div.innerHTML = `
-      <p class="interacao-pergunta">${inter.pergunta}</p>
-      <div class="interacao-opcoes" id="opcoes-container">
-        ${inter.opcoes.map((op, i) => `
-          <button class="opcao-btn" data-idx="${i}" aria-label="${op}">${op}</button>
-        `).join('')}
-      </div>
-    `;
-    area.appendChild(div);
-    div.querySelectorAll('.opcao-btn').forEach(btn => {
-      btn.addEventListener('click', () => responderEscolha(parseInt(btn.dataset.idx), inter.correta, div));
-    });
-
-  } else if (inter.tipo === 'completar') {
-    div.innerHTML = `
-      <p class="interacao-pergunta">${inter.pergunta}</p>
-      <div class="interacao-input-area">
-        <input type="text" class="interacao-input" id="input-completar" placeholder="Digite aqui..." autocomplete="off" aria-label="Resposta" />
-        <button class="btn-confirmar" id="btn-conf-completar">✓ OK</button>
-      </div>
-    `;
-    area.appendChild(div);
-    const inp = document.getElementById('input-completar');
-    const conf = document.getElementById('btn-conf-completar');
-    const normalizar = str =>
-      str.trim().toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
-
-    const verificar = () => {
-      const v = normalizar(inp.value);
-      const c = normalizar(inter.resposta);
-      const ok = v === c || v.includes(c) || c.includes(v);
-      responderCompletarFeedback(ok, c, inp, conf);
-    };
-    conf.addEventListener('click', verificar);
-    inp.addEventListener('keydown', e => { if (e.key === 'Enter') verificar(); });
-  }
-}
-
-function responderEscolha(idx, correta, container) {
-  const btns = container.querySelectorAll('.opcao-btn');
-  btns.forEach(b => b.disabled = true);
-  const ok = idx === correta;
-  btns[idx].classList.add(ok ? 'correta' : 'errada');
-  if (!ok) {
-    btns[correta].classList.add('correta');
-    estado.ajudas++;
-    estado.tentativasReprovadas++;
-  } else {
-    estado.acertos++;
-  }
-  adicionarExperiencia(12, 'fase');
-  mostrarFeedbackFase(ok);
-}
-
-function responderCompletarFeedback(ok, correta, inp, btn) {
-  inp.disabled = true;
-  btn.disabled = true;
-  inp.classList.add(ok ? 'correta' : 'errada');
-  if (!ok) {
-    inp.value = correta;
-    inp.classList.remove('errada');
-    inp.classList.add('correta');
-    estado.ajudas++;
-    estado.tentativasReprovadas++;
-  } else {
-    estado.acertos++;
-  }
-  adicionarExperiencia(12, 'fase');
-  mostrarFeedbackFase(ok);
-}
-
-function mostrarFeedbackFase(ok) {
-  const area = document.getElementById('feedback-area');
-  const card = document.getElementById('feedback-card');
-  const emoji = document.getElementById('feedback-emoji');
-  const msg = document.getElementById('feedback-msg');
-
-  area.classList.remove('oculto');
-  if (ok) {
-    card.style.background = 'linear-gradient(135deg,#DCFCE7,#D1FAE5)';
-    card.style.borderColor = 'var(--cor-verde)';
-    emoji.textContent = ['🎉', '⭐', '🌟', '🚀', '💫'][Math.floor(Math.random() * 5)];
-    msg.textContent = MSGS_ACERTO[Math.floor(Math.random() * MSGS_ACERTO.length)];
-    msg.style.color = '#166534';
-  } else {
-    card.style.background = 'linear-gradient(135deg,#FEF3C7,#FDE68A)';
-    card.style.borderColor = '#F59E0B';
-    emoji.textContent = '💛';
-    msg.textContent = MSGS_ERRO[Math.floor(Math.random() * MSGS_ERRO.length)];
-    msg.style.color = '#92400E';
-  }
-
-  const btn = document.getElementById('btn-continuar');
-  btn.textContent = 'Próxima Fase 🚀';
-  btn.style.display = 'block';
-}
-
-function ocultarFeedback() {
-  document.getElementById('feedback-area').classList.add('oculto');
+  if (!h) return;
+  mostrarLeituraCompleta();
 }
 
 function avancarFase() {
-  const h = estado.historiaAtual;
-  if (estado.faseAtual < h.fases.length - 1) {
-    estado.faseAtual++;
-    renderizarFase();
-  } else {
-    iniciarMinigames();
-  }
+  iniciarSequenciaMinigames();
 }
 
 function pularFase() {

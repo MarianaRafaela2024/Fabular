@@ -17,7 +17,6 @@ let estado = {
   errosMG: 0,
   naoConsigoOuvir: 0,
   historiaAtual: null,
-  faseAtual: 0,
   acertos: 0,
   ajudas: 0,
   minigameAtual: 0,

@@ -46,7 +46,6 @@ function refazerAtividade() {
     return;
   }
 
-  estado.faseAtual = 0;
   estado.acertos = 0;
   estado.ajudas = 0;
   estado.minigameAtual = 0;
@@ -57,7 +56,7 @@ function refazerAtividade() {
   estado.iniciouEm = Date.now();
 
   irParaTela('leitura');
-  renderizarFase();
+  mostrarLeituraCompleta();
 }
 
 async function inicializar() {
@@ -157,7 +156,7 @@ async function inicializar() {
   document.getElementById('btn-finalizar-mg').addEventListener('click', finalizarMinigames);
   document.getElementById('btn-voltar-leitura').addEventListener('click', () => {
     if (estado.modoLeituraCompleta) mostrarLeituraCompleta();
-    else { irParaTela('leitura'); renderizarFase(); }
+    else { irParaTela('leitura'); mostrarLeituraCompleta(); }
   });
   
   document.getElementById('btn-ouvir-mg').addEventListener('click', () => {
