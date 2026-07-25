@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mundo das Histórias — Progresso ✨</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/components/minigames.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div id="app-shell">
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="header-esq">
+      <div id="avatar-display" class="header-avatar"></div>
+      <div class="header-info">
+        <span class="header-nome" id="header-nome">Aventureiro</span>
+        <span class="header-nivel" id="header-nivel">Iniciante</span>
+      </div>
+    </div>
+    <div class="header-centro">
+      <span class="header-logo">📚 Mundo das Histórias</span>
+    </div>
+    <div class="header-dir">
+      <div class="moedas-badge" title="Estrelas ganhas">
+        <span aria-hidden="true">⭐</span>
+        <span id="total-estrelas">0</span>
+      </div>
+      <button class="btn-icon" id="btn-contraste" title="Alternar alto contraste" aria-label="Alternar alto contraste">🌓</button>
+      <button class="btn-icon" id="btn-fonte-mais" title="Aumentar fonte" aria-label="Aumentar fonte">A+</button>
+      <button class="btn-icon" id="btn-fonte-menos" title="Diminuir fonte" aria-label="Diminuir fonte">A−</button>
+      <button class="btn-icon btn-sair" id="btn-sair" title="Sair" aria-label="Sair e voltar ao login">🚪</button>
+    </div>
+  </header>
+
+  <!-- LAYOUT -->
+  <div class="app-layout">
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar" id="sidebar" role="navigation" aria-label="Menu principal">
+      <div class="sidebar-logo" aria-hidden="true">📚</div>
+      <button class="nav-item" data-tela="biblioteca">
+        <span class="icon home"></span>
+        <span class="nav-label">Início</span>
+      </button>
+      <button class="nav-item" data-tela="leitura">
+        <span class="nav-icon icon icon-book"></span>
+        <span class="nav-label">História</span>
+      </button>
+      <button class="nav-item ativo" data-tela="progresso">
+        <span class="icon award"></span>
+        <span class="nav-label">Progresso</span>
+      </button>
+      <button class="nav-item" data-tela="responsavel">
+        <span class="icon award"></span>
+        <span class="nav-label">Área do Responsável</span>
+      </button>
+      <button class="nav-item" data-tela="bot-ia">
+        <span class="icon bot"></span>
+        <span class="nav-label">Bot IA</span>
+      </button>
+    </nav>
+
+    <!-- MAIN -->
+    <main class="app-main" id="app-main">
+
+      <!-- PROGRESSO -->
+      <section id="tela-progresso" class="tela-app ativa">
+        <div class="tela-header">
+          <h2>🏆 Meu Progresso</h2>
+          <p class="tela-sub" id="progresso-sub">Continue assim, você está indo bem!</p>
+        </div>
+        <div class="progresso-perfil-card">
+          <div class="pp-avatar" id="pp-avatar">🦁</div>
+          <div class="pp-info">
+            <div class="pp-nome" id="pp-nome">Aventureiro</div>
+            <div class="nivel-badge" id="pp-nivel-badge">⚡ Iniciante</div>
+          </div>
+          <div class="pp-estrelas">
+            <div class="pp-total-estrelas" id="pp-total">0 ⭐</div>
+            <div class="pp-label">estrelas ganhas</div>
+          </div>
+        </div>
+        <div class="progresso-secoes">
+          <div class="progresso-secao">
+            <h3>📊 Evolução do Nível</h3>
+            <div class="nivel-progress-area">
+              <div class="xp-barra-card">
+                <div class="xp-barra-topo">
+                  <span class="xp-nivel-label" id="xp-nivel-label">🌱 Iniciante</span>
+                  <span class="xp-texto" id="xp-texto">0 XP</span>
+                </div>
+                <div class="xp-barra-track">
+                  <div class="xp-barra-fill" id="xp-barra-fill"></div>
+                </div>
+                <p class="xp-proximo-label" id="xp-proximo-label">Complete fases e minigames para ganhar experiência</p>
+              </div>
+              <div class="nivel-steps">
+                <div class="nivel-step" id="ns-iniciante"><span class="ns-icon">🌱</span><span>Iniciante</span></div>
+                <div class="nivel-linha"></div>
+                <div class="nivel-step" id="ns-intermediario"><span class="ns-icon">🌿</span><span>Intermediário</span></div>
+                <div class="nivel-linha"></div>
+                <div class="nivel-step" id="ns-avancado"><span class="ns-icon">🌳</span><span>Avançado</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="progresso-secao progresso-secao-historias">
+            <h3>📖 Histórias Concluídas</h3>
+            <div class="progresso-historias-layout">
+              <div class="historias-concluidas-wrap">
+                <div class="historias-concluidas" id="historias-concluidas">
+                  <p class="vazio-msg">Nenhuma história concluída ainda. Comece a ler! 📚</p>
+                </div>
+              </div>
+              <aside class="calendario-atividade" id="calendario-atividade" aria-label="Calendário de atividade de leitura"></aside>
+            </div>
+          </div>
+          <div class="progresso-secao">
+            <h3>⏱️ Estatísticas</h3>
+            <div class="stats-grid">
+              <div class="stat-card-prog"><span class="scp-icon">📚</span><span class="scp-valor" id="prog-historias">0</span><span class="scp-label">Histórias lidas</span></div>
+              <div class="stat-card-prog"><span class="scp-icon">⏰</span><span class="scp-valor" id="prog-tempo">0 min</span><span class="scp-label">Tempo total</span></div>
+              <div class="stat-card-prog"><span class="scp-icon">⭐</span><span class="scp-valor" id="prog-estrelas">0</span><span class="scp-label">Estrelas</span></div>
+              <div class="stat-card-prog"><span class="scp-icon">🎮</span><span class="scp-valor" id="prog-minigames">0</span><span class="scp-label">Minigames</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script src="js/models/stories.js"></script>
+<script src="js/models/state.js"></script>
+<script src="js/views/accessibilityView.js"></script>
+<script src="js/views/iaView.js"></script>
+<script src="js/views/libraryView.js"></script>
+<script src="js/views/readingView.js"></script>
+<script src="js/views/minigameView.js"></script>
+<script src="js/views/progressView.js"></script>
+<script src="js/controllers/appController.js"></script>
+</body>
+</html>

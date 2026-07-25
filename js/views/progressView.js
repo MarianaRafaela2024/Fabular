@@ -8,15 +8,23 @@ let calendarioMesAtual = new Date();
 
 function atualizarTelaProgresso() {
   const p = estado.perfil;
-  document.getElementById('pp-avatar').textContent = p.avatar;
-  document.getElementById('pp-nome').textContent = p.nome;
-  document.getElementById('pp-nivel-badge').textContent = labelNivel(estado.nivel);
-  document.getElementById('pp-total').textContent = estado.totalEstrelas + ' ⭐';
+  const ppAvatar = document.getElementById('pp-avatar');
+  const ppNome = document.getElementById('pp-nome');
+  const ppNivelBadge = document.getElementById('pp-nivel-badge');
+  const ppTotal = document.getElementById('pp-total');
+  const progressoSub = document.getElementById('progresso-sub');
+
+  if (ppAvatar) ppAvatar.textContent = p.avatar;
+  if (ppNome) ppNome.textContent = p.nome;
+  if (ppNivelBadge) ppNivelBadge.textContent = labelNivel(estado.nivel);
+  if (ppTotal) ppTotal.textContent = estado.totalEstrelas + ' ⭐';
   const acertosMG = Number(estado.acertosMG) || 0;
   const errosMG = Number(estado.errosMG) || 0;
   const naoOuco = Number(estado.naoConsigoOuvir) || 0;
-  document.getElementById('progresso-sub').textContent =
-    `Olá, ${p.nome}! Você tem ${estado.experiencia || 0} XP — continue com calma, cada fase conta!`;
+  if (progressoSub) {
+    progressoSub.textContent =
+      `Olá, ${p.nome}! Você tem ${estado.experiencia || 0} XP — continue com calma, cada fase conta!`;
+  }
 
   atualizarBarraExperiencia();
 
@@ -48,16 +56,20 @@ function atualizarTelaProgresso() {
 
   renderizarCalendarioAtividade();
 
-  document.getElementById('prog-historias').textContent = estado.historiasLidas.length;
-  document.getElementById('prog-tempo').textContent = estado.tempoTotal + ' min';
-  document.getElementById('prog-estrelas').textContent = estado.totalEstrelas;
-  document.getElementById('prog-minigames').textContent = estado.minigamesJogados;
+  const progHistorias = document.getElementById('prog-historias');
+  const progTempo = document.getElementById('prog-tempo');
+  const progEstrelas = document.getElementById('prog-estrelas');
+  const progMinigames = document.getElementById('prog-minigames');
+  if (progHistorias) progHistorias.textContent = estado.historiasLidas.length;
+  if (progTempo) progTempo.textContent = estado.tempoTotal + ' min';
+  if (progEstrelas) progEstrelas.textContent = estado.totalEstrelas;
+  if (progMinigames) progMinigames.textContent = estado.minigamesJogados;
 
   renderizarAcessoRelatorioResponsavel({ acertosMG, errosMG, naoOuco });
 }
 
 function renderizarAcessoRelatorioResponsavel(metricas) {
-  const secoes = document.querySelector('.progresso-secoes');
+  const secoes = document.getElementById('area-relatorio-responsavel');
   if (!secoes) return;
   let bloco = document.getElementById('prog-extra-relatorio');
   if (!bloco) {

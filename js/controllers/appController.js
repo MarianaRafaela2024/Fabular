@@ -4,10 +4,26 @@
 
 'use strict';
 
+const PAGINAS_POR_TELA = {
+  biblioteca: 'index.html',
+  leitura: 'index.html',
+  minigame: 'index.html',
+  resultado: 'index.html',
+  'bot-ia': 'index.html',
+  progresso: 'progresso.html',
+  responsavel: 'responsavel.html'
+};
+
 function irParaTela(nomeTela) {
-  document.querySelectorAll('.tela-app').forEach(t => t.classList.remove('ativa'));
   const alvo = document.getElementById('tela-' + nomeTela);
-  if (alvo) alvo.classList.add('ativa');
+  if (!alvo) {
+    const pagina = PAGINAS_POR_TELA[nomeTela];
+    if (pagina) window.location.href = pagina;
+    return;
+  }
+
+  document.querySelectorAll('.tela-app').forEach(t => t.classList.remove('ativa'));
+  alvo.classList.add('ativa');
 
   document.querySelectorAll('.nav-item').forEach(b => {
     const ativo = b.dataset.tela === nomeTela;
@@ -19,6 +35,7 @@ function irParaTela(nomeTela) {
   if (main) main.scrollTop = 0;
 
   if (nomeTela === 'progresso') atualizarTelaProgresso();
+  if (nomeTela === 'responsavel') atualizarTelaProgresso();
   if (nomeTela === 'biblioteca') {
     carregarProgressoDoServidor()
       .then(() => carregarHistoriasDaApi())
@@ -59,6 +76,21 @@ function refazerAtividade() {
   mostrarLeituraCompleta();
 }
 
+function obterTelaInicialDaPagina() {
+  if (document.getElementById('tela-progresso') && !document.getElementById('tela-biblioteca')) {
+    return 'progresso';
+  }
+  if (document.getElementById('tela-responsavel') && !document.getElementById('tela-biblioteca')) {
+    return 'responsavel';
+  }
+  return 'biblioteca';
+}
+
+function bindSeExistir(id, evento, handler) {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener(evento, handler);
+}
+
 async function inicializar() {
   carregarEstado();
   if (estado.experiencia == null) estado.experiencia = 0;
@@ -75,7 +107,9 @@ async function inicializar() {
   atualizarHeader();
   atualizarBarraExperiencia();
   renderizarBiblioteca();
-  irParaTela('biblioteca');
+
+  const telaInicial = obterTelaInicialDaPagina();
+  irParaTela(telaInicial);
 
   inicializarFiltros();
 
@@ -87,11 +121,11 @@ async function inicializar() {
 
   carregarModoNoturno();
 
-  document.getElementById('btn-contraste').addEventListener('click', toggleContraste);
-  document.getElementById('btn-fonte-mais').addEventListener('click', () => ajustarFonte(2));
-  document.getElementById('btn-fonte-menos').addEventListener('click', () => ajustarFonte(-2));
+  bindSeExistir('btn-contraste', 'click', toggleContraste);
+  bindSeExistir('btn-fonte-mais', 'click', () => ajustarFonte(2));
+  bindSeExistir('btn-fonte-menos', 'click', () => ajustarFonte(-2));
 
-  document.getElementById('btn-sair').addEventListener('click', () => {
+  bindSeExistir('btn-sair', 'click', () => {
     if (confirm('Deseja encerrar a sessão do responsável neste dispositivo?')) {
       localStorage.removeItem('mundoHistorias_responsavel_sessao');
       localStorage.removeItem('mundoHistorias_estado');
@@ -110,7 +144,7 @@ async function inicializar() {
     });
   });
 
-  document.getElementById('btn-ouvir').addEventListener('click', () => {
+  bindSeExistir('btn-ouvir', 'click', () => {
     const h = estado.historiaAtual;
     if (!h) {
       mostrarToast('Escolha uma história primeiro! 📚');
@@ -119,24 +153,27 @@ async function inicializar() {
     if (ttsAtivo) {
       window.speechSynthesis.cancel();
       ttsAtivo = false;
-      document.getElementById('btn-ouvir').classList.remove('ativo');
+      const btnOuvir = document.getElementById('btn-ouvir');
+      if (btnOuvir) btnOuvir.classList.remove('ativo');
       return;
     }
     const texto = estado.modoLeituraCompleta
       ? obterTextoCompletoHistoria(h)
-      : document.getElementById('historia-texto').innerHTML;
+      : (document.getElementById('historia-texto')?.innerHTML || '');
 
     ouvirTexto(texto);
   });
 
-  document.getElementById('btn-destaque').addEventListener('click', () => {
+  bindSeExistir('btn-destaque', 'click', () => {
     estado.destaqueAtivo = !estado.destaqueAtivo;
-    document.getElementById('btn-destaque').classList.toggle('ativo', estado.destaqueAtivo);
-    document.getElementById('historia-texto').classList.toggle('sem-destaque', !estado.destaqueAtivo);
+    const btnDestaque = document.getElementById('btn-destaque');
+    const historiaTexto = document.getElementById('historia-texto');
+    if (btnDestaque) btnDestaque.classList.toggle('ativo', estado.destaqueAtivo);
+    if (historiaTexto) historiaTexto.classList.toggle('sem-destaque', !estado.destaqueAtivo);
     mostrarToast(estado.destaqueAtivo ? 'Palavras-chave destacadas! 🔍' : 'Destaque removido');
   });
 
-  document.getElementById('btn-continuar').addEventListener('click', () => {
+  bindSeExistir('btn-continuar', 'click', () => {
     const btn = document.getElementById('btn-continuar');
     const textoBtn = (btn?.textContent || '').toLowerCase();
     const deveIniciarMinigames = estado.modoLeituraCompleta || textoBtn.includes('vamos jogar') || textoBtn.includes('minigame');
@@ -149,27 +186,26 @@ async function inicializar() {
     }
   });
 
-  document.getElementById('btn-pular-fase').addEventListener('click', pularFase);
-  document.getElementById('btn-voltar-biblioteca').addEventListener('click', () => irParaTela('biblioteca'));
+  bindSeExistir('btn-pular-fase', 'click', pularFase);
+  bindSeExistir('btn-voltar-biblioteca', 'click', () => irParaTela('biblioteca'));
 
-  document.getElementById('btn-proximo-mg').addEventListener('click', proximoMinigame);
-  document.getElementById('btn-finalizar-mg').addEventListener('click', finalizarMinigames);
-  document.getElementById('btn-voltar-leitura').addEventListener('click', () => {
+  bindSeExistir('btn-proximo-mg', 'click', proximoMinigame);
+  bindSeExistir('btn-finalizar-mg', 'click', finalizarMinigames);
+  bindSeExistir('btn-voltar-leitura', 'click', () => {
     if (estado.modoLeituraCompleta) mostrarLeituraCompleta();
     else { irParaTela('leitura'); mostrarLeituraCompleta(); }
   });
 
-  document.getElementById('btn-ouvir-mg').addEventListener('click', () => {
+  bindSeExistir('btn-ouvir-mg', 'click', () => {
     const enunc = document.querySelector('#minigame-corpo .mg-enunciado');
     if (enunc) ouvirTexto(enunc.textContent);
   });
 
-  document.getElementById('btn-refazer-atividade').addEventListener('click', refazerAtividade);
-  document.getElementById('btn-jogar-novamente').addEventListener('click', () => irParaTela('biblioteca'));
-  document.getElementById('btn-ver-progresso').addEventListener('click', () => irParaTela('progresso'));
+  bindSeExistir('btn-refazer-atividade', 'click', refazerAtividade);
+  bindSeExistir('btn-jogar-novamente', 'click', () => irParaTela('biblioteca'));
+  bindSeExistir('btn-ver-progresso', 'click', () => irParaTela('progresso'));
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   inicializar();
 });
-

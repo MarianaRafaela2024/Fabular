@@ -1,0 +1,12 @@
+* [33m0ed4e1b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m brevo arrumado
+* [33m3fc2118[m limpa no que nao usava do brevo
+* [33mbf0fa28[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Arrumando o login
+* [33m6dd18f2[m Recuperação de Senha Brevo
+*   [33m837a44a[m Merge branch 'main' of https://github.com/MarianaRafaela2024/Fabular
+[32m|[m[33m\[m  
+[32m|[m * [33me748f26[m Adição de imagens para substituição dos emojis grandes
+* [33m|[m [33mf8dbf26[m substituição dos emojis principais por imagens vetorizadas
+[33m|[m[33m/[m  
+* [33m860940c[m Salvando relatorio do responsavel no banco
+* [33mcfc3eaa[m Removendo controle parental
+* [33mc76081f[m Animação dos icones do menu
