@@ -4,6 +4,20 @@
 
 'use strict';
 
+function obterTextoBaseHistoria(h) {
+  if (!h) return '';
+  if (typeof h.textoCompleto === 'string' && h.textoCompleto.trim()) {
+    return h.textoCompleto.trim();
+  }
+  if (typeof h.texto === 'string' && h.texto.trim()) {
+    return h.texto.trim();
+  }
+  if (Array.isArray(h.fases)) {
+    return h.fases.map((f) => f.texto || '').filter(Boolean).join(' ');
+  }
+  return '';
+}
+
 function iniciarMinigames() {
   const h = estado.historiaAtual;
   if (!h) {
@@ -56,7 +70,8 @@ function renderizarMinigame() {
     normalizarTipoMinigame((spec && (spec.tipo || spec.Tipo)) || estado.minigamesLista[estado.minigameAtual]);
   const total = estado.minigamesLista.length;
   const h     = estado.historiaAtual;
-  const fase  = h.fases[Math.min(estado.faseAtual, h.fases.length - 1)];
+  const textoBase = obterTextoBaseHistoria(h);
+  const fase  = { texto: textoBase, cena: h?.cena || '' };
 
   document.getElementById('mg-titulo-label').textContent = nomeMinigame(tipo);
   document.getElementById('mg-contador').textContent     = `${estado.minigameAtual + 1} / ${total}`;
@@ -342,7 +357,7 @@ function montarDadosCompletarMG(fase, h, spec) {
   if (!resposta && h) {
     const kw = (h.palavrasChave || []).find(Boolean) || 'história';
     resposta = kw;
-    const textoLimpo = (fase && fase.texto ? fase.texto : h.fases[0]?.texto || '')
+    const textoLimpo = obterTextoBaseHistoria(h)
       .replace(/<[^>]+>/g, '')
       .replace(/\s+/g, ' ')
       .trim();
@@ -469,7 +484,8 @@ function renderMemoria(fase, h, corpo, spec) {
 
 // ─── 2. SOM E PALAVRA ────────────────────────────────────────────────────────
 function renderSomPalavra(fase, corpo, spec) {
-  const palavras  = (fase.texto.replace(/<[^>]+>/g, '').match(/\b\w{4,}\b/g) || ['leitura']).slice(0, 6);
+  const textoCurto = extrairTextoCurto(fase.texto);
+  const palavras  = (textoCurto.replace(/<[^>]+>/g, '').match(/\b\w{4,}\b/g) || ['leitura']).slice(0, 6);
   const alvoPreset = spec && spec.alvo ? String(spec.alvo) : '';
   const alvo = alvoPreset || palavras[Math.floor(Math.random() * palavras.length)];
   const opcoesPreset = spec && Array.isArray(spec.opcoes) && spec.opcoes.length >= 2
@@ -676,6 +692,15 @@ function renderColorirMG(h, corpo, spec) {
 }
 
 // ─── 3. MONTA-FRASE ──────────────────────────────────────────────────────────
+function extrairTextoCurto(texto) {
+  if (!texto) return '';
+  const limpo = String(texto).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+  if (!limpo) return '';
+  const frases = limpo.split(/[.!?]/).map((f) => f.trim()).filter(Boolean);
+  const fraseCurta = frases.find((f) => f.length >= 8 && f.length <= 140) || frases[0] || limpo;
+  return fraseCurta.length > 140 ? `${fraseCurta.slice(0, 137)}...` : fraseCurta;
+}
+
 function renderMontaFrase(fase, corpo, spec) {
   const dadosSpec = spec ? extrairDadosMontaFrase(spec) : null;
   if (dadosSpec && dadosSpec.palavrasPool.length >= 2 && dadosSpec.palavrasCorretas.length >= 2) {
@@ -738,7 +763,7 @@ function renderMontaFrase(fase, corpo, spec) {
     return;
   }
 
-  const textoLimpo = fase.texto.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+  const textoLimpo = extrairTextoCurto(fase.texto);
   const todasFrases = textoLimpo.split(/[.!?]/).map(f => f.trim()).filter(f => {
     const p = f.split(' ').filter(Boolean);
     return p.length >= 3 && p.length <= 9;
@@ -752,7 +777,7 @@ function renderMontaFrase(fase, corpo, spec) {
   const wrap = document.createElement('div');
   wrap.className = 'mf-wrap';
   wrap.innerHTML = `
-    <div class="mg-texto-contexto">${fase.texto}</div>
+    <div class="mg-texto-contexto">${textoLimpo}</div>
     <p class="mg-desc">Monte a frase clicando nas palavras. Clique em uma palavra já colocada para removê-la.</p>
     <div class="mf-espaco" id="mfEspaco"><span class="mf-placeholder">Clique nas palavras abaixo…</span></div>
     <div class="mf-pool" id="mfPool"></div>
@@ -820,7 +845,7 @@ function renderVerdadeiroFalso(fase, h, corpo, spec) {
     item = { afirmacao, correta: true };
   } else {
     const kw = (h.palavrasChave || ['personagem'])[0];
-    const textoFase = fase.texto.replace(/<[^>]+>/g, '').split(/[.!?]/)[0].trim();
+    const textoFase = extrairTextoCurto(fase.texto);
 
     const pares = [
       { afirmacao: textoFase.length > 10 ? textoFase + '.' : `A história fala sobre "${kw}".`, correta: true },
@@ -1387,7 +1412,7 @@ function renderRima(h, corpo, spec) {
 // ─── 8. QUEM DISSE ISSO? ────────────────────────────────────────────────────
 function renderQuemDisse(fase, h, corpo, spec) {
   const todos = [...new Set(
-    h.fases.flatMap(f => (f.personagens || []))
+    (Array.isArray(h?.fases) ? h.fases : []).flatMap(f => (f.personagens || []))
   )].filter(Boolean);
 
   let alvo = 'Narrador';
@@ -1404,7 +1429,7 @@ function renderQuemDisse(fase, h, corpo, spec) {
       ['Narrador','Dragão','Fada','Rei','Bruxo','Lobo','Gigante'].filter(p => p !== alvo)
     ).slice(0, 3);
     opcoes = embaralhar([alvo, ...distratores]);
-    const textoLimpo = fase.texto.replace(/<[^>]+>/g, '');
+    const textoLimpo = String((fase && fase.texto) || obterTextoBaseHistoria(h) || '').replace(/<[^>]+>/g, '');
     trecho = textoLimpo.substring(0, 90).trim() + '…';
   }
 
@@ -1451,7 +1476,7 @@ function renderOrdenarPassos(h, corpo, spec) {
   if (spec && Array.isArray(spec.passos) && spec.passos.length >= 3) {
     passos = spec.passos.map((txt, i) => ({ id: i, texto: String(txt) }));
   } else {
-    const fasesUsadas = h.fases.length > 5 ? h.fases.slice(0, 5) : h.fases;
+    const fasesUsadas = Array.isArray(h?.fases) && h.fases.length > 5 ? h.fases.slice(0, 5) : (Array.isArray(h?.fases) ? h.fases : []);
     passos = fasesUsadas.map((f, i) => ({
       id: i,
       texto: extrairFraseCompleta(f, i)

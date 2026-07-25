@@ -32,7 +32,7 @@ function atualizarHeader() {
   const headerNome = document.getElementById('header-nome');
   const headerNivel = document.getElementById('header-nivel');
   const totalEstrelas = document.getElementById('total-estrelas');
-  
+
   if (avatarDisp) avatarDisp.textContent = estado.perfil.avatar;
   if (headerNome) headerNome.textContent = estado.perfil.nome;
   if (headerNivel) headerNivel.textContent = labelNivel(estado.nivel);
@@ -71,7 +71,7 @@ async function inicializar() {
   await carregarProgressoDoServidor();
   await carregarHistoriasDaApi();
   aplicarFaixaDoPerfilNosFiltros();
-  
+
   atualizarHeader();
   atualizarBarraExperiencia();
   renderizarBiblioteca();
@@ -80,9 +80,9 @@ async function inicializar() {
   inicializarFiltros();
 
   const btnGerar = document.getElementById('btn-gerar-historia');
-  if (btnGerar) btnGerar.addEventListener('click', () => gerarHistoriaIa().catch(() => {}));
+  if (btnGerar) btnGerar.addEventListener('click', () => gerarHistoriaIa().catch(() => { }));
   const btnBotIaGerar = document.getElementById('btn-bot-ia-gerar');
-  if (btnBotIaGerar) btnBotIaGerar.addEventListener('click', () => gerarHistoriaBotIa().catch(() => {}));
+  if (btnBotIaGerar) btnBotIaGerar.addEventListener('click', () => gerarHistoriaBotIa().catch(() => { }));
   inicializarGeneroBotIa();
 
   carregarModoNoturno();
@@ -128,14 +128,14 @@ async function inicializar() {
 
     ouvirTexto(texto);
   });
-  
+
   document.getElementById('btn-destaque').addEventListener('click', () => {
     estado.destaqueAtivo = !estado.destaqueAtivo;
     document.getElementById('btn-destaque').classList.toggle('ativo', estado.destaqueAtivo);
     document.getElementById('historia-texto').classList.toggle('sem-destaque', !estado.destaqueAtivo);
     mostrarToast(estado.destaqueAtivo ? 'Palavras-chave destacadas! 🔍' : 'Destaque removido');
   });
-  
+
   document.getElementById('btn-continuar').addEventListener('click', () => {
     const btn = document.getElementById('btn-continuar');
     const textoBtn = (btn?.textContent || '').toLowerCase();
@@ -148,7 +148,7 @@ async function inicializar() {
       avancarFase();
     }
   });
-  
+
   document.getElementById('btn-pular-fase').addEventListener('click', pularFase);
   document.getElementById('btn-voltar-biblioteca').addEventListener('click', () => irParaTela('biblioteca'));
 
@@ -158,7 +158,7 @@ async function inicializar() {
     if (estado.modoLeituraCompleta) mostrarLeituraCompleta();
     else { irParaTela('leitura'); mostrarLeituraCompleta(); }
   });
-  
+
   document.getElementById('btn-ouvir-mg').addEventListener('click', () => {
     const enunc = document.querySelector('#minigame-corpo .mg-enunciado');
     if (enunc) ouvirTexto(enunc.textContent);
