@@ -11,7 +11,7 @@
 
   const perfil = { nome: '', avatar: '🦁', faixa: 1, genero: 'narrativo' };
   const CHAVE_ESTADO = 'mundoHistorias_estado';
-  const CHAVE_CONTAS = 'mundoHistorias_contas';
+  //const CHAVE_CONTAS = 'mundoHistorias_contas';
   const CHAVE_SESSAO = 'mundoHistorias_responsavel_sessao';
   const CHAVE_CRIANCAS_PENDENTES = 'mundoHistorias_criancas_pendentes';
   const CHAVE_VINCULOS = 'mundoHistorias_vinculos_crianca';
@@ -46,7 +46,12 @@
     }
     return resp.json();
   }
-
+async function carregarCriancas(responsavelId) {
+    return await apiRequest(
+        `/api/v1/children?responsavelId=${responsavelId}`,
+        "GET"
+    );
+}
   function criarLocalChildKey(perf) {
     const base = `${String(perf.nome || '').trim().toLowerCase()}-${String(perf.avatar || '')}-${Date.now()}`;
     return base.replace(/\s+/g, '-');
@@ -191,13 +196,13 @@
     return carregarJSON(CHAVE_SESSAO, null);
   }
 
-  function getContas() {
-    return carregarJSON(CHAVE_CONTAS, { responsaveis: [] });
-  }
+  // function getContas() {
+  //   return carregarJSON(CHAVE_CONTAS, { responsaveis: [] });
+  // }
 
-  function salvarContas(contas) {
-    salvarJSON(CHAVE_CONTAS, contas);
-  }
+  // function salvarContas(contas) {
+  //   salvarJSON(CHAVE_CONTAS, contas);
+  // }
 
   async function finalizarCadastroCrianca() {
     const sessao = getSessaoResponsavel();
@@ -206,29 +211,46 @@
       mostrarCard('#responsavel-card');
       return;
     }
+   
 
-    const contas = getContas();
-    const resp = contas.responsaveis.find(r => r.email === sessao.email);
-    if (!resp) {
-      localStorage.removeItem(CHAVE_SESSAO);
-      configurarCardResponsavel();
-      mostrarCard('#responsavel-card');
-      return;
-    }
+if (!sessao) {
+    mostrarCard('#responsavel-card');
+    return;
+}
 
-    const nomeNovo = perfil.nome.trim().toLowerCase();
-    const avatarNovo = perfil.avatar;
-    const duplicado = (resp.perfis || []).some((p) =>
-      String(p.nome || '').trim().toLowerCase() === nomeNovo &&
-      String(p.avatar || '') === avatarNovo
-    );
-    if (!duplicado) {
-      const novo = Object.assign({}, perfil);
-      resp.perfis = resp.perfis || [];
-      resp.perfis.push(novo);
-      salvarContas(contas);
-    }
+const perfis = await carregarCriancas(sessao.responsavelId);
+    // const contas = getContas();
+    // const resp = contas.responsaveis.find(r => r.email === sessao.email);
+    // if (!resp) {
+    //   localStorage.removeItem(CHAVE_SESSAO);
+    //   configurarCardResponsavel();
+    //   mostrarCard('#responsavel-card');
+    //   return;
+    // }
 
+    // const nomeNovo = perfil.nome.trim().toLowerCase();
+    // const avatarNovo = perfil.avatar;
+    // const duplicado = (resp.perfis || []).some((p) =>
+    //   String(p.nome || '').trim().toLowerCase() === nomeNovo &&
+    //   String(p.avatar || '') === avatarNovo
+    // );
+    // if (!duplicado) {
+    //   const novo = Object.assign({}, perfil);
+    //   resp.perfis = resp.perfis || [];
+    //   resp.perfis.push(novo);
+    //   salvarContas(contas);
+    // }
+      const nomeNovo = perfil.nome.trim().toLowerCase();
+      const avatarNovo = perfil.avatar;
+
+      const duplicado = (perfis || []).some((p) =>
+        String(p.nome || '').trim().toLowerCase() === nomeNovo &&
+        String(p.avatar || '') === avatarNovo
+      );
+
+      if (!duplicado) {
+        console.log('Nova criança será sincronizada:', perfil);
+      }
     try {
       await sincronizarCriancasPendentes(sessao);
     } catch (_) {}
@@ -352,7 +374,7 @@
       const sobrenome = document.getElementById('resp-sobrenome').value.trim();
       const email = document.getElementById('resp-email').value.trim().toLowerCase();
       const senha = document.getElementById('resp-senha').value.trim();
-      const contas = getContas();
+      //const contas = getContas();
       if (!email || !senha || (responsavelModo === 'cadastro' && !nome)) {
         setErro('Preencha os campos obrigatórios.');
         return;
@@ -364,22 +386,22 @@
           return;
         }
       }
-      const existente = contas.responsaveis.find(r => r.email === email);
+      //    const existente = contas.responsaveis.find(r => r.email === email);
       try {
         let sessaoApi = null;
         if (responsavelModo === 'cadastro') {
-          if (existente) {
-            setErro('E-mail já cadastrado.');
-            return;
-          }
-          contas.responsaveis.push({ nome, sobrenome, email, senha, perfis: [] });
-          salvarContas(contas);
+          // if (existente) {
+          //   setErro('E-mail já cadastrado.');
+          //   return;
+          // }
+          //contas.responsaveis.push({ nome, sobrenome, email, senha, perfis: [] });
+          //salvarContas(contas);
           sessaoApi = await apiRequest('/api/v1/parents/register', 'POST', { nome, sobrenome, email, senha });
         } else {
-          if (!existente || existente.senha !== senha) {
-            setErro('E-mail ou senha inválidos.');
-            return;
-          }
+          // if (!existente || existente.senha !== senha) {
+          //   setErro('E-mail ou senha inválidos.');
+          //   return;
+          // }
           sessaoApi = await apiRequest('/api/v1/parents/login', 'POST', { email, senha });
         }
 
@@ -387,8 +409,9 @@
         setErro('');
         salvarJSON(CHAVE_SESSAO, sessao);
         await sincronizarCriancasPendentes(sessao);
-        abrirSelecaoPerfis(email);
+        await abrirSelecaoPerfis();
       } catch (e) {
+        console.error('ERRO CADASTRO:', e);
         setErro(e.message || 'Falha ao conectar com a API.');
       }
     };
@@ -467,85 +490,59 @@
       }
     };
   }
+async function abrirSelecaoPerfis() {
+  const sessao = getSessaoResponsavel();
 
-  function abrirSelecaoPerfis(email) {
-    const contas = getContas();
-    const resp = contas.responsaveis.find(r => r.email === email);
-    if (!resp) {
-      localStorage.removeItem(CHAVE_SESSAO);
-      mostrarCard('#responsavel-card');
-      return;
-    }
-    mostrarCard('#perfis-card');
-    const lista = document.getElementById('perfis-lista');
-    const erroPerfisId = 'perfis-erro';
-    let erroPerfis = document.getElementById(erroPerfisId);
-    if (!erroPerfis) {
-      erroPerfis = document.createElement('span');
-      erroPerfis.id = erroPerfisId;
-      erroPerfis.className = 'campo-erro oculto';
-      document.getElementById('perfis-card').appendChild(erroPerfis);
-    }
-    erroPerfis.classList.add('oculto');
-    erroPerfis.textContent = '';
-    lista.innerHTML = '';
-    (resp.perfis || []).forEach((p, idx) => {
-      const btn = document.createElement('button');
-      btn.className = 'avatar-btn';
-      btn.innerHTML = `<img src="${p.avatar}" alt="Avatar" class="avatar-img">
-        <small style="display:block;font-size:.7rem">${p.nome}</small>`;
-      btn.addEventListener('click', () => entrarComPerfil(resp, idx));
-      lista.appendChild(btn);
-    });
-    document.getElementById('btn-add-crianca').onclick = () => {
-      erroPerfis.classList.add('oculto');
-      erroPerfis.textContent = '';
-      perfil.nome = '';
-      perfil.avatar = 'midia/lion.png';
-      perfil.faixa = 1;
-      perfil.genero = 'narrativo';
-      document.getElementById('input-nome').value = '';
-      document.getElementById('erro-nome').classList.add('oculto');
-      document.querySelectorAll('#avatar-grid .avatar-btn').forEach(b => {
-        const ativo = b.dataset.av === 'midia/lion.png';
-        b.classList.toggle('ativo', ativo);
-        b.setAttribute('aria-pressed', ativo ? 'true' : 'false');
-      });
-      document.querySelectorAll('#faixa-grupo .chip').forEach(b => {
-        const ativo = b.dataset.faixa === '1';
-        b.classList.toggle('ativo', ativo);
-        b.setAttribute('aria-pressed', ativo ? 'true' : 'false');
-      });
-      document.querySelectorAll('#genero-grupo .chip').forEach(b => {
-        const ativo = b.dataset.genero === 'narrativo';
-        b.classList.toggle('ativo', ativo);
-        b.setAttribute('aria-pressed', ativo ? 'true' : 'false');
-      });
-      document.getElementById('crianca-card').style.animation = '';
-      mostrarCard('#crianca-card');
-      document.getElementById('input-nome').focus();
-    };
-    document.getElementById('btn-logout-resp').onclick = () => {
-      const ok = confirm('Deseja realmente sair da conta do responsável?');
-      if (!ok) return;
-      localStorage.removeItem(CHAVE_SESSAO);
-      const d = carregarJSON(CHAVE_ESTADO, {});
-      delete d.perfil;
-      salvarJSON(CHAVE_ESTADO, d);
-      configurarCardResponsavel();
-      mostrarCard('#responsavel-card');
-    };
+  if (!sessao) {
+    mostrarCard('#responsavel-card');
+    return;
   }
 
-  function entrarComPerfil(resp, perfilIdx) {
-    const p = (resp.perfis || [])[perfilIdx];
-    if (!p) return;
-    const estado = carregarJSON(CHAVE_ESTADO, {});
-    estado.perfil = p;
-    salvarJSON(CHAVE_ESTADO, estado);
-    window.location.href = 'index.html';
-  }
+  const perfis = await carregarCriancas(sessao.responsavelId);
 
+  mostrarCard('#perfis-card');
+
+  const lista = document.getElementById('perfis-lista');
+  lista.innerHTML = '';
+
+  (perfis || []).forEach((p) => {
+    const btn = document.createElement('button');
+    btn.className = 'avatar-btn';
+    btn.innerHTML = `
+      <img src="${p.avatar}" alt="Avatar" class="avatar-img">
+      <small style="display:block;font-size:.7rem">${p.nome}</small>
+    `;
+
+    btn.addEventListener('click', () => entrarComPerfil(p));
+
+    lista.appendChild(btn);
+  });
+
+  document.getElementById('btn-add-crianca').onclick = () => {
+    mostrarCard('#crianca-card');
+  };
+
+  document.getElementById('btn-logout-resp').onclick = () => {
+    localStorage.removeItem(CHAVE_SESSAO);
+    mostrarCard('#responsavel-card');
+  };
+}
+
+  // function entrarComPerfil(resp, perfilIdx) {
+  //   const p = (resp.perfis || [])[perfilIdx];
+  //   if (!p) return;
+  //   const estado = carregarJSON(CHAVE_ESTADO, {});
+  //   estado.perfil = p;
+  //   salvarJSON(CHAVE_ESTADO, estado);
+  //   window.location.href = 'index.html';
+  // }
+    function entrarComPerfil(perfil) {
+        const estado = carregarJSON(CHAVE_ESTADO, {});
+        estado.perfil = perfil;
+        salvarJSON(CHAVE_ESTADO, estado);
+
+        window.location.href = "index.html";
+    }
 
   /* ─────────────────────────────────────────
      PARTE 3 — INICIALIZAÇÃO
@@ -555,7 +552,7 @@
 
   document.getElementById('btn-voltar-perfis').addEventListener('click', () => {
     const sessao = getSessaoResponsavel();
-    if (sessao && sessao.email) abrirSelecaoPerfis(sessao.email);
+    if (sessao && sessao.email) abrirSelecaoPerfis();
     else mostrarCard('#responsavel-card');
   });
 

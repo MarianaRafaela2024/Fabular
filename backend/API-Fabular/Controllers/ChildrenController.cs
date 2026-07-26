@@ -15,6 +15,30 @@ public class ChildrenController : ControllerBase
         _childrenLinkService = childrenLinkService;
     }
 
+    [HttpPost]
+    public async Task<ActionResult> Create([FromBody] CreateChildRequest request)
+    {
+        var result = await _childrenLinkService.CreateChildAsync(request);
+
+        if (!result.Success)
+        {
+            return StatusCode(result.StatusCode, new { message = result.Error });
+        }
+
+        return Ok(new { id = result.Value });
+    }
+
+    [HttpGet]
+    public async Task<ActionResult> Get([FromQuery] int responsavelId)
+    {
+        var result = await _childrenLinkService.GetChildrenAsync(responsavelId);
+
+        if (!result.Success)
+            return StatusCode(result.StatusCode, new { message = result.Error });
+
+        return Ok(result.Value);
+    }
+
     [HttpPost("link-local")]
     public async Task<ActionResult<object>> LinkLocal([FromBody] LinkLocalChildrenRequest request)
     {

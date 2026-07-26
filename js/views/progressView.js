@@ -79,14 +79,14 @@ function renderizarAcessoRelatorioResponsavel(metricas) {
     secoes.appendChild(bloco);
   }
 
-  const sessaoResponsavel = (() => {
-    try {
-      const raw = localStorage.getItem('mundoHistorias_responsavel_sessao');
-      return raw ? JSON.parse(raw) : null;
-    } catch (_) {
-      return null;
-    }
-  })();
+  //const sessaoResponsavel = (() => {
+ //   try {
+ //    const raw = localStorage.getItem('mundoHistorias_responsavel_sessao');
+ //     return raw ? JSON.parse(raw) : null;
+//} catch (_) {
+ //     return null;
+ //   }
+ // })();
 
   if (!sessaoResponsavel || !sessaoResponsavel.email) {
     bloco.innerHTML = '';

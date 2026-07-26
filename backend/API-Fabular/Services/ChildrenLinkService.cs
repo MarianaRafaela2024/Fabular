@@ -12,7 +12,66 @@ public class ChildrenLinkService
     {
         _db = db;
     }
+    public async Task<ApplicationResult<IEnumerable<ChildResponse>>> GetChildrenAsync(int responsavelId)
+    {
+        await using var conn = _db.Create();
+        await conn.OpenAsync();
 
+        var children = await conn.QueryAsync<ChildResponse>(
+            """
+        SELECT
+            c.Id,
+            c.Nome,
+            c.FaixaEtaria,
+            c.Avatar,
+            c.GeneroFavorito
+        FROM Crianca c
+        INNER JOIN Responsavel_Crianca rc
+            ON rc.Id_Crianca = c.Id
+        WHERE rc.Id_Responsavel = @ResponsavelId
+        ORDER BY c.Nome
+        """,
+            new { ResponsavelId = responsavelId });
+
+        return ApplicationResult<IEnumerable<ChildResponse>>.Ok(children);
+    }
+
+    public async Task<ApplicationResult<int>> CreateChildAsync(CreateChildRequest request)
+    {
+        await using var conn = _db.Create();
+        await conn.OpenAsync();
+
+        var childId = await conn.QuerySingleAsync<int>(
+            """
+        INSERT INTO Crianca
+            (Nome, FaixaEtaria, Avatar, GeneroFavorito)
+        OUTPUT INSERTED.Id
+        VALUES
+            (@Nome, @FaixaEtaria, @Avatar, @GeneroFavorito)
+        """,
+            new
+            {
+                Nome = request.Nome.Trim(),
+                FaixaEtaria = Math.Clamp(request.FaixaEtaria, (byte)1, (byte)3),
+                request.Avatar,
+                request.GeneroFavorito
+            });
+
+        await conn.ExecuteAsync(
+            """
+        INSERT INTO Responsavel_Crianca
+            (Id_Responsavel, Id_Crianca)
+        VALUES
+            (@ResponsavelId, @ChildId)
+        """,
+            new
+            {
+                request.ResponsavelId,
+                ChildId = childId
+            });
+
+        return ApplicationResult<int>.Ok(childId);
+    }
     public async Task<ApplicationResult<object>> LinkLocalAsync(LinkLocalChildrenRequest request)
     {
         if (request.ResponsavelId <= 0 || request.ChildrenLocal is null || request.ChildrenLocal.Count == 0)
