@@ -2108,6 +2108,183 @@ body.login-body {
   gap: 18px;
 }
 
+/* =============================================
+   EVOLUÇÃO DA RAPOSA
+   ============================================= */
+.raposa-evolucao-card {
+  background: linear-gradient(135deg, rgba(255, 251, 235, 0.95), rgba(254, 243, 199, 0.7), rgba(240, 253, 250, 0.9));
+  border: 2px solid rgba(245, 158, 11, 0.3);
+  border-radius: var(--radius);
+  padding: 24px;
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.15), var(--shadow);
+  transition: all var(--trans);
+}
+
+.raposa-imagem-wrapper {
+  flex-shrink: 0;
+  width: 140px;
+  height: 140px;
+  border-radius: 24px;
+  background: #ffffff;
+  padding: 10px;
+  border: 3px solid rgba(245, 158, 11, 0.4);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.raposa-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform 0.4s ease;
+}
+
+.raposa-img:hover {
+  transform: scale(1.06);
+}
+
+.raposa-detalhes {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.raposa-fase-badge {
+  display: inline-block;
+  align-self: flex-start;
+  font-family: 'Baloo 2', cursive;
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  padding: 4px 12px;
+  border-radius: 999px;
+  letter-spacing: 0.03em;
+}
+
+.raposa-fase-nome {
+  margin: 0;
+  font-family: 'Baloo 2', cursive;
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--texto);
+  line-height: 1.2;
+}
+
+.raposa-mensagem {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--texto-sub);
+  line-height: 1.5;
+}
+
+.raposa-progresso-bar-wrap {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.raposa-progresso-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.raposa-estrelas-atual {
+  color: var(--cor-primaria);
+}
+
+.raposa-proximo-texto {
+  color: var(--texto-sub);
+}
+
+.raposa-bar-track {
+  height: 14px;
+  background: rgba(229, 231, 235, 0.85);
+  border-radius: 999px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.raposa-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #f59e0b, #eab308, #10b981);
+  border-radius: 999px;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+}
+
+.raposa-estagios-mini {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.raposa-estagio-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--texto-sub);
+  opacity: 0.45;
+  filter: grayscale(0.8);
+  transition: all var(--trans);
+}
+
+.raposa-estagio-step.ativo {
+  opacity: 1;
+  filter: none;
+  color: var(--cor-primaria);
+}
+
+.raposa-estagio-step.ativo .res-icon {
+  transform: scale(1.15);
+}
+
+.res-icon {
+  font-size: 1.3rem;
+  transition: transform var(--trans);
+}
+
+.raposa-estagio-linha {
+  flex: 1;
+  height: 2px;
+  background: rgba(209, 213, 219, 0.6);
+  border-radius: 999px;
+}
+
+@media (max-width: 640px) {
+  .raposa-evolucao-card {
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+    padding: 18px;
+  }
+  .raposa-detalhes {
+    align-items: center;
+  }
+  .raposa-fase-badge {
+    align-self: center;
+  }
+}
+
 .mg-completar-wrap {
   display: flex;
   flex-direction: column;

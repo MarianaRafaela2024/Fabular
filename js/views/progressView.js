@@ -207,17 +207,100 @@ function renderizarCalendarioAtividade() {
   });
 }
 
-function niveisOrdem(n) {
-  return { iniciante: 0, intermediario: 1, avancado: 2 }[n] || 0;
+const ETAGES_RAPOSA = [
+  {
+    id: 'filhote',
+    nome: 'Raposa Filhote',
+    minEstrelas: 0,
+    maxEstrelas: 10,
+    imagem: 'midia/raposa/raposa1.png',
+    mensagem: 'Sua raposinha acabou de nascer! Continue lendo histórias e completando minigames para ajudá-la a crescer. 🦊🌱'
+  },
+  {
+    id: 'jovem',
+    nome: 'Raposa Jovem',
+    minEstrelas: 10,
+    maxEstrelas: 25,
+    imagem: 'midia/raposa/raposa2.png',
+    mensagem: 'Sua raposa está crescendo forte e curiosa! Continue praticando para ver o próximo estágio. 🌿✨'
+  },
+  {
+    id: 'aventureira',
+    nome: 'Raposa Aventureira',
+    minEstrelas: 25,
+    maxEstrelas: 45,
+    imagem: 'midia/raposa/raposa3.png',
+    mensagem: 'Que incrível! Sua raposa agora é uma grande aventureira explorando novos mundos! 🎒🌳'
+  },
+  {
+    id: 'mestre',
+    nome: 'Raposa Mestre',
+    minEstrelas: 45,
+    maxEstrelas: Infinity,
+    imagem: 'midia/raposa/raposa4.png',
+    mensagem: 'Parabéns! Sua raposa atingiu a sabedoria máxima e se tornou uma grande Mestre! 🏆👑'
+  }
+];
+
+function obterEstagioRaposa(estrelas) {
+  const e = Math.max(0, Number(estrelas !== undefined ? estrelas : estado.totalEstrelas) || 0);
+  if (e >= 45) return ETAGES_RAPOSA[3];
+  if (e >= 25) return ETAGES_RAPOSA[2];
+  if (e >= 10) return ETAGES_RAPOSA[1];
+  return ETAGES_RAPOSA[0];
 }
 
 function labelNivel(n) {
-  return { iniciante: '🌱 Iniciante', intermediario: '🌿 Intermediário', avancado: '🌳 Avançado' }[n] || '🌱 Iniciante';
+  const estagio = obterEstagioRaposa(estado.totalEstrelas);
+  return estagio ? estagio.nome : 'Raposa Filhote';
 }
 
 function atualizarBarraExperiencia() {
-  ['iniciante', 'intermediario', 'avancado'].forEach((n) => {
-    const el = document.getElementById('ns-' + n);
-    if (el) el.classList.toggle('ativo', niveisOrdem(estado.nivel) >= niveisOrdem(n));
+  atualizarEvolucaoRaposa();
+}
+
+function atualizarEvolucaoRaposa() {
+  const total = estado.totalEstrelas || 0;
+  const estagio = obterEstagioRaposa(total);
+
+  const imgEl = document.getElementById('raposa-img');
+  const nomeEl = document.getElementById('raposa-fase-nome');
+  const msgEl = document.getElementById('raposa-mensagem');
+  const badgeEl = document.getElementById('raposa-fase-badge');
+  const estrelasTextoEl = document.getElementById('raposa-estrelas-texto');
+  const proximoTextoEl = document.getElementById('raposa-proximo-texto');
+  const fillEl = document.getElementById('raposa-bar-fill');
+
+  if (imgEl) {
+    imgEl.src = estagio.imagem;
+    imgEl.alt = estagio.nome;
+  }
+  if (nomeEl) nomeEl.textContent = estagio.nome;
+  if (msgEl) msgEl.textContent = estagio.mensagem;
+  if (badgeEl) badgeEl.textContent = `🦊 ${estagio.nome}`;
+
+  if (estagio.maxEstrelas === Infinity) {
+    if (estrelasTextoEl) estrelasTextoEl.textContent = `${total} ⭐ acumuladas`;
+    if (proximoTextoEl) proximoTextoEl.textContent = 'Estágio Máximo Alcançado! 🏆';
+    if (fillEl) fillEl.style.width = '100%';
+  } else {
+    const estrelasNoEstagio = total - estagio.minEstrelas;
+    const alcanceEstagio = estagio.maxEstrelas - estagio.minEstrelas;
+    const faltam = estagio.maxEstrelas - total;
+    const pct = Math.min(100, Math.max(0, Math.round((estrelasNoEstagio / alcanceEstagio) * 100)));
+
+    const proximoEstagio = ETAGES_RAPOSA.find(e => e.minEstrelas === estagio.maxEstrelas);
+    const nomeProximo = proximoEstagio ? proximoEstagio.nome : 'Próximo Estágio';
+
+    if (estrelasTextoEl) estrelasTextoEl.textContent = `${total} / ${estagio.maxEstrelas} ⭐`;
+    if (proximoTextoEl) proximoTextoEl.textContent = `Faltam ${faltam} ⭐ para ${nomeProximo}`;
+    if (fillEl) fillEl.style.width = `${pct}%`;
+  }
+
+  const estagiosIds = ['filhote', 'jovem', 'aventureira', 'mestre'];
+  const indexAtual = ETAGES_RAPOSA.findIndex(e => e.id === estagio.id);
+  estagiosIds.forEach((id, index) => {
+    const el = document.getElementById('res-' + id);
+    if (el) el.classList.toggle('ativo', index <= indexAtual);
   });
 }
