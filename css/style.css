@@ -2108,59 +2108,6 @@ body.login-body {
   gap: 18px;
 }
 
-.xp-barra-card {
-  background: linear-gradient(135deg, rgba(240, 253, 250, .9), rgba(237, 233, 254, .85));
-  border-radius: var(--radius-sm);
-  padding: 14px 16px;
-  border: 1.5px solid rgba(78, 205, 196, .25);
-}
-
-.xp-barra-topo {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.xp-nivel-label {
-  font-family: 'Baloo 2', cursive;
-  font-weight: 800;
-  font-size: .95rem;
-  color: var(--texto);
-}
-
-.xp-texto {
-  font-size: .82rem;
-  font-weight: 800;
-  color: var(--texto-sub);
-}
-
-.xp-barra-track {
-  height: 14px;
-  background: rgba(229, 231, 235, .75);
-  border-radius: 999px;
-  overflow: hidden;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, .06);
-}
-
-.xp-barra-fill {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, var(--cor-secundaria), var(--cor-primaria), var(--cor-acento));
-  border-radius: 999px;
-  transition: width 1.2s cubic-bezier(.4, 0, .2, 1);
-  box-shadow: 0 0 12px rgba(78, 205, 196, .35);
-}
-
-.xp-proximo-label {
-  margin: 10px 0 0;
-  font-size: .8rem;
-  font-weight: 700;
-  color: var(--texto-sub);
-}
-
 .mg-completar-wrap {
   display: flex;
   flex-direction: column;

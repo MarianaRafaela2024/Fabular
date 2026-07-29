@@ -23,7 +23,7 @@ function atualizarTelaProgresso() {
   const naoOuco = Number(estado.naoConsigoOuvir) || 0;
   if (progressoSub) {
     progressoSub.textContent =
-      `Olá, ${p.nome}! Você tem ${estado.experiencia || 0} XP — continue com calma, cada fase conta!`;
+      `Olá, ${p.nome}! Você tem ${estado.totalEstrelas || 0} estrela${estado.totalEstrelas === 1 ? '' : 's'} — continue lendo e jogando para evoluir!`;
   }
 
   atualizarBarraExperiencia();
@@ -216,26 +216,6 @@ function labelNivel(n) {
 }
 
 function atualizarBarraExperiencia() {
-  const xp = estado.experiencia || 0;
-  const faixa = obterFaixaXpAtual(xp);
-  const noNivel = xp - faixa.min;
-  const tamanhoFaixa = faixa.max - faixa.min;
-  const pct = Math.min(100, Math.round((noNivel / tamanhoFaixa) * 100));
-  const fill = document.getElementById('xp-barra-fill');
-  const texto = document.getElementById('xp-texto');
-  const label = document.getElementById('xp-nivel-label');
-  const proxLabel = document.getElementById('xp-proximo-label');
-  if (fill) fill.style.width = pct + '%';
-  if (texto) texto.textContent = `${xp} XP · ${noNivel} / ${tamanhoFaixa} neste nível`;
-  if (label) label.textContent = labelNivel(estado.nivel);
-  if (proxLabel) {
-    if (faixa.id === 'avancado') {
-      proxLabel.textContent = xp >= faixa.max ? 'Nível máximo alcançado! 🏆' : `Faltam ${faixa.max - xp} XP para dominar tudo`;
-    } else {
-      const prox = faixa.id === 'iniciante' ? 'Intermediário' : 'Avançado';
-      proxLabel.textContent = `Faltam ${faixa.max - xp} XP para ${prox}`;
-    }
-  }
   ['iniciante', 'intermediario', 'avancado'].forEach((n) => {
     const el = document.getElementById('ns-' + n);
     if (el) el.classList.toggle('ativo', niveisOrdem(estado.nivel) >= niveisOrdem(n));

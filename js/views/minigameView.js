@@ -159,10 +159,6 @@ function mostrarFeedbackMG(ok, mostrarProximo = true) {
     msg.style.color        = '#92400E';
   }
 
-  if (ok) {
-    adicionarExperiencia(18, 'fase');
-  }
-
   if (mostrarProximo) {
     const isUltimo = estado.minigameAtual >= estado.minigamesLista.length - 1;
     const btnProx  = document.getElementById('btn-proximo-mg');
@@ -229,8 +225,7 @@ function finalizarMinigames() {
     estado.historiasLidas[idx].dataIso = dataIso;
   }
 
-  adicionarExperiencia(28, 'historia');
-  estado.nivel = calcularNivelPorXp(estado.experiencia || 0);
+  estado.nivel = calcularNivelPorXp(estado.totalEstrelas);
 
   salvarEstado();
   atualizarHeader();

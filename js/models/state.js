@@ -7,7 +7,6 @@
 let estado = {
   perfil: { nome: '', avatar: '🦁', faixa: 1, genero: 'narrativo' },
   nivel: 'iniciante', // iniciante | intermediario | avancado
-  experiencia: 0,
   totalEstrelas: 0,
   historiasLidas: [],  // [{id, estrelas, data}]
   tempoTotal: 0,       // minutos
@@ -33,17 +32,10 @@ let estado = {
 
 let syncTimer = null;
 
-const FAIXAS_NIVEL_XP = [
-  { id: 'iniciante', min: 0, max: 100 },
-  { id: 'intermediario', min: 100, max: 280 },
-  { id: 'avancado', min: 280, max: 450 }
-];
-
 function salvarEstado() {
   const dados = {
     perfil: estado.perfil,
     nivel: estado.nivel,
-    experiencia: estado.experiencia || 0,
     totalEstrelas: estado.totalEstrelas,
     historiasLidas: estado.historiasLidas,
     tempoTotal: estado.tempoTotal,
@@ -214,7 +206,6 @@ function mesclarProgressoServidor(servidor) {
   const dados = {
     perfil: estado.perfil,
     nivel: estado.nivel,
-    experiencia: estado.experiencia || 0,
     totalEstrelas: estado.totalEstrelas,
     historiasLidas: estado.historiasLidas,
     tempoTotal: estado.tempoTotal,
@@ -233,31 +224,33 @@ function recalcularTotalEstrelas() {
     (soma, r) => soma + (Number(r.estrelas) || 0),
     0
   );
+  estado.nivel = calcularNivelPorXp(estado.totalEstrelas);
 }
 
-function calcularNivelPorXp(xp) {
-  const x = Math.max(0, Number(xp) || 0);
-  if (x >= 280) return 'avancado';
-  if (x >= 100) return 'intermediario';
+function calcularNivelPorXp(estrelas) {
+  const e = Math.max(0, Number(estrelas !== undefined ? estrelas : estado.totalEstrelas) || 0);
+  if (e >= 25) return 'avancado';
+  if (e >= 10) return 'intermediario';
   return 'iniciante';
 }
 
-function obterFaixaXpAtual(xp) {
-  const nivel = calcularNivelPorXp(xp);
-  return FAIXAS_NIVEL_XP.find((f) => f.id === nivel) || FAIXAS_NIVEL_XP[0];
+function obterFaixaXpAtual(estrelas) {
+  const nivel = calcularNivelPorXp(estrelas);
+  const faixas = [
+    { id: 'iniciante', min: 0, max: 10 },
+    { id: 'intermediario', min: 10, max: 25 },
+    { id: 'avancado', min: 25, max: 50 }
+  ];
+  return faixas.find((f) => f.id === nivel) || faixas[0];
 }
 
 function adicionarExperiencia(quantidade, motivo) {
-  const ganho = Math.max(0, Number(quantidade) || 0);
-  if (!ganho) return;
-  const antes = estado.experiencia || 0;
-  const nivelAntes = calcularNivelPorXp(antes);
-  estado.experiencia = antes + ganho;
-  const nivelDepois = calcularNivelPorXp(estado.experiencia);
+  const nivelAntes = estado.nivel;
+  const nivelDepois = calcularNivelPorXp(estado.totalEstrelas);
   estado.nivel = nivelDepois;
   salvarEstado();
   atualizarHeader();
-  atualizarBarraExperiencia();
+  if (typeof atualizarBarraExperiencia === 'function') atualizarBarraExperiencia();
   if (nivelDepois !== nivelAntes) {
     const labels = { intermediario: 'Intermediário 🌿', avancado: 'Avançado 🌳' };
     mostrarToast(`Você subiu de nível! Agora é ${labels[nivelDepois] || nivelDepois} ✨`);

@@ -93,8 +93,7 @@ function bindSeExistir(id, evento, handler) {
 
 async function inicializar() {
   carregarEstado();
-  if (estado.experiencia == null) estado.experiencia = 0;
-  estado.nivel = calcularNivelPorXp(estado.experiencia);
+  estado.nivel = calcularNivelPorXp(estado.totalEstrelas);
   if (!estado.perfil || !estado.perfil.nome) {
     window.location.href = 'login.html';
     return;
