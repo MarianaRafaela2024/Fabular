@@ -125,13 +125,7 @@ async function inicializar() {
   bindSeExistir('btn-fonte-mais', 'click', () => ajustarFonte(2));
   bindSeExistir('btn-fonte-menos', 'click', () => ajustarFonte(-2));
 
-  bindSeExistir('btn-sair', 'click', () => {
-    if (confirm('Deseja encerrar a sessão do responsável neste dispositivo?')) {
-      localStorage.removeItem('mundoHistorias_responsavel_sessao');
-      localStorage.removeItem('mundoHistorias_estado');
-      window.location.href = 'login.html';
-    }
-  });
+  bindSeExistir('btn-sair', 'click', mostrarModalSair);
 
   document.querySelectorAll('.nav-item').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -206,6 +200,68 @@ async function inicializar() {
   bindSeExistir('btn-ver-progresso', 'click', () => irParaTela('progresso'));
 }
 
+function mostrarModalSair() {
+  let modal = document.getElementById('modal-sair-container');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modal-sair-container';
+    modal.className = 'modal-sair-overlay';
+    modal.innerHTML = `
+      <div class="modal-sair-card" role="dialog" aria-modal="true" aria-labelledby="modal-sair-titulo">
+        <button class="modal-sair-fechar" id="btn-modal-sair-fechar" aria-label="Fechar modal">&times;</button>
+        <div class="modal-sair-header">
+          <h2 id="modal-sair-titulo" class="modal-sair-titulo">Como você deseja sair?</h2>
+        </div>
+        <div class="modal-sair-opcoes">
+          <button class="modal-op-btn modal-op-perfil" id="btn-modal-trocar-perfil" type="button">
+            <div class="modal-op-info">
+              <strong>Trocar de Perfil</strong>
+            </div>
+          </button>
+          <button class="modal-op-btn modal-op-logout" id="btn-modal-logout-geral" type="button">
+            <div class="modal-op-info">
+              <strong>Sair</strong>
+            </div>
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    const fechar = () => {
+      modal.classList.remove('ativo');
+    };
+
+    document.getElementById('btn-modal-sair-fechar').addEventListener('click', fechar);
+    document.getElementById('btn-modal-sair-cancelar').addEventListener('click', fechar);
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) fechar();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('ativo')) {
+        fechar();
+      }
+    });
+
+    document.getElementById('btn-modal-trocar-perfil').addEventListener('click', () => {
+      fechar();
+      window.location.href = 'login.html';
+    });
+
+    document.getElementById('btn-modal-logout-geral').addEventListener('click', () => {
+      fechar();
+      localStorage.removeItem('mundoHistorias_responsavel_sessao');
+      localStorage.removeItem('mundoHistorias_estado');
+      window.location.href = 'login.html';
+    });
+  }
+
+  modal.classList.add('ativo');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   inicializar();
 });
+
