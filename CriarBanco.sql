@@ -97,6 +97,7 @@ CREATE TABLE Sessao_Leitura (
     ErrosTotal INT NOT NULL DEFAULT 0,
     AjudasTotal INT NOT NULL DEFAULT 0,
     Concluida BIT NOT NULL DEFAULT 0,
+    ConcluidaEm DATETIME2 NULL,
     CriadoEm DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
     CONSTRAINT FK_SL_Crianca FOREIGN KEY (Id_Crianca) REFERENCES Crianca(Id),
     CONSTRAINT FK_SL_Historia FOREIGN KEY (Id_Historia) REFERENCES Historia(Id)
