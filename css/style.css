@@ -1984,6 +1984,18 @@ body.login-body {
 /* ==============================================
    PROGRESSO
    ============================================== */
+
+
+.interrogacao,
+.interrogação {
+  background-image: url("../midia/question.png");
+}
+
+.trofeuestrela {
+  background-image: url("../midia/trophy-star.png");
+}
+
+
 .progresso-perfil-card {
   margin: 18px 24px;
   background: var(--grad-hero);
@@ -2112,7 +2124,7 @@ body.login-body {
    EVOLUÇÃO DA RAPOSA
    ============================================= */
 .raposa-evolucao-card {
-  background: linear-gradient(135deg, rgba(255, 251, 235, 0.95), rgba(254, 243, 199, 0.7), rgba(240, 253, 250, 0.9));
+  background: rgba(254, 243, 199, 0.7);
   border: 2px solid rgba(245, 158, 11, 0.3);
   border-radius: var(--radius);
   padding: 24px;
@@ -2161,10 +2173,10 @@ body.login-body {
   align-self: flex-start;
   font-family: 'Baloo 2', cursive;
   font-weight: 800;
-  font-size: 0.85rem;
+  font-size: 1.15rem;
   color: #92400e;
-  background: #fef3c7;
-  border: 1px solid #fde68a;
+  background: #fffdf4;
+  border: 1px solid #ffe993;
   padding: 4px 12px;
   border-radius: 999px;
   letter-spacing: 0.03em;
@@ -2254,12 +2266,14 @@ body.login-body {
   color: var(--cor-primaria);
 }
 
-.raposa-estagio-step.ativo .res-icon {
+.raposa-estagio-step.ativo .res-icon,
+.raposa-estagio-step.ativo .icon {
   transform: scale(1.15);
 }
 
 .res-icon {
-  font-size: 1.3rem;
+  width: 24px;
+  height: 24px;
   transition: transform var(--trans);
 }
 
@@ -2277,9 +2291,11 @@ body.login-body {
     align-items: center;
     padding: 18px;
   }
+
   .raposa-detalhes {
     align-items: center;
   }
+
   .raposa-fase-badge {
     align-self: center;
   }

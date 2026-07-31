@@ -301,6 +301,15 @@ function atualizarEvolucaoRaposa() {
   const indexAtual = ETAGES_RAPOSA.findIndex(e => e.id === estagio.id);
   estagiosIds.forEach((id, index) => {
     const el = document.getElementById('res-' + id);
-    if (el) el.classList.toggle('ativo', index <= indexAtual);
+    if (el) {
+      const estaAlcancado = index <= indexAtual;
+      el.classList.toggle('ativo', estaAlcancado);
+      const iconEl = el.querySelector('.icon');
+      if (iconEl) {
+        iconEl.classList.toggle('trofeuestrela', estaAlcancado);
+        iconEl.classList.toggle('interrogacao', !estaAlcancado);
+        iconEl.classList.toggle('interrogação', !estaAlcancado);
+      }
+    }
   });
 }
