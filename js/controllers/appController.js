@@ -232,7 +232,7 @@ function mostrarModalSair() {
     };
 
     document.getElementById('btn-modal-sair-fechar').addEventListener('click', fechar);
-    document.getElementById('btn-modal-sair-cancelar').addEventListener('click', fechar);
+   
 
     modal.addEventListener('click', (e) => {
       if (e.target === modal) fechar();

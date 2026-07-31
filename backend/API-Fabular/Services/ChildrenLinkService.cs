@@ -17,12 +17,13 @@ public class ChildrenLinkService
         await using var conn = _db.Create();
         await conn.OpenAsync();
 
-        var children = await conn.QueryAsync<ChildResponse>(
+        var children = (await conn.QueryAsync<ChildResponse>(
             """
         SELECT
             c.Id,
             c.Nome,
             c.FaixaEtaria,
+            c.DataNascimento,
             c.Avatar,
             c.GeneroFavorito
         FROM Crianca c
@@ -31,28 +32,54 @@ public class ChildrenLinkService
         WHERE rc.Id_Responsavel = @ResponsavelId
         ORDER BY c.Nome
         """,
-            new { ResponsavelId = responsavelId });
+            new { ResponsavelId = responsavelId })).ToList();
+
+        var hoje = DateOnly.FromDateTime(DateTime.Today);
+        foreach (var child in children)
+        {
+            if (!child.DataNascimento.HasValue)
+            {
+                continue;
+            }
+
+            var faixaCalculada = FaixaEtariaHelper.Calcular(child.DataNascimento, hoje);
+            if (child.FaixaEtaria != faixaCalculada)
+            {
+                await conn.ExecuteAsync(
+                    "UPDATE Crianca SET FaixaEtaria = @FaixaEtaria WHERE Id = @Id",
+                    new { FaixaEtaria = faixaCalculada, child.Id });
+                child.FaixaEtaria = faixaCalculada;
+            }
+        }
 
         return ApplicationResult<IEnumerable<ChildResponse>>.Ok(children);
     }
 
     public async Task<ApplicationResult<int>> CreateChildAsync(CreateChildRequest request)
     {
+        if (!request.DataNascimento.HasValue)
+        {
+            return ApplicationResult<int>.BadRequest("Data de nascimento é obrigatória.");
+        }
+
+        var faixaEtaria = FaixaEtariaHelper.Calcular(request.DataNascimento);
+
         await using var conn = _db.Create();
         await conn.OpenAsync();
 
         var childId = await conn.QuerySingleAsync<int>(
             """
         INSERT INTO Crianca
-            (Nome, FaixaEtaria, Avatar, GeneroFavorito)
+            (Nome, FaixaEtaria, DataNascimento, Avatar, GeneroFavorito)
         OUTPUT INSERTED.Id
         VALUES
-            (@Nome, @FaixaEtaria, @Avatar, @GeneroFavorito)
+            (@Nome, @FaixaEtaria, @DataNascimento, @Avatar, @GeneroFavorito)
         """,
             new
             {
                 Nome = request.Nome.Trim(),
-                FaixaEtaria = Math.Clamp(request.FaixaEtaria, (byte)1, (byte)3),
+                FaixaEtaria = faixaEtaria,
+                request.DataNascimento,
                 request.Avatar,
                 request.GeneroFavorito
             });
@@ -104,22 +131,38 @@ public class ChildrenLinkService
 
             int childId;
             var status = "reused";
+            var faixaEtaria = child.DataNascimento.HasValue
+                ? FaixaEtariaHelper.Calcular(child.DataNascimento)
+                : (byte)Math.Clamp(child.FaixaEtaria, 1, 3);
+
             if (existing.HasValue)
             {
                 childId = existing.Value;
+                if (child.DataNascimento.HasValue)
+                {
+                    await conn.ExecuteAsync(
+                        """
+                        UPDATE Crianca
+                        SET FaixaEtaria = @FaixaEtaria, DataNascimento = @DataNascimento
+                        WHERE Id = @Id
+                        """,
+                        new { FaixaEtaria = faixaEtaria, child.DataNascimento, Id = childId },
+                        tx);
+                }
             }
             else
             {
                 childId = await conn.QuerySingleAsync<int>(
                     """
-                    INSERT INTO Crianca (Nome, FaixaEtaria, Avatar, GeneroFavorito, LocalChildKey)
+                    INSERT INTO Crianca (Nome, FaixaEtaria, DataNascimento, Avatar, GeneroFavorito, LocalChildKey)
                     OUTPUT INSERTED.Id
-                    VALUES (@Nome, @FaixaEtaria, @Avatar, @GeneroFavorito, @LocalChildKey)
+                    VALUES (@Nome, @FaixaEtaria, @DataNascimento, @Avatar, @GeneroFavorito, @LocalChildKey)
                     """,
                     new
                     {
                         Nome = child.Nome.Trim(),
-                        FaixaEtaria = Math.Clamp(child.FaixaEtaria, 1, 3),
+                        FaixaEtaria = faixaEtaria,
+                        child.DataNascimento,
                         child.Avatar,
                         child.GeneroFavorito,
                         child.LocalChildKey

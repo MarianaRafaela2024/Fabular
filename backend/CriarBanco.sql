@@ -33,6 +33,7 @@ CREATE TABLE Crianca (
     Id INT IDENTITY(1,1) PRIMARY KEY,
     Nome NVARCHAR(80) NOT NULL,
     FaixaEtaria TINYINT NOT NULL CHECK (FaixaEtaria IN (1,2,3)),
+    DataNascimento DATE NULL,
     Avatar VARCHAR(32) NULL,
     GeneroFavorito VARCHAR(32) NULL,
     Estrela SMALLINT NOT NULL DEFAULT 0,

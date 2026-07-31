@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mundo das Histórias — Entrar ✨</title>
+  <title>Login - Fabular</title>
+  <link rel="icon" type="image/png" href="midia/iconeRaposa.png">
   <link rel="stylesheet" href="css/style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"></head>
@@ -65,14 +66,19 @@
           </div>
         </div>
 
-        <!-- Faixa etária -->
+        <!-- Data de nascimento -->
         <div class="campo-grupo">
-          <label class="campo-label" id="label-faixa">Sua faixa de idade</label>
-          <div class="chip-grupo" id="faixa-grupo" role="radiogroup" aria-labelledby="label-faixa">
-            <button class="chip ativo" data-faixa="1" aria-pressed="true">5–6 anos</button>
-            <button class="chip"       data-faixa="2" aria-pressed="false">7–8 anos</button>
-            <button class="chip"       data-faixa="3" aria-pressed="false">9–10 anos</button>
-          </div>
+          <label class="campo-label" for="input-nascimento">🎂 Data de nascimento</label>
+          <input
+            type="date"
+            id="input-nascimento"
+            class="campo-input"
+            aria-label="Data de nascimento"
+            aria-required="true"
+            required
+          />
+          <span class="campo-erro oculto" id="erro-nascimento" role="alert">Informe a data de nascimento.</span>
+          <p class="tela-sub" id="faixa-preview" style="margin-top:.35rem;font-size:.85rem;" aria-live="polite"></p>
         </div>
 
         <!-- Gênero favorito -->
@@ -182,6 +188,7 @@
       color: #888;
     }
   </style>
+  <script src="js/models/faixaEtaria.js"></script>
   <script src="js/login.js"></script>
 </body>
 </html>
