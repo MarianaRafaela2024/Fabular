@@ -9,7 +9,7 @@
      PARTE 1 — PERFIL DA CRIANÇA
    ───────────────────────────────────────── */
 
-  const perfil = { nome: '', avatar: '🦁', faixa: 1, genero: 'narrativo' };
+  const perfil = { nome: '', avatar: '🦁', faixa: 1, genero: 'narrativo', dataNascimento: null };
   const CHAVE_ESTADO = 'mundoHistorias_estado';
   //const CHAVE_CONTAS = 'mundoHistorias_contas';
   const CHAVE_SESSAO = 'mundoHistorias_responsavel_sessao';
@@ -58,13 +58,15 @@ async function carregarCriancas(responsavelId) {
   }
 
   function registrarCriancaPendente(perf) {
+    const perfilNormalizado = normalizarPerfilCrianca(perf);
     const pendentes = carregarJSON(CHAVE_CRIANCAS_PENDENTES, []);
     const novo = {
-      localChildKey: criarLocalChildKey(perf),
-      nome: perf.nome,
-      faixaEtaria: perf.faixa,
-      avatar: perf.avatar,
-      generoFavorito: perf.genero,
+      localChildKey: criarLocalChildKey(perfilNormalizado),
+      nome: perfilNormalizado.nome,
+      faixaEtaria: perfilNormalizado.faixa,
+      dataNascimento: perfilNormalizado.dataNascimento,
+      avatar: perfilNormalizado.avatar,
+      generoFavorito: perfilNormalizado.genero,
       createdAt: new Date().toISOString(),
       synced: false
     };
@@ -85,6 +87,7 @@ async function carregarCriancas(responsavelId) {
         localChildKey: c.localChildKey,
         nome: c.nome,
         faixaEtaria: c.faixaEtaria,
+        dataNascimento: c.dataNascimento || null,
         avatar: c.avatar,
         generoFavorito: c.generoFavorito,
         createdAt: c.createdAt
@@ -119,19 +122,6 @@ async function carregarCriancas(responsavelId) {
     });
   });
 
-  // Faixa etária
-  document.querySelectorAll('#faixa-grupo .chip').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('#faixa-grupo .chip').forEach(b => {
-        b.classList.remove('ativo');
-        b.setAttribute('aria-pressed', 'false');
-      });
-      btn.classList.add('ativo');
-      btn.setAttribute('aria-pressed', 'true');
-      perfil.faixa = parseInt(btn.dataset.faixa);
-    });
-  });
-
   // Gênero favorito
   document.querySelectorAll('#genero-grupo .chip').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -151,9 +141,27 @@ async function carregarCriancas(responsavelId) {
     if (e.key === 'Enter') tentarEntrar();
   });
 
+  function atualizarPreviewFaixa() {
+    const preview = document.getElementById('faixa-preview');
+    const data = document.getElementById('input-nascimento').value;
+    if (!preview) return;
+    if (!data) {
+      preview.textContent = '';
+      return;
+    }
+    const faixa = calcularFaixaEtaria(data);
+    preview.textContent = `Faixa etária: ${labelFaixaEtaria(faixa)}`;
+  }
+
+  document.getElementById('input-nascimento').addEventListener('change', atualizarPreviewFaixa);
+  document.getElementById('input-nascimento').addEventListener('input', atualizarPreviewFaixa);
+  document.getElementById('input-nascimento').max = new Date().toISOString().slice(0, 10);
+
   function tentarEntrar() {
     const nome   = document.getElementById('input-nome').value.trim();
+    const dataNascimento = document.getElementById('input-nascimento').value;
     const erroEl = document.getElementById('erro-nome');
+    const erroNascimento = document.getElementById('erro-nascimento');
 
     if (!nome) {
       erroEl.classList.remove('oculto');
@@ -161,7 +169,28 @@ async function carregarCriancas(responsavelId) {
       return;
     }
     erroEl.classList.add('oculto');
+
+    if (!dataNascimento) {
+      erroNascimento.classList.remove('oculto');
+      document.getElementById('input-nascimento').focus();
+      return;
+    }
+
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const nasc = new Date(dataNascimento + 'T12:00:00');
+    if (nasc > hoje) {
+      erroNascimento.textContent = 'A data de nascimento não pode ser no futuro.';
+      erroNascimento.classList.remove('oculto');
+      document.getElementById('input-nascimento').focus();
+      return;
+    }
+    erroNascimento.classList.add('oculto');
+    erroNascimento.textContent = 'Informe a data de nascimento.';
+
     perfil.nome = nome;
+    perfil.dataNascimento = dataNascimento;
+    perfil.faixa = calcularFaixaEtaria(dataNascimento);
 
     let estadoExistente = {};
     try {
@@ -256,7 +285,7 @@ const perfis = await carregarCriancas(sessao.responsavelId);
     } catch (_) {}
 
     const estado = carregarJSON(CHAVE_ESTADO, {});
-    estado.perfil = Object.assign({}, perfil);
+    estado.perfil = normalizarPerfilCrianca(Object.assign({}, perfil));
     salvarJSON(CHAVE_ESTADO, estado);
 
     window.location.href = 'index.html';
@@ -519,6 +548,11 @@ async function abrirSelecaoPerfis() {
   });
 
   document.getElementById('btn-add-crianca').onclick = () => {
+    document.getElementById('input-nome').value = '';
+    document.getElementById('input-nascimento').value = '';
+    document.getElementById('faixa-preview').textContent = '';
+    document.getElementById('erro-nome').classList.add('oculto');
+    document.getElementById('erro-nascimento').classList.add('oculto');
     mostrarCard('#crianca-card');
   };
 
@@ -536,9 +570,17 @@ async function abrirSelecaoPerfis() {
   //   salvarJSON(CHAVE_ESTADO, estado);
   //   window.location.href = 'index.html';
   // }
-    function entrarComPerfil(perfil) {
+    function entrarComPerfil(perfilApi) {
         const estado = carregarJSON(CHAVE_ESTADO, {});
-        estado.perfil = perfil;
+        estado.perfil = normalizarPerfilCrianca({
+            id: perfilApi.id,
+            nome: perfilApi.nome,
+            avatar: perfilApi.avatar,
+            genero: perfilApi.generoFavorito,
+            dataNascimento: perfilApi.dataNascimento,
+            faixa: perfilApi.faixaEtaria,
+            localChildKey: perfilApi.localChildKey
+        });
         salvarJSON(CHAVE_ESTADO, estado);
 
         window.location.href = "index.html";

@@ -8,6 +8,8 @@ public class CreateChildRequest
 
     public byte FaixaEtaria { get; set; }
 
+    public DateOnly? DataNascimento { get; set; }
+
     public string? Avatar { get; set; }
 
     public string? GeneroFavorito { get; set; }

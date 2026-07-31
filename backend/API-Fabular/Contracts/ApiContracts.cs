@@ -7,7 +7,7 @@ public record ParentForgotPasswordRequest(string Email);
 public record ParentResetPasswordRequest(string Email, string Codigo, string NovaSenha);
 public record ContactMessageRequest(string Nome, string Email, string Assunto, string Mensagem);
 
-public record LocalChildDto(string LocalChildKey, string Nome, int FaixaEtaria, string? Avatar, string? GeneroFavorito, DateTime? CreatedAt);
+public record LocalChildDto(string LocalChildKey, string Nome, int FaixaEtaria, DateOnly? DataNascimento, string? Avatar, string? GeneroFavorito, DateTime? CreatedAt);
 public record LinkLocalChildrenRequest(int ResponsavelId, List<LocalChildDto> ChildrenLocal);
 public record LinkedChildDto(string LocalChildKey, int CriancaId, string Status);
 

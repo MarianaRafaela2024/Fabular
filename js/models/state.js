@@ -55,7 +55,14 @@ function carregarEstado() {
   if (!raw) return;
   try {
     const dados = JSON.parse(raw);
+    const faixaAnterior = dados?.perfil?.faixa;
     Object.assign(estado, dados);
+    if (estado.perfil) {
+      estado.perfil = normalizarPerfilCrianca(estado.perfil);
+      if (estado.perfil.faixa !== faixaAnterior) {
+        salvarEstado();
+      }
+    }
     garantirContadoresRelatorio();
   } catch (e) { /* ignora */ }
 }
