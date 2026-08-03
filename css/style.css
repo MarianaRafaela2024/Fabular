@@ -597,6 +597,16 @@ body.login-body {
   backdrop-filter: blur(4px);
 }
 
+.btn-icon img {
+  width: 20px !important;
+  height: 20px !important;
+  max-width: 20px;
+  max-height: 20px;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+}
+
 .btn-icon:hover {
   border-color: var(--cor-primaria);
   color: var(--cor-primaria);
