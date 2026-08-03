@@ -129,6 +129,129 @@ function nivelAtividadeDia(qtd) {
   return 4;
 }
 
+function obterEstrelasPorDia(qtd) {
+  if (!qtd || qtd <= 0) return '';
+  if (qtd === 1) return '⭐';
+  if (qtd === 2) return '⭐⭐';
+  if (qtd === 3) return '⭐⭐⭐';
+  return '⭐⭐⭐⭐';
+}
+
+function calcularSequenciaLeitura(atividade) {
+  const agora = new Date();
+  let d = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
+  let streak = 0;
+
+  const formatIso = (dateObj) => {
+    const y = dateObj.getFullYear();
+    const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+
+  let iso = formatIso(d);
+  if (!atividade[iso] || atividade[iso] <= 0) {
+    d.setDate(d.getDate() - 1);
+    iso = formatIso(d);
+  }
+
+  while (atividade[iso] && atividade[iso] > 0) {
+    streak++;
+    d.setDate(d.getDate() - 1);
+    iso = formatIso(d);
+  }
+
+  return streak;
+}
+
+const FRASES_MOTIVACIONAIS_RAPOSA = [
+  'Cada página que você lê traz uma nova aventura mágica! 🌟',
+  'Ler todos os dias deixa sua imaginação super poderosa! 🚀',
+  'A raposinha está muito orgulhosa do seu progresso! 🦊❤️',
+  'Quanto mais histórias você lê, mais longe você pode voar! 📚✨',
+  'Aprender lendo é o melhor minigame de todos! 🎮📖',
+  'Você é um verdadeiro campeão das histórias! 🏆⭐',
+  'Abrir um livro é abrir uma porta para o mundo dos sonhos! 🚪🌈'
+];
+
+function obterFraseMotivacionalRaposa(streak, totalMes) {
+  if (streak >= 5) return `Nossa! ${streak} dias seguidos lendo! Você é imbatível! 🔥🦊`;
+  if (streak >= 3) return `Uau! ${streak} dias de leitura seguidos! Continue assim! 🔥✨`;
+  if (totalMes >= 10) return `Já foram ${totalMes} histórias este mês! Você lê super bem! 📚🏆`;
+  const idx = (totalMes + streak) % FRASES_MOTIVACIONAIS_RAPOSA.length;
+  return FRASES_MOTIVACIONAIS_RAPOSA[idx];
+}
+
+function exibirModalDetalhesDia(iso, dia, mes, ano, qtd, estrelasStr) {
+  let modal = document.getElementById('cal-dia-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'cal-dia-modal';
+    modal.className = 'cal-modal-overlay';
+    document.body.appendChild(modal);
+  }
+
+  const MESES_EXTENSO = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+  const dataFormatada = `${dia} de ${MESES_EXTENSO[mes]} de ${ano}`;
+
+  const historiasNoDia = (estado.historiasLidas || []).filter(r => obterDataIsoHistoria(r) === iso);
+
+  let historiasHtml = '';
+  if (historiasNoDia.length > 0) {
+    historiasHtml = '<ul class="cal-modal-historias-lista">';
+    historiasNoDia.forEach(r => {
+      const h = (typeof HISTORIAS !== 'undefined' ? HISTORIAS : []).find(x => x.id === r.id);
+      const titulo = h ? h.titulo : (r.titulo || 'História Concluída');
+      const emoji = h ? h.emoji : '📖';
+      const estCount = Math.min(4, Math.max(1, Number(r.estrelas) || 1));
+      const est = '⭐'.repeat(estCount);
+      historiasHtml += `<li><span class="cal-modal-h-emoji">${emoji}</span> <div class="cal-modal-h-info"><strong>${titulo}</strong><span class="cal-modal-h-est">${est}</span></div></li>`;
+    });
+    historiasHtml += '</ul>';
+  } else if (qtd > 0) {
+    historiasHtml = `<p class="cal-modal-info-texto">📚 ${qtd} história${qtd > 1 ? 's' : ''} concluída${qtd > 1 ? 's' : ''} neste dia!</p>`;
+  } else {
+    historiasHtml = `<p class="cal-modal-vazio">Nenhuma história lida neste dia ainda. Que tal ler uma hoje? 📚✨</p>`;
+  }
+
+  const msgRaposa = qtd > 0
+    ? `Incrível! Você conquistou ${estrelasStr} lendo histórias neste dia! 🦊⭐`
+    : 'Cada dia é uma nova oportunidade para viajar nos livros! 🦊🚀';
+
+  modal.innerHTML = `
+    <div class="cal-modal-card">
+      <button type="button" class="cal-modal-fechar" aria-label="Fechar detalhes">✕</button>
+      <div class="cal-modal-header">
+        <span class="cal-modal-icon">📅</span>
+        <div class="cal-modal-data-wrap">
+          <h4 class="cal-modal-data">${dataFormatada}</h4>
+          <span class="cal-modal-badge-estrelas">${estrelasStr || (qtd > 0 ? '⭐' : 'Sem leitura')}</span>
+        </div>
+      </div>
+      <div class="cal-modal-body">
+        <div class="cal-modal-secao">
+          <h5 class="cal-modal-subtitulo">📖 Histórias Lidas</h5>
+          ${historiasHtml}
+        </div>
+        <div class="cal-modal-raposa-msg">
+          <span class="cal-modal-raposa-emoji">🦊</span>
+          <p>${msgRaposa}</p>
+        </div>
+      </div>
+    </div>
+  `;
+
+  modal.classList.add('ativo');
+
+  const fecharBtn = modal.querySelector('.cal-modal-fechar');
+  const fecharModal = () => modal.classList.remove('ativo');
+
+  fecharBtn?.addEventListener('click', fecharModal);
+  modal.onclick = (e) => {
+    if (e.target === modal) fecharModal();
+  };
+}
+
 function renderizarCalendarioAtividade() {
   const el = document.getElementById('calendario-atividade');
   if (!el) return;
@@ -141,12 +264,37 @@ function renderizarCalendarioAtividade() {
   const hojeIso = new Date().toISOString().slice(0, 10);
   const offset = new Date(ano, mes, 1).getDay();
   const diasNoMes = new Date(ano, mes + 1, 0).getDate();
+  const streak = calcularSequenciaLeitura(atividade);
+
+  const totalSlots = offset + diasNoMes;
+  const numSemanas = Math.ceil(totalSlots / 7);
+  const semanasInfo = [];
+
+  for (let s = 0; s < numSemanas; s++) {
+    let diasComLeituraNaSemana = 0;
+    let diasValidosNaSemana = 0;
+    for (let dIndex = s * 7; dIndex < (s + 1) * 7; dIndex++) {
+      const diaNum = dIndex - offset + 1;
+      if (diaNum >= 1 && diaNum <= diasNoMes) {
+        diasValidosNaSemana++;
+        const iso = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(diaNum).padStart(2, '0')}`;
+        if ((atividade[iso] || 0) > 0) {
+          diasComLeituraNaSemana++;
+        }
+      }
+    }
+    const ehSemanaPerfeita = (diasValidosNaSemana >= 4 && diasComLeituraNaSemana === diasValidosNaSemana);
+    semanasInfo.push(ehSemanaPerfeita);
+  }
+
+  let temAlgumaSemanaPerfeita = semanasInfo.some(Boolean);
 
   let grade = '';
   let totalMes = 0;
   for (let i = 0; i < offset; i++) {
     grade += '<div class="cal-dia cal-dia-vazio" aria-hidden="true"></div>';
   }
+
   for (let dia = 1; dia <= diasNoMes; dia++) {
     const iso = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
     const qtd = atividade[iso] || 0;
@@ -154,20 +302,53 @@ function renderizarCalendarioAtividade() {
     const nivel = nivelAtividadeDia(qtd);
     const futuro = iso > hojeIso;
     const hoje = iso === hojeIso;
+    const estrelasStr = obterEstrelasPorDia(qtd);
+
+    const slotIndex = offset + (dia - 1);
+    const semanaIndex = Math.floor(slotIndex / 7);
+    const ehDiaSemanaPerfeita = semanasInfo[semanaIndex] || false;
+
     const classes = [
       'cal-dia',
       nivel ? `cal-dia-nivel-${nivel}` : '',
       futuro ? 'cal-dia-futuro' : '',
-      hoje ? 'cal-dia-hoje' : ''
+      hoje ? 'cal-dia-hoje' : '',
+      ehDiaSemanaPerfeita ? 'cal-dia-semana-perfeita' : ''
     ].filter(Boolean).join(' ');
+
     const label = qtd
-      ? `${dia} — ${qtd} história${qtd > 1 ? 's' : ''} concluída${qtd > 1 ? 's' : ''}`
+      ? `${dia} — ${qtd} história${qtd > 1 ? 's' : ''} concluída${qtd > 1 ? 's' : ''} (${estrelasStr})`
       : `${dia} — sem atividade`;
-    grade += `<div class="${classes}" role="gridcell" aria-label="${label}" title="${label}">${dia}</div>`;
+
+    const ehUltimoDiaDaSemana = ((slotIndex + 1) % 7 === 0) || (dia === diasNoMes && ehDiaSemanaPerfeita);
+    const seloHtml = (ehDiaSemanaPerfeita && ehUltimoDiaDaSemana)
+      ? '<span class="cal-selo-semana" title="Semana Perfeita de Leitura! 🏆" aria-label="Semana Perfeita">👑</span>'
+      : '';
+
+    grade += `
+      <div class="${classes}" role="gridcell" tabindex="0" data-iso="${iso}" data-dia="${dia}" data-qtd="${qtd}" aria-label="${label}" title="${label}">
+        <span class="cal-dia-num">${dia}</span>
+        ${estrelasStr ? `<span class="cal-dia-estrelas" aria-hidden="true">${estrelasStr}</span>` : ''}
+        ${hoje ? '<span class="cal-dia-hoje-badge">HOJE</span>' : ''}
+        ${seloHtml}
+      </div>
+    `;
   }
 
   const tituloMes = `${MESES_PT[mes]} ${ano}`;
+  const fraseMotivacional = obterFraseMotivacionalRaposa(streak, totalMes);
+
   el.innerHTML = `
+    <div class="calendario-topo-bar">
+      <div class="calendario-streak-badge">
+        <span class="cal-streak-fire">🔥</span>
+        <div class="cal-streak-info">
+          <span class="cal-streak-valor">${streak} ${streak === 1 ? 'dia seguido' : 'dias seguidos'}</span>
+          <span class="cal-streak-label">Sequência de Leitura</span>
+        </div>
+      </div>
+      ${temAlgumaSemanaPerfeita ? '<div class="calendario-selo-topo">👑 Semana Perfeita!</div>' : ''}
+    </div>
     <div class="calendario-header">
       <div class="calendario-titulo">${tituloMes}</div>
       <div class="calendario-nav">
@@ -182,7 +363,7 @@ function renderizarCalendarioAtividade() {
       ${grade}
     </div>
     <div class="calendario-legenda">
-      <span>Menos</span>
+      <span>Menos ⭐</span>
       <div class="calendario-legenda-cores">
         <span class="cal-legenda-amostra" style="background:#F3F4F6"></span>
         <span class="cal-legenda-amostra cal-dia-nivel-1"></span>
@@ -190,11 +371,20 @@ function renderizarCalendarioAtividade() {
         <span class="cal-legenda-amostra cal-dia-nivel-3"></span>
         <span class="cal-legenda-amostra cal-dia-nivel-4"></span>
       </div>
-      <span>Mais</span>
+      <span>Mais ⭐⭐⭐⭐</span>
     </div>
     <p class="calendario-resumo">${totalMes > 0
       ? `${totalMes} história${totalMes > 1 ? 's' : ''} concluída${totalMes > 1 ? 's' : ''} neste mês`
       : 'Nenhuma história concluída neste mês ainda'}</p>
+    <div class="calendario-raposa-frase">
+      <div class="cal-raposa-avatar-wrap">
+        <img src="midia/raposa/raposa1.png" alt="Raposa Fabular" class="cal-raposa-avatar" />
+      </div>
+      <div class="cal-raposa-balao">
+        <span class="cal-raposa-titulo">🦊 Raposa diz:</span>
+        <p class="cal-raposa-texto">"${fraseMotivacional}"</p>
+      </div>
+    </div>
   `;
 
   document.getElementById('cal-prev')?.addEventListener('click', () => {
@@ -204,6 +394,23 @@ function renderizarCalendarioAtividade() {
   document.getElementById('cal-prox')?.addEventListener('click', () => {
     calendarioMesAtual = new Date(ano, mes + 1, 1);
     renderizarCalendarioAtividade();
+  });
+
+  el.querySelectorAll('.cal-dia:not(.cal-dia-vazio)').forEach(diaEl => {
+    const handleDiaClick = () => {
+      const iso = diaEl.getAttribute('data-iso');
+      const diaNum = Number(diaEl.getAttribute('data-dia'));
+      const qtdNum = Number(diaEl.getAttribute('data-qtd')) || 0;
+      const est = obterEstrelasPorDia(qtdNum);
+      exibirModalDetalhesDia(iso, diaNum, mes, ano, qtdNum, est);
+    };
+    diaEl.addEventListener('click', handleDiaClick);
+    diaEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleDiaClick();
+      }
+    });
   });
 }
 
