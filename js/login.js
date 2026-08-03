@@ -9,7 +9,7 @@
      PARTE 1 — PERFIL DA CRIANÇA
    ───────────────────────────────────────── */
 
-  const perfil = { nome: '', avatar: '🦁', faixa: 1, genero: 'narrativo', dataNascimento: null };
+  const perfil = { nome: '', avatar: '🦁', faixa: 1, genero: 'narrativo', dataNascimento: null, horarioBrincar: null };
   const CHAVE_ESTADO = 'mundoHistorias_estado';
   //const CHAVE_CONTAS = 'mundoHistorias_contas';
   const CHAVE_SESSAO = 'mundoHistorias_responsavel_sessao';
@@ -67,6 +67,7 @@ async function carregarCriancas(responsavelId) {
       dataNascimento: perfilNormalizado.dataNascimento,
       avatar: perfilNormalizado.avatar,
       generoFavorito: perfilNormalizado.genero,
+      horarioBrincar: perfilNormalizado.horarioBrincar,
       createdAt: new Date().toISOString(),
       synced: false
     };
@@ -90,6 +91,7 @@ async function carregarCriancas(responsavelId) {
         dataNascimento: c.dataNascimento || null,
         avatar: c.avatar,
         generoFavorito: c.generoFavorito,
+        horarioBrincar: c.horarioBrincar || null,
         createdAt: c.createdAt
       }))
     };
@@ -191,6 +193,8 @@ async function carregarCriancas(responsavelId) {
     perfil.nome = nome;
     perfil.dataNascimento = dataNascimento;
     perfil.faixa = calcularFaixaEtaria(dataNascimento);
+    const inputHorario = document.getElementById('input-horario');
+    perfil.horarioBrincar = inputHorario ? inputHorario.value || null : null;
 
     let estadoExistente = {};
     try {
@@ -579,7 +583,8 @@ async function abrirSelecaoPerfis() {
             genero: perfilApi.generoFavorito,
             dataNascimento: perfilApi.dataNascimento,
             faixa: perfilApi.faixaEtaria,
-            localChildKey: perfilApi.localChildKey
+            localChildKey: perfilApi.localChildKey,
+            horarioBrincar: perfilApi.horarioBrincar
         });
         salvarJSON(CHAVE_ESTADO, estado);
 

@@ -1,4 +1,4 @@
-﻿namespace API_Fabular.Contracts;
+namespace API_Fabular.Contracts;
 
 public class ChildResponse
 {
@@ -13,4 +13,6 @@ public class ChildResponse
     public string? Avatar { get; set; }
 
     public string? GeneroFavorito { get; set; }
+
+    public string? HorarioBrincar { get; set; }
 }

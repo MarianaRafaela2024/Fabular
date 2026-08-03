@@ -1,4 +1,4 @@
-﻿SET NOCOUNT ON;
+SET NOCOUNT ON;
 
 USE Fabular;
 GO
@@ -36,6 +36,7 @@ CREATE TABLE Crianca (
     DataNascimento DATE NULL,
     Avatar VARCHAR(32) NULL,
     GeneroFavorito VARCHAR(32) NULL,
+    HorarioBrincar VARCHAR(10) NULL,
     Estrela SMALLINT NOT NULL DEFAULT 0,
     LocalChildKey VARCHAR(80) NULL,
     CriadoEm DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()

@@ -34,6 +34,7 @@ function normalizarPerfilCrianca(perfil) {
   p.avatar = p.avatar || '🦁';
   p.genero = p.genero || p.generoFavorito || 'narrativo';
   p.dataNascimento = p.dataNascimento || null;
+  p.horarioBrincar = p.horarioBrincar || p.horario || null;
   p.faixa = calcularFaixaEtaria(p.dataNascimento);
   return p;
 }

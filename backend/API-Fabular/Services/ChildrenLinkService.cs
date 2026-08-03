@@ -25,7 +25,8 @@ public class ChildrenLinkService
             c.FaixaEtaria,
             c.DataNascimento,
             c.Avatar,
-            c.GeneroFavorito
+            c.GeneroFavorito,
+            c.HorarioBrincar
         FROM Crianca c
         INNER JOIN Responsavel_Crianca rc
             ON rc.Id_Crianca = c.Id
@@ -70,10 +71,10 @@ public class ChildrenLinkService
         var childId = await conn.QuerySingleAsync<int>(
             """
         INSERT INTO Crianca
-            (Nome, FaixaEtaria, DataNascimento, Avatar, GeneroFavorito)
+            (Nome, FaixaEtaria, DataNascimento, Avatar, GeneroFavorito, HorarioBrincar)
         OUTPUT INSERTED.Id
         VALUES
-            (@Nome, @FaixaEtaria, @DataNascimento, @Avatar, @GeneroFavorito)
+            (@Nome, @FaixaEtaria, @DataNascimento, @Avatar, @GeneroFavorito, @HorarioBrincar)
         """,
             new
             {
@@ -81,7 +82,8 @@ public class ChildrenLinkService
                 FaixaEtaria = faixaEtaria,
                 request.DataNascimento,
                 request.Avatar,
-                request.GeneroFavorito
+                request.GeneroFavorito,
+                request.HorarioBrincar
             });
 
         await conn.ExecuteAsync(
@@ -143,10 +145,12 @@ public class ChildrenLinkService
                     await conn.ExecuteAsync(
                         """
                         UPDATE Crianca
-                        SET FaixaEtaria = @FaixaEtaria, DataNascimento = @DataNascimento
+                        SET FaixaEtaria = @FaixaEtaria,
+                            DataNascimento = @DataNascimento,
+                            HorarioBrincar = COALESCE(@HorarioBrincar, HorarioBrincar)
                         WHERE Id = @Id
                         """,
-                        new { FaixaEtaria = faixaEtaria, child.DataNascimento, Id = childId },
+                        new { FaixaEtaria = faixaEtaria, child.DataNascimento, HorarioBrincar = child.HorarioBrincar, Id = childId },
                         tx);
                 }
             }
@@ -154,9 +158,9 @@ public class ChildrenLinkService
             {
                 childId = await conn.QuerySingleAsync<int>(
                     """
-                    INSERT INTO Crianca (Nome, FaixaEtaria, DataNascimento, Avatar, GeneroFavorito, LocalChildKey)
+                    INSERT INTO Crianca (Nome, FaixaEtaria, DataNascimento, Avatar, GeneroFavorito, HorarioBrincar, LocalChildKey)
                     OUTPUT INSERTED.Id
-                    VALUES (@Nome, @FaixaEtaria, @DataNascimento, @Avatar, @GeneroFavorito, @LocalChildKey)
+                    VALUES (@Nome, @FaixaEtaria, @DataNascimento, @Avatar, @GeneroFavorito, @HorarioBrincar, @LocalChildKey)
                     """,
                     new
                     {
@@ -165,6 +169,7 @@ public class ChildrenLinkService
                         child.DataNascimento,
                         child.Avatar,
                         child.GeneroFavorito,
+                        child.HorarioBrincar,
                         child.LocalChildKey
                     },
                     tx);
