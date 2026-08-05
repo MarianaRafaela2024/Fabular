@@ -103,7 +103,7 @@ async function gerarHistoriaBotIa() {
       try {
         const err = await response.json();
         detail = err?.error?.message || '';
-      } catch (_) {}
+      } catch (_) { }
       throw new Error(detail || `Erro Groq ${response.status}`);
     }
 
@@ -399,6 +399,11 @@ ordenar_passos:
 
 monta_frase:
 - usar frase da história
+
+rima:
+- selecionar uma palavra importante presente no texto da história
+- a rima correta DEVE SER uma palavra DIFERENTE da palavra selecionada (ex.: leão → balão, lua → rua)
+- NUNCA usar a própria palavra da história como a opção de resposta
 
 jogo_memoria:
 - usar 3 a 4 palavras-chave da história
