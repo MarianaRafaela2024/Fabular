@@ -25,9 +25,15 @@ public class ParentAuthService
 
     public async Task<ApplicationResult<ParentAuthResponse>> RegisterAsync(ParentRegisterRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Senha) || string.IsNullOrWhiteSpace(request.Nome))
+        if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Senha) || string.IsNullOrWhiteSpace(request.Nome) || string.IsNullOrWhiteSpace(request.Telefone))
         {
-            return ApplicationResult<ParentAuthResponse>.BadRequest("Nome, email e senha são obrigatórios.");
+            return ApplicationResult<ParentAuthResponse>.BadRequest("Nome, telefone, email e senha são obrigatórios.");
+        }
+
+        var telefone = new string(request.Telefone.Where(char.IsDigit).ToArray());
+        if (telefone.Length < 10 || telefone.Length > 11)
+        {
+            return ApplicationResult<ParentAuthResponse>.BadRequest("Informe um telefone válido com DDD.");
         }
 
         await using var conn = _db.Create();
@@ -39,15 +45,16 @@ public class ParentAuthService
         }
 
         var sql = """
-                  INSERT INTO Responsavel (Nome, Sobrenome, Email, SenhaHash)
+                  INSERT INTO Responsavel (Nome, Sobrenome, Telefone, Email, SenhaHash)
                   OUTPUT INSERTED.Id
-                  VALUES (@Nome, @Sobrenome, @Email, @SenhaHash);
+                  VALUES (@Nome, @Sobrenome, @Telefone, @Email, @SenhaHash);
                   """;
         var cleanName = request.Nome.Trim();
         var id = await conn.QuerySingleAsync<int>(sql, new
         {
             Nome = cleanName,
             Sobrenome = request.Sobrenome?.Trim(),
+            Telefone = telefone,
             Email = email,
             SenhaHash = Hash(request.Senha)
         });

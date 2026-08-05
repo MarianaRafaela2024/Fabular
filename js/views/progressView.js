@@ -165,19 +165,19 @@ function calcularSequenciaLeitura(atividade) {
 }
 
 const FRASES_MOTIVACIONAIS_RAPOSA = [
-  'Cada página que você lê traz uma nova aventura mágica! 🌟',
-  'Ler todos os dias deixa sua imaginação super poderosa! 🚀',
-  'A raposinha está muito orgulhosa do seu progresso! 🦊❤️',
-  'Quanto mais histórias você lê, mais longe você pode voar! 📚✨',
-  'Aprender lendo é o melhor minigame de todos! 🎮📖',
-  'Você é um verdadeiro campeão das histórias! 🏆⭐',
-  'Abrir um livro é abrir uma porta para o mundo dos sonhos! 🚪🌈'
+  'Cada página que você lê traz uma nova aventura mágica! ',
+  'Ler todos os dias deixa sua imaginação super poderosa! ',
+  'A raposinha está muito orgulhosa do seu progresso! ',
+  'Quanto mais histórias você lê, mais longe você pode voar! ',
+  'Aprender lendo é o melhor minigame de todos! ',
+  'Você é um verdadeiro campeão das histórias! ',
+  'Abrir um livro é abrir uma porta para o mundo dos sonhos!'
 ];
 
 function obterFraseMotivacionalRaposa(streak, totalMes) {
-  if (streak >= 5) return `Nossa! ${streak} dias seguidos lendo! Você é imbatível! 🔥🦊`;
-  if (streak >= 3) return `Uau! ${streak} dias de leitura seguidos! Continue assim! 🔥✨`;
-  if (totalMes >= 10) return `Já foram ${totalMes} histórias este mês! Você lê super bem! 📚🏆`;
+  if (streak >= 5) return `Nossa! ${streak} dias seguidos lendo! Você é imbatível! `;
+  if (streak >= 3) return `Uau! ${streak} dias de leitura seguidos! Continue assim! `;
+  if (totalMes >= 10) return `Já foram ${totalMes} histórias este mês! Você lê super bem! `;
   const idx = (totalMes + streak) % FRASES_MOTIVACIONAIS_RAPOSA.length;
   return FRASES_MOTIVACIONAIS_RAPOSA[idx];
 }
@@ -214,10 +214,7 @@ function exibirModalDetalhesDia(iso, dia, mes, ano, qtd, estrelasStr) {
     historiasHtml = `<p class="cal-modal-vazio">Nenhuma história lida neste dia ainda. Que tal ler uma hoje? 📚✨</p>`;
   }
 
-  const msgRaposa = qtd > 0
-    ? `Incrível! Você conquistou ${estrelasStr} lendo histórias neste dia! 🦊⭐`
-    : 'Cada dia é uma nova oportunidade para viajar nos livros! 🦊🚀';
-
+  
   modal.innerHTML = `
     <div class="cal-modal-card">
       <button type="button" class="cal-modal-fechar" aria-label="Fechar detalhes">✕</button>
@@ -233,10 +230,7 @@ function exibirModalDetalhesDia(iso, dia, mes, ano, qtd, estrelasStr) {
           <h5 class="cal-modal-subtitulo">📖 Histórias Lidas</h5>
           ${historiasHtml}
         </div>
-        <div class="cal-modal-raposa-msg">
-          <span class="cal-modal-raposa-emoji">🦊</span>
-          <p>${msgRaposa}</p>
-        </div>
+       
       </div>
     </div>
   `;
@@ -376,15 +370,7 @@ function renderizarCalendarioAtividade() {
     <p class="calendario-resumo">${totalMes > 0
       ? `${totalMes} história${totalMes > 1 ? 's' : ''} concluída${totalMes > 1 ? 's' : ''} neste mês`
       : 'Nenhuma história concluída neste mês ainda'}</p>
-    <div class="calendario-raposa-frase">
-      <div class="cal-raposa-avatar-wrap">
-        <img src="midia/raposa/raposa1.png" alt="Raposa Fabular" class="cal-raposa-avatar" />
-      </div>
-      <div class="cal-raposa-balao">
-        <span class="cal-raposa-titulo">🦊 Raposa diz:</span>
-        <p class="cal-raposa-texto">"${fraseMotivacional}"</p>
-      </div>
-    </div>
+    
   `;
 
   document.getElementById('cal-prev')?.addEventListener('click', () => {
