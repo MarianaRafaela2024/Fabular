@@ -70,10 +70,8 @@ function refazerAtividade() {
   estado.ajudas = 0;
   estado.minigameAtual = 0;
   estado.mgAcertos = 0;
-  estado.modoLeituraCompleta = false;
-  estado.minigamesLista = [];
-  estado.minigamesPreset = null;
   estado.iniciouEm = Date.now();
+  prepararMinigamesPreset(estado.historiaAtual);
 
   irParaTela('leitura');
   mostrarLeituraCompleta();
