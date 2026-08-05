@@ -510,7 +510,7 @@ function renderSomPalavra(fase, corpo, spec) {
       <button class="btn-secundario" id="btnNaoOuco" aria-label="Não consigo ouvir">
         Não consigo ouvir
       </button>
-      <button class="btn-desistir-mg" id="btnDesistirSomPalavra" style="margin-top:0;">
+      <button class="btn-desistir-mg" id="btnDesistirSomPalavra">
         🏳️ Solução
       </button>
     </div>
@@ -710,9 +710,9 @@ function renderColorirMG(h, corpo, spec) {
     <div class="rima-opcoes-grid">
       ${itens.map((it, i) => `<button class="rima-opc" data-idx="${i}">${it.p}</button>`).join('')}
     </div>
-    <div style="display:flex;gap:10px;margin-top:12px;">
+    <div class="mg-acoes-row">
       <button class="btn-confirmar" id="btnConfColorir" style="flex:1;">✔ Confirmar</button>
-      <button class="btn-desistir-mg" id="btnDesistirColorir" style="margin-top:0;">🏳️ Solução</button>
+      <button class="btn-desistir-mg" id="btnDesistirColorir">🏳️ Solução</button>
     </div>
   `;
   corpo.appendChild(wrap);
@@ -785,9 +785,9 @@ function renderMontaFrase(fase, corpo, spec) {
       <p class="mg-desc">Monte a frase clicando nas palavras. Clique em uma palavra já colocada para removê-la.</p>
       <div class="mf-espaco" id="mfEspaco"><span class="mf-placeholder">Clique nas palavras abaixo…</span></div>
       <div class="mf-pool" id="mfPool"></div>
-      <div style="display:flex;gap:10px;margin-top:12px;">
+      <div class="mg-acoes-row">
         <button class="btn-confirmar" id="btnConfMF" style="flex:1;">✔ Verificar</button>
-        <button class="btn-desistir-mg" id="btnDesistirMF" style="margin-top:0;">🏳️ Solução</button>
+        <button class="btn-desistir-mg" id="btnDesistirMF">🏳️ Solução</button>
       </div>
     `;
     corpo.appendChild(wrap);
@@ -869,9 +869,9 @@ function renderMontaFrase(fase, corpo, spec) {
     <p class="mg-desc">Monte a frase clicando nas palavras. Clique em uma palavra já colocada para removê-la.</p>
     <div class="mf-espaco" id="mfEspaco"><span class="mf-placeholder">Clique nas palavras abaixo…</span></div>
     <div class="mf-pool" id="mfPool"></div>
-    <div style="display:flex;gap:10px;margin-top:12px;">
+    <div class="mg-acoes-row">
       <button class="btn-confirmar" id="btnConfMF" style="flex:1;">✔ Verificar</button>
-      <button class="btn-desistir-mg" id="btnDesistirMF" style="margin-top:0;">🏳️ Solução</button>
+      <button class="btn-desistir-mg" id="btnDesistirMF">🏳️ Solução</button>
     </div>
   `;
   corpo.appendChild(wrap);
@@ -1061,9 +1061,9 @@ function renderCacaPalavras(fase, h, corpo) {
     <div class="cp-scroll-wrap">
       <div class="cp-grade" id="cpGrade" style="grid-template-columns:repeat(${TAM},${CEL}px);width:${TAM * CEL + TAM * 2}px"></div>
     </div>
-    <div style="display:flex;gap:10px;margin-top:14px;">
+    <div class="mg-acoes-row">
       <button class="btn-confirmar" id="btnConfCP" style="flex:1;">✔ Terminei</button>
-      <button class="btn-desistir-mg" id="btnDesistirCP" style="margin-top:0;">🏳️ Solução</button>
+      <button class="btn-desistir-mg" id="btnDesistirCP">🏳️ Solução</button>
     </div>
   `;
   corpo.appendChild(wrap);
@@ -1355,9 +1355,9 @@ function renderLigarPontos(fase, h, corpo) {
       </div>
     </div>
     <svg class="lp-svg" id="lpSvg"></svg>
-    <div style="display:flex;gap:10px;margin-top:14px;">
+    <div class="mg-acoes-row">
       <button class="btn-confirmar" id="btnConfLP" style="flex:1;">✔ Verificar</button>
-      <button class="btn-desistir-mg" id="btnDesistirLP" style="margin-top:0;">🏳️ Solução</button>
+      <button class="btn-desistir-mg" id="btnDesistirLP">🏳️ Solução</button>
     </div>
   `;
   corpo.appendChild(wrap);
@@ -1843,9 +1843,9 @@ function renderOrdenarPassos(h, corpo, spec) {
   wrap.innerHTML = `
     <p class="mg-desc">Use as setas ↑↓ para colocar os eventos da história na ordem correta!</p>
     <ul class="op-lista" id="opLista"></ul>
-    <div style="display:flex;gap:10px;margin-top:12px;">
+    <div class="mg-acoes-row">
       <button class="btn-confirmar" id="btnConfOP" style="flex:1;">✔ Confirmar Ordem</button>
-      <button class="btn-desistir-mg" id="btnDesistirOP" style="margin-top:0;">🏳️ Solução</button>
+      <button class="btn-desistir-mg" id="btnDesistirOP">🏳️ Solução</button>
     </div>
   `;
   corpo.appendChild(wrap);
