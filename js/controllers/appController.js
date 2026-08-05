@@ -9,7 +9,7 @@ const PAGINAS_POR_TELA = {
   leitura: 'index.html',
   minigame: 'index.html',
   resultado: 'index.html',
-  'bot-ia': 'index.html',
+  'bot-ia': 'bot.html',
   progresso: 'progresso.html',
   responsavel: 'responsavel.html'
 };
@@ -18,7 +18,10 @@ function irParaTela(nomeTela) {
   const alvo = document.getElementById('tela-' + nomeTela);
   if (!alvo) {
     const pagina = PAGINAS_POR_TELA[nomeTela];
-    if (pagina) window.location.href = pagina;
+    if (pagina) {
+      sessionStorage.setItem('telaDesejada', nomeTela);
+      window.location.href = pagina;
+    }
     return;
   }
 
@@ -77,11 +80,21 @@ function refazerAtividade() {
 }
 
 function obterTelaInicialDaPagina() {
+  const telaSalva = sessionStorage.getItem('telaDesejada');
+  if (telaSalva) {
+    sessionStorage.removeItem('telaDesejada');
+    if (document.getElementById('tela-' + telaSalva)) {
+      return telaSalva;
+    }
+  }
   if (document.getElementById('tela-progresso') && !document.getElementById('tela-biblioteca')) {
     return 'progresso';
   }
   if (document.getElementById('tela-responsavel') && !document.getElementById('tela-biblioteca')) {
     return 'responsavel';
+  }
+  if (document.getElementById('tela-bot-ia') && !document.getElementById('tela-biblioteca')) {
+    return 'bot-ia';
   }
   return 'biblioteca';
 }

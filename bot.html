@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bot IA - Fabular</title>
+  <link rel="icon" type="image/png" href="midia/iconeRaposa.png">
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/components/minigames.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700;800&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+
+  <div id="app-shell">
+
+    <!-- HEADER -->
+    <header class="app-header">
+      <div class="header-esq">
+        <div id="avatar-display" class="header-avatar"></div>
+        <div class="header-info">
+          <span class="header-nome" id="header-nome">Aventureiro</span>
+          <span class="header-nivel" id="header-nivel">Iniciante</span>
+        </div>
+      </div>
+      <div class="header-centro">
+        <span class="header-logo">📚 Mundo das Histórias</span>
+      </div>
+      <div class="header-dir">
+        <div class="moedas-badge" title="Estrelas ganhas">
+          <span aria-hidden="true">⭐</span>
+          <span id="total-estrelas">0</span>
+        </div>
+        <button class="btn-icon" id="btn-contraste" title="Alternar alto contraste"
+          aria-label="Alternar alto contraste">
+          <img src="midia/contraste.png" alt="Alto contraste">
+        </button>
+        <button class="btn-icon" id="btn-fonte-mais" title="Aumentar fonte" aria-label="Aumentar fonte">A+
+        </button>
+        <button class="btn-icon" id="btn-fonte-menos" title="Diminuir fonte" aria-label="Diminuir fonte">A-
+        </button>
+        <button class="btn-icon btn-sair" id="btn-sair" title="Sair" aria-label="Sair e voltar ao login">
+          <img src="midia/sair.png" alt="Sair">
+        </button>
+      </div>
+    </header>
+
+    <!-- LAYOUT -->
+    <div class="app-layout">
+
+      <!-- SIDEBAR -->
+      <nav class="sidebar" id="sidebar" role="navigation" aria-label="Menu principal">
+        <div class="sidebar-logo" aria-hidden="true">📚</div>
+        <button class="nav-item" data-tela="biblioteca">
+          <span class="icon home"></span>
+          <span class="nav-label">Início</span>
+        </button>
+        <button class="nav-item" data-tela="leitura">
+          <span class="nav-icon icon icon-book"></span>
+          <span class="nav-label">História</span>
+        </button>
+        <button class="nav-item" data-tela="progresso">
+          <span class="icon award"></span>
+          <span class="nav-label">Progresso</span>
+        </button>
+        <button class="nav-item" data-tela="responsavel">
+          <span class="icon award"></span>
+          <span class="nav-label">Área do Responsável</span>
+        </button>
+        <button class="nav-item ativo" data-tela="bot-ia">
+          <span class="icon bot"></span>
+          <span class="nav-label">Bot IA</span>
+        </button>
+      </nav>
+
+      <!-- MAIN -->
+      <main class="app-main" id="app-main">
+
+        <!-- BOT IA -->
+        <section id="tela-bot-ia" class="tela-app ativa">
+          <div class="tela-header">
+            <h2>🤖 Bot de IA para Histórias</h2>
+            <p class="tela-sub">Conte sua ideia e a IA cria uma história com minigames.</p>
+          </div>
+          <div class="bot-ia-wrap">
+            <div class="bot-ia-card">
+              <div class="bot-chat">
+                <div class="bot-chat-msg bot-chat-msg-ai">
+                  <span class="bot-chat-avatar">🤖</span>
+                  <div class="bot-chat-bubble">
+                    Oi! Me conte sua ideia e eu crio uma história com 4 minigames para você.
+                  </div>
+                </div>
+                <div class="bot-chat-msg bot-chat-msg-ai">
+                  <span class="bot-chat-avatar">✨</span>
+                  <div class="bot-chat-bubble">
+                    Escolha o gênero textual para começar:
+                  </div>
+                </div>
+              </div>
+
+              <label class="bot-ia-label" id="label-bot-ia-genero">Gênero textual</label>
+              <div class="chip-grupo bot-ia-genero-grupo" id="bot-ia-genero-grupo" role="radiogroup"
+                aria-labelledby="label-bot-ia-genero">
+                <button type="button" class="chip ativo" data-genero="narrativo" aria-pressed="true">📖
+                  Narrativo</button>
+                <button type="button" class="chip" data-genero="poetico" aria-pressed="false">🎵 Poético</button>
+                <button type="button" class="chip" data-genero="instrucional" aria-pressed="false">📋
+                  Instrucional</button>
+                <button type="button" class="chip" data-genero="descritivo" aria-pressed="false">🔍 Descritivo</button>
+                <button type="button" class="chip" data-genero="informativo" aria-pressed="false">💡
+                  Informativo</button>
+              </div>
+
+              <label class="bot-ia-label" for="bot-ia-prompt">Tema ou ideia da história</label>
+              <textarea id="bot-ia-prompt" class="bot-ia-textarea" rows="4" maxlength="700"
+                placeholder="Ex.: um coelho que aprende a colaborar com os amigos para montar uma horta..."></textarea>
+              <button type="button" class="btn-principal bot-ia-btn" id="btn-bot-ia-gerar">Criar história com IA
+                ✨</button>
+              <p id="bot-ia-erro" class="bot-ia-erro oculto" role="alert"></p>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <script src="js/models/faixaEtaria.js"></script>
+  <script src="js/models/stories.js"></script>
+  <script src="js/models/state.js"></script>
+  <script src="js/views/accessibilityView.js"></script>
+  <script src="js/views/iaView.js"></script>
+  <script src="js/views/libraryView.js"></script>
+  <script src="js/views/readingView.js"></script>
+  <script src="js/views/minigameView.js"></script>
+  <script src="js/views/progressView.js"></script>
+  <script src="js/controllers/appController.js"></script>
+</body>
+
+</html>
