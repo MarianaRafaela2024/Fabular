@@ -395,16 +395,22 @@
       btnContinuar.onclick = async () => {
         const nomeEl = document.getElementById('resp-nome');
         const sobrenomeEl = document.getElementById('resp-sobrenome');
+        const telefoneEl = document.getElementById('resp-telefone');
         const emailEl = document.getElementById('resp-email');
         const senhaEl = document.getElementById('resp-senha');
 
         const nome = nomeEl ? nomeEl.value.trim() : '';
         const sobrenome = sobrenomeEl ? sobrenomeEl.value.trim() : '';
+        const telefone = telefoneEl ? telefoneEl.value.replace(/\D/g, '') : '';
         const email = emailEl ? emailEl.value.trim().toLowerCase() : '';
         const senha = senhaEl ? senhaEl.value.trim() : '';
 
         if (!email || !senha || (responsavelModo === 'cadastro' && !nome)) {
           setErro('Preencha os campos obrigatórios.');
+          return;
+        }
+        if (responsavelModo === 'cadastro' && telefone.length < 10) {
+          setErro('Informe um telefone válido com DDD.');
           return;
         }
         if (responsavelModo === 'cadastro') {
@@ -419,7 +425,7 @@
         try {
           let sessaoApi = null;
           if (responsavelModo === 'cadastro') {
-            sessaoApi = await apiRequest('/api/v1/parents/register', 'POST', { nome, sobrenome, email, senha });
+            sessaoApi = await apiRequest('/api/v1/parents/register', 'POST', { nome, sobrenome, telefone, email, senha });
           } else {
             sessaoApi = await apiRequest('/api/v1/parents/login', 'POST', { email, senha });
           }

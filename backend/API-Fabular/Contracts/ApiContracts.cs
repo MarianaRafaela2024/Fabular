@@ -1,6 +1,6 @@
 namespace API_Fabular.Contracts;
 /**/
-public record ParentRegisterRequest(string Nome, string? Sobrenome, string Email, string Senha);
+public record ParentRegisterRequest(string Nome, string? Sobrenome, string Telefone, string Email, string Senha);
 public record ParentLoginRequest(string Email, string Senha);
 public record ParentAuthResponse(int ResponsavelId, string Email, string Nome);
 public record ParentForgotPasswordRequest(string Email);
