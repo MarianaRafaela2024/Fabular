@@ -12,10 +12,12 @@
   const perfil = { nome: '', avatar: '🦁', faixa: 1, genero: 'narrativo', dataNascimento: null, horarioBrincar: null };
   const CHAVE_ESTADO = 'mundoHistorias_estado';
   const CHAVE_SESSAO = 'mundoHistorias_responsavel_sessao';
-  const CHAVE_CRIANCAS_PENDENTES = 'mundoHistorias_criancas_pendentes';
-  const CHAVE_VINCULOS = 'mundoHistorias_vinculos_crianca';
   const API_BASE = (window.API_BASE_URL || 'http://localhost:5275').replace(/\/$/, '');
   let responsavelModo = 'login';
+
+  // Limpeza proativa de chaves legadas no localStorage para garantir que a lista de crianças não seja mantida localmente
+  localStorage.removeItem('mundoHistorias_criancas_pendentes');
+  localStorage.removeItem('mundoHistorias_vinculos_crianca');
 
   function carregarJSON(chave, fallback) {
     try {
@@ -61,80 +63,6 @@
     } catch (e) {
       console.warn('Falha ao carregar crianças da API (retornando lista vazia):', e);
       return [];
-    }
-  }
-
-  function criarLocalChildKey(perf) {
-    const base = `${String(perf.nome || '').trim().toLowerCase()}-${String(perf.avatar || '')}-${Date.now()}`;
-    return base.replace(/\s+/g, '-');
-  }
-
-  function registrarCriancaPendente(perf) {
-    const perfilNormalizado = typeof normalizarPerfilCrianca === 'function'
-      ? normalizarPerfilCrianca(perf)
-      : Object.assign({}, perf);
-
-    const pendentes = carregarJSON(CHAVE_CRIANCAS_PENDENTES, []);
-    const novo = {
-      localChildKey: perf.localChildKey || criarLocalChildKey(perfilNormalizado),
-      nome: perfilNormalizado.nome,
-      faixaEtaria: perfilNormalizado.faixa || perfilNormalizado.faixaEtaria || 1,
-      dataNascimento: perfilNormalizado.dataNascimento || null,
-      avatar: perfilNormalizado.avatar || '🦁',
-      generoFavorito: perfilNormalizado.genero || perfilNormalizado.generoFavorito || 'narrativo',
-      horarioBrincar: perfilNormalizado.horarioBrincar || null,
-      createdAt: new Date().toISOString(),
-      synced: false
-    };
-
-    // Evita duplicar pendente idêntico
-    const idx = pendentes.findIndex(p => p.localChildKey === novo.localChildKey || (p.nome === novo.nome && p.avatar === novo.avatar));
-    if (idx >= 0) {
-      pendentes[idx] = Object.assign({}, pendentes[idx], novo);
-    } else {
-      pendentes.push(novo);
-    }
-
-    salvarJSON(CHAVE_CRIANCAS_PENDENTES, pendentes);
-    return novo;
-  }
-
-  async function sincronizarCriancasPendentes(sessao) {
-    if (!sessao || !sessao.responsavelId) return;
-    const pendentes = carregarJSON(CHAVE_CRIANCAS_PENDENTES, []);
-    if (!pendentes.length) return;
-    const naoSincronizados = pendentes.filter(c => !c.synced);
-    if (!naoSincronizados.length) return;
-
-    const payload = {
-      responsavelId: Number(sessao.responsavelId),
-      childrenLocal: naoSincronizados.map(c => ({
-        localChildKey: c.localChildKey,
-        nome: c.nome,
-        faixaEtaria: Number(c.faixaEtaria || 1),
-        dataNascimento: c.dataNascimento || null,
-        avatar: c.avatar || '🦁',
-        generoFavorito: c.generoFavorito || 'narrativo',
-        horarioBrincar: c.horarioBrincar || null,
-        createdAt: c.createdAt || new Date().toISOString()
-      }))
-    };
-
-    try {
-      const result = await apiRequest('/api/v1/children/link-local', 'POST', payload);
-      const linked = (result && result.linkedChildren) || [];
-      const map = carregarJSON(CHAVE_VINCULOS, {});
-
-      linked.forEach(item => {
-        const idx = pendentes.findIndex(p => p.localChildKey === item.localChildKey);
-        if (idx >= 0) pendentes[idx].synced = true;
-        map[item.localChildKey] = { criancaId: item.criancaId, responsavelId: sessao.responsavelId };
-      });
-
-      salvarJSON(CHAVE_VINCULOS, map);
-      salvarJSON(CHAVE_CRIANCAS_PENDENTES, pendentes);
-    } catch (e) {
-      console.warn('Sincronização de crianças pendentes falhou:', e);
     }
   }
 
@@ -198,7 +126,7 @@
     inputNasc.max = new Date().toISOString().slice(0, 10);
   }
 
-  function tentarEntrar() {
+  async function tentarEntrar() {
     const nome = document.getElementById('input-nome').value.trim();
     const dataNascimento = document.getElementById('input-nascimento').value;
     const erroEl = document.getElementById('erro-nome');
@@ -233,26 +161,66 @@
       erroNascimento.textContent = 'Informe a data de nascimento.';
     }
 
+    const sessao = getSessaoResponsavel();
+    if (!sessao || !sessao.responsavelId) {
+      configurarCardResponsavel();
+      mostrarCard('#responsavel-card');
+      return;
+    }
+
     perfil.nome = nome;
     perfil.dataNascimento = dataNascimento;
     perfil.faixa = typeof calcularFaixaEtaria === 'function' ? calcularFaixaEtaria(dataNascimento) : 1;
     const inputHorario = document.getElementById('input-horario');
     perfil.horarioBrincar = inputHorario ? inputHorario.value || null : null;
 
-    let estadoExistente = {};
     try {
-      const raw = localStorage.getItem(CHAVE_ESTADO);
-      if (raw) estadoExistente = JSON.parse(raw);
-    } catch (_) { }
+      const res = await apiRequest('/api/v1/children', 'POST', {
+        responsavelId: Number(sessao.responsavelId),
+        nome: perfil.nome,
+        faixaEtaria: Number(perfil.faixa),
+        dataNascimento: perfil.dataNascimento,
+        avatar: perfil.avatar || '🦁',
+        generoFavorito: perfil.genero || 'narrativo',
+        horarioBrincar: perfil.horarioBrincar
+      });
 
-    const pendente = registrarCriancaPendente(perfil);
-    perfil.localChildKey = pendente.localChildKey;
-    const estadoFinal = Object.assign({}, estadoExistente, { perfil });
-    localStorage.setItem(CHAVE_ESTADO, JSON.stringify(estadoFinal));
+      const childId = res ? (res.id ?? res.Id) : null;
+      let estadoExistente = {};
+      try {
+        const raw = localStorage.getItem(CHAVE_ESTADO);
+        if (raw) estadoExistente = JSON.parse(raw);
+      } catch (_) { }
 
-    const card = document.getElementById('crianca-card');
-    if (card) card.style.animation = 'slideUp .28s ease reverse forwards';
-    setTimeout(() => finalizarCadastroCrianca(), 250);
+      const perfilFinal = {
+        id: childId,
+        nome: perfil.nome,
+        avatar: perfil.avatar || '🦁',
+        genero: perfil.genero || 'narrativo',
+        dataNascimento: perfil.dataNascimento,
+        faixa: perfil.faixa,
+        horarioBrincar: perfil.horarioBrincar
+      };
+
+      const perfilNorm = typeof normalizarPerfilCrianca === 'function'
+        ? normalizarPerfilCrianca(perfilFinal)
+        : perfilFinal;
+
+      const estadoFinal = Object.assign({}, estadoExistente, { perfil: perfilNorm });
+      salvarJSON(CHAVE_ESTADO, estadoFinal);
+
+      const card = document.getElementById('crianca-card');
+      if (card) card.style.animation = 'slideUp .28s ease reverse forwards';
+      setTimeout(() => {
+        window.location.href = 'index.html';
+      }, 250);
+    } catch (err) {
+      console.error('Erro ao cadastrar criança no banco:', err);
+      if (erroNascimento) {
+        erroNascimento.textContent = err.message || 'Falha ao cadastrar criança no banco de dados.';
+        erroNascimento.classList.remove('oculto');
+      }
+    }
   }
 
 
@@ -271,37 +239,6 @@
 
   function getSessaoResponsavel() {
     return carregarJSON(CHAVE_SESSAO, null);
-  }
-
-  async function finalizarCadastroCrianca() {
-    const sessao = getSessaoResponsavel();
-    if (!sessao || !sessao.email || !sessao.responsavelId) {
-      configurarCardResponsavel();
-      mostrarCard('#responsavel-card');
-      return;
-    }
-
-    // Garante que o perfil atual está registrado localmente
-    registrarCriancaPendente(perfil);
-
-    // Tenta sincronizar com o backend
-    if (sessao.responsavelId) {
-      try {
-        await sincronizarCriancasPendentes(sessao);
-      } catch (err) {
-        console.warn('Erro ao sincronizar crianças pendentes:', err);
-      }
-    }
-
-    const estado = carregarJSON(CHAVE_ESTADO, {});
-    const perfilNorm = typeof normalizarPerfilCrianca === 'function'
-      ? normalizarPerfilCrianca(Object.assign({}, perfil))
-      : Object.assign({}, perfil);
-
-    estado.perfil = perfilNorm;
-    salvarJSON(CHAVE_ESTADO, estado);
-
-    window.location.href = 'index.html';
   }
 
   function configurarCardResponsavel() {
@@ -435,8 +372,6 @@
           setErro('');
           salvarJSON(CHAVE_SESSAO, sessao);
 
-          // Sincroniza perfis infantis pendentes após autenticação do responsável
-          await sincronizarCriancasPendentes(sessao);
           await abrirSelecaoPerfis();
         } catch (e) {
           console.error('ERRO AUTENTICAÇÃO:', e);
@@ -491,34 +426,8 @@
       return;
     }
 
-    // 1. Tentar sincronizar crianças pendentes
-    await sincronizarCriancasPendentes(sessao);
-
-    // 2. Carregar crianças do servidor API (seguro com fallback interno)
+    // Carregar crianças diretamente do banco de dados via API para o responsável logado
     const perfisApi = await carregarCriancas(sessao.responsavelId);
-
-    // 3. Carregar crianças pendentes para unificação de perfis no frontend
-    const pendentes = carregarJSON(CHAVE_CRIANCAS_PENDENTES, []);
-    const perfisUnificados = [...perfisApi];
-
-    pendentes.forEach(p => {
-      const jaExiste = perfisUnificados.some(apiP =>
-        (apiP.localChildKey && apiP.localChildKey === p.localChildKey) ||
-        (apiP.nome && p.nome && apiP.nome.trim().toLowerCase() === p.nome.trim().toLowerCase())
-      );
-      if (!jaExiste) {
-        perfisUnificados.push({
-          id: p.localChildKey,
-          nome: p.nome,
-          avatar: p.avatar || '🦁',
-          faixaEtaria: p.faixaEtaria || p.faixa || 1,
-          dataNascimento: p.dataNascimento || null,
-          generoFavorito: p.generoFavorito || p.genero || 'narrativo',
-          localChildKey: p.localChildKey,
-          horarioBrincar: p.horarioBrincar || null
-        });
-      }
-    });
 
     mostrarCard('#perfis-card');
 
@@ -526,19 +435,19 @@
     if (lista) {
       lista.innerHTML = '';
 
-      if (perfisUnificados.length === 0) {
+      if (!perfisApi || perfisApi.length === 0) {
         const msgVazia = document.createElement('p');
         msgVazia.style.cssText = 'grid-column: 1/-1; text-align: center; color: #666; font-size: 0.9rem; padding: 1rem;';
         msgVazia.textContent = 'Nenhuma criança cadastrada ainda. Clique abaixo para adicionar!';
         lista.appendChild(msgVazia);
       } else {
-        perfisUnificados.forEach((p) => {
+        perfisApi.forEach((p) => {
           const btn = document.createElement('button');
           btn.className = 'avatar-btn';
           btn.type = 'button';
           btn.innerHTML = `
-            <span class="avatar-emoji" style="font-size: 2.2rem; display: block; margin-bottom: 0.2rem;">${p.avatar || '🦁'}</span>
-            <small style="display:block;font-size:.8rem;font-weight:600;color:#333;">${p.nome}</small>
+            <span class="avatar-emoji" style="font-size: 2.2rem; display: block; margin-bottom: 0.2rem;">${p.avatar || p.Avatar || '🦁'}</span>
+            <small style="display:block;font-size:.8rem;font-weight:600;color:#333;">${p.nome || p.Nome}</small>
           `;
 
           btn.addEventListener('click', () => entrarComPerfil(p));
@@ -568,6 +477,7 @@
     if (btnLogout) {
       btnLogout.onclick = () => {
         localStorage.removeItem(CHAVE_SESSAO);
+        localStorage.removeItem(CHAVE_ESTADO);
         mostrarCard('#responsavel-card');
       };
     }
@@ -576,14 +486,13 @@
   function entrarComPerfil(perfilApi) {
     const estado = carregarJSON(CHAVE_ESTADO, {});
     const perfilObj = {
-      id: perfilApi.id || perfilApi.localChildKey,
-      nome: perfilApi.nome,
-      avatar: perfilApi.avatar,
-      genero: perfilApi.generoFavorito || perfilApi.genero,
-      dataNascimento: perfilApi.dataNascimento,
-      faixa: perfilApi.faixaEtaria || perfilApi.faixa || 1,
-      localChildKey: perfilApi.localChildKey,
-      horarioBrincar: perfilApi.horarioBrincar
+      id: perfilApi.id || perfilApi.Id,
+      nome: perfilApi.nome || perfilApi.Nome,
+      avatar: perfilApi.avatar || perfilApi.Avatar || '🦁',
+      genero: perfilApi.generoFavorito || perfilApi.GeneroFavorito || 'narrativo',
+      dataNascimento: perfilApi.dataNascimento || perfilApi.DataNascimento,
+      faixa: perfilApi.faixaEtaria || perfilApi.FaixaEtaria || 1,
+      horarioBrincar: perfilApi.horarioBrincar || perfilApi.HorarioBrincar
     };
 
     estado.perfil = typeof normalizarPerfilCrianca === 'function'

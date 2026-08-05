@@ -12,10 +12,23 @@ public class ChildrenLinkService
     {
         _db = db;
     }
+    private async Task GarantirColunasCriancaAsync(System.Data.Common.DbConnection conn)
+    {
+        try
+        {
+            await conn.ExecuteAsync(@"
+                IF COL_LENGTH('Crianca', 'DataNascimento') IS NULL ALTER TABLE Crianca ADD DataNascimento DATE NULL;
+                IF COL_LENGTH('Crianca', 'HorarioBrincar') IS NULL ALTER TABLE Crianca ADD HorarioBrincar VARCHAR(10) NULL;
+            ");
+        }
+        catch { }
+    }
+
     public async Task<ApplicationResult<IEnumerable<ChildResponse>>> GetChildrenAsync(int responsavelId)
     {
         await using var conn = _db.Create();
         await conn.OpenAsync();
+        await GarantirColunasCriancaAsync(conn);
 
         var children = (await conn.QueryAsync<ChildResponse>(
             """
@@ -67,6 +80,9 @@ public class ChildrenLinkService
 
         await using var conn = _db.Create();
         await conn.OpenAsync();
+        await GarantirColunasCriancaAsync(conn);
+
+        var dataNascParam = request.DataNascimento.Value.ToDateTime(TimeOnly.MinValue);
 
         var childId = await conn.QuerySingleAsync<int>(
             """
@@ -80,7 +96,7 @@ public class ChildrenLinkService
             {
                 Nome = request.Nome.Trim(),
                 FaixaEtaria = faixaEtaria,
-                request.DataNascimento,
+                DataNascimento = dataNascParam,
                 request.Avatar,
                 request.GeneroFavorito,
                 request.HorarioBrincar

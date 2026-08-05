@@ -271,7 +271,6 @@ const HISTORIAS = [
 ];
 
 const API_BASE = (window.API_BASE_URL || 'http://localhost:5275').replace(/\/$/, '');
-const CHAVE_VINCULOS = 'mundoHistorias_vinculos_crianca';
 const CHAVE_HISTORIAS_CACHE = 'mundoHistorias_historias_ia_cache';
 
 // ── Cache local de histórias geradas pela IA ─────────────────

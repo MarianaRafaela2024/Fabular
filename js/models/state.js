@@ -80,10 +80,10 @@ function garantirContadoresRelatorio() {
 
 function obterVinculoCrianca() {
   try {
-    const localChildKey = estado?.perfil?.localChildKey;
-    if (!localChildKey) return null;
-    const vinculos = JSON.parse(localStorage.getItem(CHAVE_VINCULOS) || '{}');
-    return vinculos[localChildKey] || null;
+    const criancaId = estado?.perfil?.id;
+    const responsavelId = obterResponsavelId();
+    if (!criancaId) return null;
+    return { criancaId: Number(criancaId), responsavelId };
   } catch (_) {
     return null;
   }
