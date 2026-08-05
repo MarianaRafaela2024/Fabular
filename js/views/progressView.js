@@ -211,7 +211,7 @@ function exibirModalDetalhesDia(iso, dia, mes, ano, qtd, estrelasStr) {
   } else if (qtd > 0) {
     historiasHtml = `<p class="cal-modal-info-texto">📚 ${qtd} história${qtd > 1 ? 's' : ''} concluída${qtd > 1 ? 's' : ''} neste dia!</p>`;
   } else {
-    historiasHtml = `<p class="cal-modal-vazio">Nenhuma história lida neste dia ainda. Que tal ler uma hoje? 📚✨</p>`;
+    historiasHtml = `<p class="cal-modal-vazio">Nenhuma história lida neste dia ainda. Que tal ler uma hoje? </p>`;
   }
 
   
@@ -335,7 +335,7 @@ function renderizarCalendarioAtividade() {
   el.innerHTML = `
     <div class="calendario-topo-bar">
       <div class="calendario-streak-badge">
-        <span class="cal-streak-fire">🔥</span>
+        <span class="icon res-icon fire"></span>
         <div class="cal-streak-info">
           <span class="cal-streak-valor">${streak} ${streak === 1 ? 'dia seguido' : 'dias seguidos'}</span>
           <span class="cal-streak-label">Sequência de Leitura</span>
@@ -407,7 +407,7 @@ const ETAGES_RAPOSA = [
     minEstrelas: 0,
     maxEstrelas: 10,
     imagem: 'midia/raposa/raposa1.png',
-    mensagem: 'Sua raposinha acabou de nascer! Continue lendo histórias e completando minigames para ajudá-la a crescer. 🦊🌱'
+    mensagem: 'Sua raposinha acabou de nascer! Continue lendo histórias e completando minigames para ajudá-la a crescer. '
   },
   {
     id: 'jovem',
@@ -415,7 +415,7 @@ const ETAGES_RAPOSA = [
     minEstrelas: 10,
     maxEstrelas: 25,
     imagem: 'midia/raposa/raposa2.png',
-    mensagem: 'Sua raposa está crescendo forte e curiosa! Continue praticando para ver o próximo estágio. 🌿✨'
+    mensagem: 'Sua raposa está crescendo forte e curiosa! Continue praticando para ver o próximo estágio. '
   },
   {
     id: 'aventureira',
@@ -423,7 +423,7 @@ const ETAGES_RAPOSA = [
     minEstrelas: 25,
     maxEstrelas: 45,
     imagem: 'midia/raposa/raposa3.png',
-    mensagem: 'Que incrível! Sua raposa agora é uma grande aventureira explorando novos mundos! 🎒🌳'
+    mensagem: 'Que incrível! Sua raposa agora é uma grande aventureira explorando novos mundos! '
   },
   {
     id: 'mestre',
@@ -431,7 +431,7 @@ const ETAGES_RAPOSA = [
     minEstrelas: 45,
     maxEstrelas: Infinity,
     imagem: 'midia/raposa/raposa4.png',
-    mensagem: 'Parabéns! Sua raposa atingiu a sabedoria máxima e se tornou uma grande Mestre! 🏆👑'
+    mensagem: 'Parabéns! Sua raposa atingiu a sabedoria máxima e se tornou uma grande Mestre! '
   }
 ];
 
