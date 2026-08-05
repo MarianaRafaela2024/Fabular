@@ -43,20 +43,21 @@ function iniciarSequenciaMinigames() {
 
 function nomeMinigame(tipo) {
   const nomes = {
-    memoria:         '🃏 Jogo da Memória',
-    jogo_memoria:    '🃏 Jogo da Memória',
-    som_palavra:     '🔊 Som e Palavra',
-    monta_frase:     '🧩 Monta-Frase',
-    verdadeiro_falso:'✅ Verdadeiro ou Falso?',
-    caca_palavras:   '🔍 Caça-Palavras',
-    ligar_pontos:    '🔗 Ligar os Pontos',
-    rima:            '🎵 Encontre a Rima',
-    quem_disse:      '💬 Quem Disse Isso?',
-    ordenar_passos:  '📋 Ordene os Passos',
-    escolha:         '❓ Escolha Múltipla',
-    completar:       '✍️ Completar',
-    colorir:         '🎨 Colorir Palavras',
-    palavras_perdidas:'🧠 Palavras Perdidas'
+    memoria: '🃏 Jogo da Memória',//
+    //jogo_memoria:    '🃏 Jogo da Memória',
+    som_palavra: '🔊 Som e Palavra',//
+    monta_frase: '🧩 Monta-Frase',
+    verdadeiro_falso: '✅ Verdadeiro ou Falso?',
+    caca_palavras: '🔍 Caça-Palavras',
+    ligar_pontos: '🔗 Ligar os Pontos',//
+    rima: '🎵 Encontre a Rima',//
+    quem_disse: '💬 Quem Disse Isso?',//
+    ordenar_passos: '📋 Ordene os Passos', //
+    escolha: '❓ Escolha Múltipla',//
+    completar: '✍️ Completar',//
+    //colorir:         '🎨 Colorir Palavras',
+    palavras_perdidas: '🧠 Palavras Perdidas'
+    //minigame de qual titulo combina
   };
   return nomes[tipo] || tipo;
 }
@@ -69,12 +70,12 @@ function renderizarMinigame() {
   const tipo =
     normalizarTipoMinigame((spec && (spec.tipo || spec.Tipo)) || estado.minigamesLista[estado.minigameAtual]);
   const total = estado.minigamesLista.length;
-  const h     = estado.historiaAtual;
+  const h = estado.historiaAtual;
   const textoBase = obterTextoBaseHistoria(h);
-  const fase  = { texto: textoBase, cena: h?.cena || '' };
+  const fase = { texto: textoBase, cena: h?.cena || '' };
 
   document.getElementById('mg-titulo-label').textContent = nomeMinigame(tipo);
-  document.getElementById('mg-contador').textContent     = `${estado.minigameAtual + 1} / ${total}`;
+  document.getElementById('mg-contador').textContent = `${estado.minigameAtual + 1} / ${total}`;
 
   document.getElementById('mg-feedback').classList.add('oculto');
   document.getElementById('btn-proximo-mg').classList.add('oculto');
@@ -93,20 +94,20 @@ function renderizarMinigame() {
 
   switch (tipo) {
     case 'memoria':
-    case 'jogo_memoria':     renderMemoria(fase, h, corpo, spec);           break;
-    case 'som_palavra':      renderSomPalavra(fase, corpo, spec);            break;
-    case 'monta_frase':      renderMontaFrase(fase, corpo, spec);           break;
-    case 'verdadeiro_falso': renderVerdadeiroFalso(fase, h, corpo, spec);   break;
-    case 'caca_palavras':    renderCacaPalavras(fase, h, corpo);            break;
-    case 'ligar_pontos':     renderLigarPontos(fase, h, corpo);             break;
-    case 'rima':             renderRima(h, corpo, spec);                    break;
-    case 'quem_disse':       renderQuemDisse(fase, h, corpo, spec);         break;
-    case 'ordenar_passos':   renderOrdenarPassos(h, corpo, spec);           break;
-    case 'escolha':          renderEscolhaMG(fase, corpo, spec);            break;
-    case 'completar':        renderCompletarMG(fase, corpo, spec);          break;
-    case 'colorir':          renderColorirMG(h, corpo, spec);               break;
-    case 'palavras_perdidas':renderCompletarMG(fase, corpo, spec || { tipo: 'completar' }); break;
-    default:                 renderVerdadeiroFalso(fase, h, corpo, spec);
+    case 'jogo_memoria': renderMemoria(fase, h, corpo, spec); break;
+    case 'som_palavra': renderSomPalavra(fase, corpo, spec); break;
+    case 'monta_frase': renderMontaFrase(fase, corpo, spec); break;
+    case 'verdadeiro_falso': renderVerdadeiroFalso(fase, h, corpo, spec); break;
+    case 'caca_palavras': renderCacaPalavras(fase, h, corpo); break;
+    case 'ligar_pontos': renderLigarPontos(fase, h, corpo); break;
+    case 'rima': renderRima(h, corpo, spec); break;
+    case 'quem_disse': renderQuemDisse(fase, h, corpo, spec); break;
+    case 'ordenar_passos': renderOrdenarPassos(h, corpo, spec); break;
+    case 'escolha': renderEscolhaMG(fase, corpo, spec); break;
+    case 'completar': renderCompletarMG(fase, corpo, spec); break;
+    case 'colorir': renderColorirMG(h, corpo, spec); break;
+    case 'palavras_perdidas': renderCompletarMG(fase, corpo, spec || { tipo: 'completar' }); break;
+    default: renderVerdadeiroFalso(fase, h, corpo, spec);
   }
 }
 
@@ -138,35 +139,35 @@ function mostrarFeedbackMG(ok, mostrarProximo = true) {
   if (ok) estado.mgAcertos++;
   else estado.tentativasReprovadas++;
 
-  const area  = document.getElementById('mg-feedback');
-  const card  = document.getElementById('mg-feedback-card');
+  const area = document.getElementById('mg-feedback');
+  const card = document.getElementById('mg-feedback-card');
   const emoji = document.getElementById('mg-feedback-emoji');
-  const msg   = document.getElementById('mg-feedback-msg');
+  const msg = document.getElementById('mg-feedback-msg');
 
   area.classList.remove('oculto');
 
   if (ok) {
-    card.style.background  = 'linear-gradient(135deg,#DCFCE7,#D1FAE5)';
+    card.style.background = 'linear-gradient(135deg,#DCFCE7,#D1FAE5)';
     card.style.borderColor = 'var(--cor-verde)';
-    emoji.textContent      = ['🎉','🌟','🏆','💫','🚀'][Math.floor(Math.random()*5)];
-    msg.textContent        = MSGS_ACERTO[Math.floor(Math.random()*MSGS_ACERTO.length)];
-    msg.style.color        = '#166534';
+    emoji.textContent = ['🎉', '🌟', '🏆', '💫', '🚀'][Math.floor(Math.random() * 5)];
+    msg.textContent = MSGS_ACERTO[Math.floor(Math.random() * MSGS_ACERTO.length)];
+    msg.style.color = '#166534';
   } else {
-    card.style.background  = 'linear-gradient(135deg,#FEF3C7,#FDE68A)';
+    card.style.background = 'linear-gradient(135deg,#FEF3C7,#FDE68A)';
     card.style.borderColor = '#F59E0B';
-    emoji.textContent      = '💛';
-    msg.textContent        = MSGS_ERRO[Math.floor(Math.random()*MSGS_ERRO.length)];
-    msg.style.color        = '#92400E';
+    emoji.textContent = '💛';
+    msg.textContent = MSGS_ERRO[Math.floor(Math.random() * MSGS_ERRO.length)];
+    msg.style.color = '#92400E';
   }
 
   if (mostrarProximo) {
     const isUltimo = estado.minigameAtual >= estado.minigamesLista.length - 1;
-    const btnProx  = document.getElementById('btn-proximo-mg');
-    const btnFin   = document.getElementById('btn-finalizar-mg');
-    btnProx.classList.toggle('oculto',  isUltimo);
-    btnFin.classList.toggle('oculto',  !isUltimo);
+    const btnProx = document.getElementById('btn-proximo-mg');
+    const btnFin = document.getElementById('btn-finalizar-mg');
+    btnProx.classList.toggle('oculto', isUltimo);
+    btnFin.classList.toggle('oculto', !isUltimo);
     if (isUltimo) btnFin.textContent = 'Ver Resultado 🏆';
-    else          btnProx.textContent = 'Próximo Jogo →';
+    else btnProx.textContent = 'Próximo Jogo →';
   }
 
   area.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -213,8 +214,8 @@ function finalizarMinigames() {
   estado.minigamesJogados += estado.minigamesLista.length;
 
   const acertosTotal = (estado.acertos || 0) + (estado.mgAcertos || 0);
-  const totalJogos   = estado.minigamesLista.length || 4;
-  const estrelas     = calcularEstrelasPorAcertos(acertosTotal, totalJogos);
+  const totalJogos = estado.minigamesLista.length || 4;
+  const estrelas = calcularEstrelasPorAcertos(acertosTotal, totalJogos);
 
   registrarEstrelasHistoria(estrelas);
   const id = estado.historiaAtual.id;
@@ -391,7 +392,7 @@ function renderMemoria(fase, h, corpo, spec) {
 
   const cards = embaralhar([
     ...pares.map(p => ({ tipo: 'palavra', valor: p.palavra, pairId: p.id })),
-    ...pares.map(p => ({ tipo: 'emoji',   valor: p.emoji,   pairId: p.id }))
+    ...pares.map(p => ({ tipo: 'emoji', valor: p.emoji, pairId: p.id }))
   ]);
 
   const wrap = document.createElement('div');
@@ -464,14 +465,14 @@ function renderMemoria(fase, h, corpo, spec) {
 // ─── 2. SOM E PALAVRA ────────────────────────────────────────────────────────
 function renderSomPalavra(fase, corpo, spec) {
   const textoCurto = extrairTextoCurto(fase.texto);
-  const palavras  = (textoCurto.replace(/<[^>]+>/g, '').match(/\b\w{4,}\b/g) || ['leitura']).slice(0, 6);
+  const palavras = (textoCurto.replace(/<[^>]+>/g, '').match(/\b\w{4,}\b/g) || ['leitura']).slice(0, 6);
   const alvoPreset = spec && spec.alvo ? String(spec.alvo) : '';
   const alvo = alvoPreset || palavras[Math.floor(Math.random() * palavras.length)];
   const opcoesPreset = spec && Array.isArray(spec.opcoes) && spec.opcoes.length >= 2
     ? spec.opcoes.map(String)
     : null;
   const distratores = embaralhar(
-    ['estrela','nuvem','pedra','livro','vento','chuva','foguete','floresta'].filter(p => p !== alvo)
+    ['estrela', 'nuvem', 'pedra', 'livro', 'vento', 'chuva', 'foguete', 'floresta'].filter(p => p !== alvo)
   ).slice(0, 3);
   const opcoes = opcoesPreset
     ? embaralhar(opcoesPreset.includes(alvo) ? opcoesPreset : [alvo, ...opcoesPreset])
@@ -749,7 +750,7 @@ function renderMontaFrase(fase, corpo, spec) {
   });
   const frase = todasFrases[0] || textoLimpo.split(' ').slice(0, 7).join(' ');
   const palavrasCorretas = frase.split(' ').filter(Boolean);
-  const embaralhadas     = embaralhar([...palavrasCorretas]);
+  const embaralhadas = embaralhar([...palavrasCorretas]);
 
   let colocadosIdx = [];
 
@@ -765,7 +766,7 @@ function renderMontaFrase(fase, corpo, spec) {
   corpo.appendChild(wrap);
 
   function atualizar() {
-    const pool   = document.getElementById('mfPool');
+    const pool = document.getElementById('mfPool');
     const espaco = document.getElementById('mfEspaco');
 
     pool.innerHTML = embaralhadas.map((p, i) =>
@@ -799,7 +800,7 @@ function renderMontaFrase(fase, corpo, spec) {
   document.getElementById('btnConfMF').addEventListener('click', () => {
     if (colocadosIdx.length < 2) { mostrarToast('Monte a frase primeiro! 😊'); return; }
     const tentativa = colocadosIdx.map(i => embaralhadas[i]).join(' ').toLowerCase().trim();
-    const correta   = palavrasCorretas.join(' ').toLowerCase().trim();
+    const correta = palavrasCorretas.join(' ').toLowerCase().trim();
     const ok = tentativa === correta;
     document.getElementById('btnConfMF').disabled = true;
     revelarMontaFraseCorreta(palavrasCorretas);
@@ -868,7 +869,7 @@ function renderVerdadeiroFalso(fase, h, corpo, spec) {
 
 // ─── 5. CAÇA-PALAVRAS ────────────────────────────────────────────────────────
 function renderCacaPalavras(fase, h, corpo) {
-  const normalize = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z]/g,'').substring(0, 15);
+  const normalize = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z]/g, '').substring(0, 15);
   const palavrasAlvo = [...new Set(
     (h.palavrasChave || []).map(normalize).filter(p => p.length >= 3 && p.length <= 15)
   )].slice(0, 4);
@@ -877,11 +878,11 @@ function renderCacaPalavras(fase, h, corpo) {
 
   const TAM = 12;
   const LETRAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const grade  = Array.from({ length: TAM }, () => Array(TAM).fill(''));
+  const grade = Array.from({ length: TAM }, () => Array(TAM).fill(''));
   const posicoes = {};
 
   palavrasAlvo.forEach(palavra => {
-    const dirs = [{ dr:0, dc:1 }, { dr:1, dc:0 }];
+    const dirs = [{ dr: 0, dc: 1 }, { dr: 1, dc: 0 }];
     let inserida = false;
     for (let t = 0; t < 500 && !inserida; t++) {
       const { dr, dc } = dirs[Math.floor(Math.random() * dirs.length)];
@@ -892,14 +893,14 @@ function renderCacaPalavras(fase, h, corpo) {
       const sC = Math.floor(Math.random() * maxC);
       let ok = true;
       for (let i = 0; i < palavra.length; i++) {
-        const r = sR + dr*i, c = sC + dc*i;
+        const r = sR + dr * i, c = sC + dc * i;
         if (grade[r][c] !== '' && grade[r][c] !== palavra[i]) { ok = false; break; }
       }
       if (ok) {
         const cells = [];
         for (let i = 0; i < palavra.length; i++) {
-          grade[sR + dr*i][sC + dc*i] = palavra[i];
-          cells.push({ r: sR + dr*i, c: sC + dc*i });
+          grade[sR + dr * i][sC + dc * i] = palavra[i];
+          cells.push({ r: sR + dr * i, c: sC + dc * i });
         }
         posicoes[palavra] = cells;
         inserida = true;
@@ -913,10 +914,10 @@ function renderCacaPalavras(fase, h, corpo) {
         grade[r][c] = LETRAS[Math.floor(Math.random() * LETRAS.length)];
 
   const dispW = Math.min(window.innerWidth, 700) - 48;
-  const CEL   = Math.max(22, Math.min(30, Math.floor(dispW / TAM)));
+  const CEL = Math.max(22, Math.min(30, Math.floor(dispW / TAM)));
   const FSIZE = Math.max(9, CEL - 14);
 
-  const CORES_PALAVRAS = ['#A855F7','#FF6B35','#22C55E','#3B82F6'];
+  const CORES_PALAVRAS = ['#A855F7', '#FF6B35', '#22C55E', '#3B82F6'];
 
   const wrap = document.createElement('div');
   wrap.innerHTML = `
@@ -925,7 +926,7 @@ function renderCacaPalavras(fase, h, corpo) {
       ${palavrasAlvo.map((p, i) => `<span class="cp-alvo" id="cpa-${p}" style="--cor-palavra:${CORES_PALAVRAS[i % CORES_PALAVRAS.length]}">${p}</span>`).join('')}
     </div>
     <div class="cp-scroll-wrap">
-      <div class="cp-grade" id="cpGrade" style="grid-template-columns:repeat(${TAM},${CEL}px);width:${TAM*CEL+TAM*2}px"></div>
+      <div class="cp-grade" id="cpGrade" style="grid-template-columns:repeat(${TAM},${CEL}px);width:${TAM * CEL + TAM * 2}px"></div>
     </div>
     <button class="btn-confirmar" id="btnConfCP" style="margin-top:14px;width:100%">✔ Terminei</button>
   `;
@@ -935,7 +936,7 @@ function renderCacaPalavras(fase, h, corpo) {
   for (let r = 0; r < TAM; r++) {
     for (let c = 0; c < TAM; c++) {
       const cell = document.createElement('div');
-      cell.className  = 'cp-cel';
+      cell.className = 'cp-cel';
       cell.style.cssText = `width:${CEL}px;height:${CEL}px;font-size:${FSIZE}px`;
       cell.textContent = grade[r][c];
       cell.dataset.r = r;
@@ -944,8 +945,8 @@ function renderCacaPalavras(fase, h, corpo) {
     }
   }
 
-  let arrastando  = false;
-  let primeira    = null;
+  let arrastando = false;
+  let primeira = null;
   let encontradas = new Set();
 
   function getCell(r, c) { return gridEl.children[r * TAM + c]; }
@@ -962,7 +963,7 @@ function renderCacaPalavras(fase, h, corpo) {
     const dc = c1 === c2 ? 0 : (c2 > c1 ? 1 : -1);
     const res = [];
     let r = r1, c = c1;
-    for (;;) {
+    for (; ;) {
       res.push({ r, c, letra: grade[r][c] });
       if (r === r2 && c === c2) break;
       r += dr; c += dc;
@@ -976,7 +977,7 @@ function renderCacaPalavras(fase, h, corpo) {
     const dc = c1 === c2 ? 0 : (c2 > c1 ? 1 : -1);
     if (dr !== 0 && dc !== 0) return;
     let r = r1, c = c1;
-    for (;;) {
+    for (; ;) {
       const el = getCell(r, c);
       if (el && !el.classList.contains('cp-found')) {
         el.classList.add('cp-preview');
@@ -991,7 +992,7 @@ function renderCacaPalavras(fase, h, corpo) {
     const isH = r1 === r2, isV = c1 === c2;
     if (!isH && !isV) return false;
     const seg = coletarSegmento(r1, c1, r2, c2);
-    const palavra  = seg.map(s => s.letra).join('');
+    const palavra = seg.map(s => s.letra).join('');
     const palavraR = [...palavra].reverse().join('');
     limparPreview();
 
@@ -1016,13 +1017,13 @@ function renderCacaPalavras(fase, h, corpo) {
         const area = document.getElementById('mg-feedback');
         const card = document.getElementById('mg-feedback-card');
         const emoji = document.getElementById('mg-feedback-emoji');
-        const msg   = document.getElementById('mg-feedback-msg');
+        const msg = document.getElementById('mg-feedback-msg');
         area.classList.remove('oculto');
-        card.style.background  = 'linear-gradient(135deg,#DCFCE7,#D1FAE5)';
+        card.style.background = 'linear-gradient(135deg,#DCFCE7,#D1FAE5)';
         card.style.borderColor = 'var(--cor-verde)';
-        emoji.textContent      = '🎉';
-        msg.textContent        = `Encontrou "${match}"! (${encontradas.size}/${palavrasAlvo.length})`;
-        msg.style.color        = '#166534';
+        emoji.textContent = '🎉';
+        msg.textContent = `Encontrou "${match}"! (${encontradas.size}/${palavrasAlvo.length})`;
+        msg.style.color = '#166534';
       }
       return true;
     } else if (!match || encontradas.has(match)) {
@@ -1149,37 +1150,37 @@ function renderCacaPalavras(fase, h, corpo) {
 // ─── 6. LIGAR OS PONTOS ──────────────────────────────────────────────────────
 function renderLigarPontos(fase, h, corpo) {
   const BANCO_DEFS = {
-    sol:'Estrela que ilumina o dia', lua:'Astro que brilha à noite',
-    agua:'Líquido essencial à vida', fogo:'Chama que aquece e ilumina',
-    vento:'Movimento do ar', chuva:'Água que cai do céu',
-    flor:'Parte colorida da planta', arvore:'Planta de tronco grande',
-    peixe:'Animal que vive na água', passaro:'Animal que voa com asas',
-    casa:'Lugar onde a família vive', escola:'Lugar onde se aprende',
-    livro:'Objeto cheio de histórias', menino:'Criança do sexo masculino',
-    menina:'Criança do sexo feminino', gato:'Animal doméstico que mia',
-    cachorro:'Animal doméstico que late', cavalo:'Animal que galopa',
-    leao:'Rei da selva com juba', floresta:'Conjunto de muitas árvores',
-    mar:'Grande extensão de água salgada', rio:'Corrente de água doce',
-    montanha:'Elevação grande de terra', estrela:'Ponto de luz no céu',
-    nuvem:'Massa de vapor no céu', pedra:'Material sólido da natureza',
-    terra:'Solo onde as plantas crescem', mel:'Alimento doce das abelhas',
-    rei:'Governante de um reino', rainha:'Governante de um reino',
-    fada:'Ser mágico das histórias', dragao:'Criatura mítica que cospe fogo',
-    gigante:'Ser de tamanho enorme', bruxa:'Personagem mágica das fábulas',
-    castelo:'Grande construção de pedra', magia:'Poder sobrenatural',
-    coragem:'Força para enfrentar o medo', amizade:'Laço afetivo entre pessoas',
-    pao:'Alimento feito de farinha', barco:'Veículo que navega na água',
-    ponte:'Estrutura que une dois lados', navio:'Grande barco do mar',
-    praia:'Areia à beira do mar', campo:'Área aberta de terra',
-    cidade:'Local com muitas casas', aldeia:'Pequeno grupo de casas',
+    sol: 'Estrela que ilumina o dia', lua: 'Astro que brilha à noite',
+    agua: 'Líquido essencial à vida', fogo: 'Chama que aquece e ilumina',
+    vento: 'Movimento do ar', chuva: 'Água que cai do céu',
+    flor: 'Parte colorida da planta', arvore: 'Planta de tronco grande',
+    peixe: 'Animal que vive na água', passaro: 'Animal que voa com asas',
+    casa: 'Lugar onde a família vive', escola: 'Lugar onde se aprende',
+    livro: 'Objeto cheio de histórias', menino: 'Criança do sexo masculino',
+    menina: 'Criança do sexo feminino', gato: 'Animal doméstico que mia',
+    cachorro: 'Animal doméstico que late', cavalo: 'Animal que galopa',
+    leao: 'Rei da selva com juba', floresta: 'Conjunto de muitas árvores',
+    mar: 'Grande extensão de água salgada', rio: 'Corrente de água doce',
+    montanha: 'Elevação grande de terra', estrela: 'Ponto de luz no céu',
+    nuvem: 'Massa de vapor no céu', pedra: 'Material sólido da natureza',
+    terra: 'Solo onde as plantas crescem', mel: 'Alimento doce das abelhas',
+    rei: 'Governante de um reino', rainha: 'Governante de um reino',
+    fada: 'Ser mágico das histórias', dragao: 'Criatura mítica que cospe fogo',
+    gigante: 'Ser de tamanho enorme', bruxa: 'Personagem mágica das fábulas',
+    castelo: 'Grande construção de pedra', magia: 'Poder sobrenatural',
+    coragem: 'Força para enfrentar o medo', amizade: 'Laço afetivo entre pessoas',
+    pao: 'Alimento feito de farinha', barco: 'Veículo que navega na água',
+    ponte: 'Estrutura que une dois lados', navio: 'Grande barco do mar',
+    praia: 'Areia à beira do mar', campo: 'Área aberta de terra',
+    cidade: 'Local com muitas casas', aldeia: 'Pequeno grupo de casas',
   };
 
-  const norm = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z]/g,'');
+  const norm = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]/g, '');
   const FALLBACK = [
-    {palavra:'Sol',   def:'Estrela que ilumina o dia'},
-    {palavra:'Lua',   def:'Astro que brilha à noite'},
-    {palavra:'Livro', def:'Objeto cheio de histórias'},
-    {palavra:'Flor',  def:'Parte colorida da planta'},
+    { palavra: 'Sol', def: 'Estrela que ilumina o dia' },
+    { palavra: 'Lua', def: 'Astro que brilha à noite' },
+    { palavra: 'Livro', def: 'Objeto cheio de histórias' },
+    { palavra: 'Flor', def: 'Parte colorida da planta' },
   ];
 
   let pares = [];
@@ -1196,12 +1197,12 @@ function renderLigarPontos(fase, h, corpo) {
   pares = pares.slice(0, 4);
 
   const esquerda = embaralhar([...pares]);
-  const direita  = embaralhar([...pares]);
-  const CORES = ['#A855F7','#FF6B35','#22C55E','#3B82F6'];
+  const direita = embaralhar([...pares]);
+  const CORES = ['#A855F7', '#FF6B35', '#22C55E', '#3B82F6'];
 
   let selecionado = null;
-  let ligacoes    = [];
-  let acertos     = 0;
+  let ligacoes = [];
+  let acertos = 0;
 
   const wrap = document.createElement('div');
   wrap.className = 'lp-wrap';
@@ -1209,10 +1210,10 @@ function renderLigarPontos(fase, h, corpo) {
     <p class="mg-desc">Clique em uma <strong>palavra</strong> e depois em sua <strong>definição</strong> para ligar!</p>
     <div class="lp-arena" id="lpArena">
       <div class="lp-col" id="lpEsq">
-        ${esquerda.map((p,i)=>`<button class="lp-btn lp-palavra" data-lado="esq" data-i="${i}" data-k="${norm(p.palavra)}">${p.palavra}</button>`).join('')}
+        ${esquerda.map((p, i) => `<button class="lp-btn lp-palavra" data-lado="esq" data-i="${i}" data-k="${norm(p.palavra)}">${p.palavra}</button>`).join('')}
       </div>
       <div class="lp-col" id="lpDir">
-        ${direita.map((p,i)=>`<button class="lp-btn lp-def" data-lado="dir" data-i="${i}" data-k="${norm(p.palavra)}">${p.def}</button>`).join('')}
+        ${direita.map((p, i) => `<button class="lp-btn lp-def" data-lado="dir" data-i="${i}" data-k="${norm(p.palavra)}">${p.def}</button>`).join('')}
       </div>
     </div>
     <svg class="lp-svg" id="lpSvg"></svg>
@@ -1235,7 +1236,7 @@ function renderLigarPontos(fase, h, corpo) {
     const svg = document.getElementById('lpSvg');
     if (!svg) return;
     const wr = wrap.getBoundingClientRect();
-    svg.setAttribute('width',  wr.width);
+    svg.setAttribute('width', wr.width);
     svg.setAttribute('height', wr.height);
     svg.innerHTML = '';
     ligacoes.forEach(lig => {
@@ -1245,7 +1246,7 @@ function renderLigarPontos(fase, h, corpo) {
       const p1 = midRight(eEl);
       const p2 = midLeft(dEl);
       const cx = (p1.x + p2.x) / 2;
-      const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('d', `M${p1.x},${p1.y} C${cx},${p1.y} ${cx},${p2.y} ${p2.x},${p2.y}`);
       path.setAttribute('stroke', lig.cor);
       path.setAttribute('stroke-width', '3.5');
@@ -1259,7 +1260,7 @@ function renderLigarPontos(fase, h, corpo) {
     btn.addEventListener('click', () => {
       if (btn.classList.contains('lp-ligado')) return;
       const lado = btn.dataset.lado;
-      const k    = btn.dataset.k;
+      const k = btn.dataset.k;
 
       if (!selecionado) {
         wrap.querySelectorAll('.lp-btn.lp-ativo').forEach(b => b.classList.remove('lp-ativo'));
@@ -1280,7 +1281,7 @@ function renderLigarPontos(fase, h, corpo) {
       wrap.querySelectorAll('.lp-btn.lp-ativo').forEach(b => b.classList.remove('lp-ativo'));
       selecionado = null;
 
-      const ok  = eKey === dKey;
+      const ok = eKey === dKey;
       const cor = ok ? CORES[acertos % CORES.length] : '#EF4444';
       const eEl = wrap.querySelector(`#lpEsq [data-k="${eKey}"]`);
       const dEl = wrap.querySelector(`#lpDir [data-k="${dKey}"]`);
@@ -1288,7 +1289,7 @@ function renderLigarPontos(fase, h, corpo) {
       if (ok) {
         acertos++;
         [eEl, dEl].forEach(el => {
-          el.classList.add('lp-ligado','lp-certo');
+          el.classList.add('lp-ligado', 'lp-certo');
           el.style.borderColor = cor;
           el.style.color = cor;
         });
@@ -1334,16 +1335,16 @@ function renderLigarPontos(fase, h, corpo) {
 // ─── 7. RIMA ────────────────────────────────────────────────────────────────
 function renderRima(h, corpo, spec) {
   const pares = [
-    { palavra:'sol',   rima:'farol',  erradas:['livro','pedra','chuva'] },
-    { palavra:'mar',   rima:'voar',   erradas:['correr','dormir','andar'] },
-    { palavra:'flor',  rima:'amor',   erradas:['pedra','vento','carro'] },
-    { palavra:'lua',   rima:'rua',    erradas:['livro','estrela','pedra'] },
-    { palavra:'pão',   rima:'mão',    erradas:['neve','chuva','bola'] },
-    { palavra:'gato',  rima:'prato',  erradas:['nuvem','janela','caixa'] },
-    { palavra:'fada',  rima:'espada', erradas:['livro','pedra','carro'] },
-    { palavra:'chuva', rima:'uva',    erradas:['pedra','livro','nuvem'] },
-    { palavra:'leão',  rima:'balão',  erradas:['pedra','carro','livro'] },
-    { palavra:'fogo',  rima:'jogo',   erradas:['pedra','livro','carro'] }
+    { palavra: 'sol', rima: 'farol', erradas: ['livro', 'pedra', 'chuva'] },
+    { palavra: 'mar', rima: 'voar', erradas: ['correr', 'dormir', 'andar'] },
+    { palavra: 'flor', rima: 'amor', erradas: ['pedra', 'vento', 'carro'] },
+    { palavra: 'lua', rima: 'rua', erradas: ['livro', 'estrela', 'pedra'] },
+    { palavra: 'pão', rima: 'mão', erradas: ['neve', 'chuva', 'bola'] },
+    { palavra: 'gato', rima: 'prato', erradas: ['nuvem', 'janela', 'caixa'] },
+    { palavra: 'fada', rima: 'espada', erradas: ['livro', 'pedra', 'carro'] },
+    { palavra: 'chuva', rima: 'uva', erradas: ['pedra', 'livro', 'nuvem'] },
+    { palavra: 'leão', rima: 'balão', erradas: ['pedra', 'carro', 'livro'] },
+    { palavra: 'fogo', rima: 'jogo', erradas: ['pedra', 'livro', 'carro'] }
   ];
   let par;
   let opcoes;
@@ -1354,7 +1355,7 @@ function renderRima(h, corpo, spec) {
     const kws = (h.palavrasChave || []).map(p => p.toLowerCase());
     par = pares.find(pr => kws.some(k => k.includes(pr.palavra) || pr.palavra.includes(k)));
     if (!par) par = pares[Math.floor(Math.random() * pares.length)];
-    opcoes = embaralhar([par.rima, ...par.erradas.slice(0,3)]);
+    opcoes = embaralhar([par.rima, ...par.erradas.slice(0, 3)]);
   }
 
   const wrap = document.createElement('div');
@@ -1405,7 +1406,7 @@ function renderQuemDisse(fase, h, corpo, spec) {
     const personagens = todos.length > 0 ? todos : (h.palavrasChave || []).slice(0, 3);
     alvo = personagens[0] || 'Narrador';
     const distratores = embaralhar(
-      ['Narrador','Dragão','Fada','Rei','Bruxo','Lobo','Gigante'].filter(p => p !== alvo)
+      ['Narrador', 'Dragão', 'Fada', 'Rei', 'Bruxo', 'Lobo', 'Gigante'].filter(p => p !== alvo)
     ).slice(0, 3);
     opcoes = embaralhar([alvo, ...distratores]);
     const textoLimpo = String((fase && fase.texto) || obterTextoBaseHistoria(h) || '').replace(/<[^>]+>/g, '');
@@ -1479,7 +1480,7 @@ function renderOrdenarPassos(h, corpo, spec) {
         <span class="op-num">${i + 1}</span>
         <span class="op-texto">${passos[id].texto}</span>
         <div class="op-setas">
-          <button class="op-seta" data-action="up"   data-i="${i}" aria-label="Mover para cima"  ${i === 0                ? 'disabled' : ''}>↑</button>
+          <button class="op-seta" data-action="up"   data-i="${i}" aria-label="Mover para cima"  ${i === 0 ? 'disabled' : ''}>↑</button>
           <button class="op-seta" data-action="down" data-i="${i}" aria-label="Mover para baixo" ${i === ordem.length - 1 ? 'disabled' : ''}>↓</button>
         </div>
       </li>
@@ -1489,9 +1490,9 @@ function renderOrdenarPassos(h, corpo, spec) {
       btn.addEventListener('click', () => {
         const i = parseInt(btn.dataset.i);
         if (btn.dataset.action === 'up' && i > 0) {
-          [ordem[i], ordem[i-1]] = [ordem[i-1], ordem[i]];
+          [ordem[i], ordem[i - 1]] = [ordem[i - 1], ordem[i]];
         } else if (btn.dataset.action === 'down' && i < ordem.length - 1) {
-          [ordem[i], ordem[i+1]] = [ordem[i+1], ordem[i]];
+          [ordem[i], ordem[i + 1]] = [ordem[i + 1], ordem[i]];
         }
         renderLista();
       });
