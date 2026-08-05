@@ -783,45 +783,123 @@ function faixaParaIdade(faixa) {
   return 8;
 }
 
-function escolherMinigamesTipos(faixa, genero) {
-  const mapa = {
+/* =========================================================================
+   BANCO CENTRAL DE MINIGAMES
+   =========================================================================
+   Contém TODOS os 13 minigames disponíveis no sistema.
+   Mapeados e separados por Gênero Textual e Faixa Etária (1: 5-6 anos, 2: 7-8 anos, 3: 9-10 anos).
+   
+   COMO ALTERAR FACILMENTE QUAIS MINIGAMES PODEM SER USADOS:
+   Para adicionar, remover ou reordenar minigames de qualquer faixa etária ou gênero,
+   basta editar o array correspondente dentro de `REGRAS[genero][faixa]`.
+   ========================================================================= */
+
+const BANCO_MINIGAMES = {
+  // Lista com TODOS os minigames suportados no sistema
+  TODOS: [
+    'jogo_memoria',      // 🃏 Jogo da Memória
+    'som_palavra',       // 🔊 Som e Palavra
+    'monta_frase',       // 🧩 Monta-Frase
+    'verdadeiro_falso',  // ✅ Verdadeiro ou Falso?
+    'caca_palavras',     // 🔍 Caça-Palavras
+    'ligar_pontos',      // 🔗 Ligar os Pontos
+    'rima',              // 🎵 Encontre a Rima
+    'quem_disse',        // 💬 Quem Disse Isso?
+    'ordenar_passos',    // 📋 Ordene os Passos
+    'escolha',           // ❓ Escolha Múltipla / Quiz
+    'completar',         // ✍️ Completar Frase
+    'colorir',           // 🎨 Colorir Palavras
+    'palavras_perdidas'  // 🧠 Palavras Perdidas
+  ],
+
+  // Mapeamento por Gênero Textual e Faixa Etária (1: 5-6 anos, 2: 7-8 anos, 3: 9-10 anos)
+  REGRAS: {
     narrativo: {
-      1: ['jogo_memoria', 'som_palavra', 'escolha', 'quem_disse'],
-      2: ['monta_frase', 'verdadeiro_falso', 'completar', 'ordenar_passos'],
-      3: ['ordenar_passos', 'quem_disse', 'completar', 'verdadeiro_falso']
+      1: ['jogo_memoria', 'som_palavra', 'escolha', 'quem_disse', 'ligar_pontos', 'colorir', 'verdadeiro_falso'],
+      2: ['monta_frase', 'verdadeiro_falso', 'completar', 'ordenar_passos', 'caca_palavras', 'jogo_memoria', 'quem_disse', 'palavras_perdidas'],
+      3: ['ordenar_passos', 'quem_disse', 'completar', 'verdadeiro_falso', 'caca_palavras', 'monta_frase', 'rima', 'palavras_perdidas', 'jogo_memoria']
     },
     poetico: {
-      1: ['som_palavra', 'jogo_memoria', 'rima', 'colorir'],
-      2: ['rima', 'monta_frase', 'verdadeiro_falso', 'completar'],
-      3: ['rima', 'completar', 'verdadeiro_falso', 'quem_disse']
+      1: ['som_palavra', 'jogo_memoria', 'rima', 'colorir', 'ligar_pontos', 'escolha', 'verdadeiro_falso'],
+      2: ['rima', 'monta_frase', 'verdadeiro_falso', 'completar', 'som_palavra', 'colorir', 'jogo_memoria', 'palavras_perdidas'],
+      3: ['rima', 'completar', 'verdadeiro_falso', 'quem_disse', 'monta_frase', 'caca_palavras', 'ordenar_passos', 'palavras_perdidas', 'som_palavra']
     },
     instrucional: {
-      1: ['ordenar_passos', 'jogo_memoria', 'escolha', 'verdadeiro_falso'],
-      2: ['ordenar_passos', 'verdadeiro_falso', 'caca_palavras', 'monta_frase'],
-      3: ['ordenar_passos', 'caca_palavras', 'completar', 'verdadeiro_falso']
+      1: ['ordenar_passos', 'jogo_memoria', 'escolha', 'verdadeiro_falso', 'ligar_pontos', 'colorir', 'som_palavra'],
+      2: ['ordenar_passos', 'verdadeiro_falso', 'caca_palavras', 'monta_frase', 'completar', 'ligar_pontos', 'palavras_perdidas', 'quem_disse'],
+      3: ['ordenar_passos', 'caca_palavras', 'completar', 'verdadeiro_falso', 'quem_disse', 'monta_frase', 'rima', 'palavras_perdidas', 'jogo_memoria']
     },
     descritivo: {
-      1: ['jogo_memoria', 'som_palavra', 'colorir', 'escolha'],
-      2: ['monta_frase', 'caca_palavras', 'verdadeiro_falso', 'completar'],
-      3: ['caca_palavras', 'quem_disse', 'completar', 'verdadeiro_falso']
+      1: ['jogo_memoria', 'som_palavra', 'colorir', 'escolha', 'ligar_pontos', 'verdadeiro_falso', 'rima'],
+      2: ['monta_frase', 'caca_palavras', 'verdadeiro_falso', 'completar', 'colorir', 'jogo_memoria', 'palavras_perdidas', 'som_palavra'],
+      3: ['caca_palavras', 'quem_disse', 'completar', 'verdadeiro_falso', 'ordenar_passos', 'monta_frase', 'rima', 'palavras_perdidas', 'colorir']
     },
     informativo: {
-      1: ['verdadeiro_falso', 'som_palavra', 'escolha', 'colorir'],
-      2: ['verdadeiro_falso', 'caca_palavras', 'completar', 'monta_frase'],
-      3: ['caca_palavras', 'monta_frase', 'completar', 'quem_disse']
+      1: ['verdadeiro_falso', 'som_palavra', 'escolha', 'colorir', 'jogo_memoria', 'ligar_pontos', 'rima'],
+      2: ['verdadeiro_falso', 'caca_palavras', 'completar', 'monta_frase', 'ordenar_passos', 'quem_disse', 'palavras_perdidas', 'som_palavra'],
+      3: ['caca_palavras', 'monta_frase', 'completar', 'quem_disse', 'ordenar_passos', 'verdadeiro_falso', 'rima', 'palavras_perdidas', 'colorir']
     }
-  };
-  const f = Math.min(3, Math.max(1, faixa));
-  const lista = (mapa[genero] && mapa[genero][f]) || ['verdadeiro_falso', 'monta_frase'];
-  const semDuplicatas = [...new Set(lista)];
-  while (semDuplicatas.length < 4) {
-    const fallback = ['verdadeiro_falso', 'monta_frase', 'escolha', 'completar']
-      .find(t => !semDuplicatas.includes(t));
-    if (!fallback) break;
-    semDuplicatas.push(fallback);
   }
-  return semDuplicatas.slice(0, 4);
+};
+
+if (typeof window !== 'undefined') {
+  window.BANCO_MINIGAMES = BANCO_MINIGAMES;
+  window.obterMinigamesAleatoriosDoBanco = obterMinigamesAleatoriosDoBanco;
 }
+
+function obterMinigamesAleatoriosDoBanco(faixa, genero, quantidade = 4) {
+  const g = String(genero || 'narrativo').trim().toLowerCase();
+  const f = Math.min(3, Math.max(1, parseInt(faixa, 10) || 1));
+
+  // Busca opções no banco para aquele gênero e faixa, com fallback para narrativo ou TODOS
+  const regrasGenero = BANCO_MINIGAMES.REGRAS[g] || BANCO_MINIGAMES.REGRAS.narrativo;
+  const opcoesBanco = (regrasGenero && regrasGenero[f]) || BANCO_MINIGAMES.TODOS;
+
+  // Embaralhar as opções do banco
+  const opcoesCopia = [...opcoesBanco];
+  for (let i = opcoesCopia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [opcoesCopia[i], opcoesCopia[j]] = [opcoesCopia[j], opcoesCopia[i]];
+  }
+
+  // Filtrar duplicatas por tipo/chave
+  const selecionados = [];
+  const chavesVistas = new Set();
+
+  opcoesCopia.forEach((tipoRaw) => {
+    const norm = normalizarTipoMinigame(tipoRaw);
+    const chave = chaveUnicaMinigame(norm);
+    if (!chavesVistas.has(chave) && selecionados.length < quantidade) {
+      chavesVistas.add(chave);
+      selecionados.push(norm);
+    }
+  });
+
+  // Completa do pool TODOS se necessário
+  if (selecionados.length < quantidade) {
+    const todosCopia = [...BANCO_MINIGAMES.TODOS];
+    for (let i = todosCopia.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [todosCopia[i], todosCopia[j]] = [todosCopia[j], todosCopia[i]];
+    }
+
+    todosCopia.forEach((tipoRaw) => {
+      const norm = normalizarTipoMinigame(tipoRaw);
+      const chave = chaveUnicaMinigame(norm);
+      if (!chavesVistas.has(chave) && selecionados.length < quantidade) {
+        chavesVistas.add(chave);
+        selecionados.push(norm);
+      }
+    });
+  }
+
+  return selecionados.slice(0, quantidade);
+}
+
+function escolherMinigamesTipos(faixa, genero) {
+  return obterMinigamesAleatoriosDoBanco(faixa, genero, 4);
+}
+
 
 function enriquecerParesMemoria(paresRaw) {
   if (!Array.isArray(paresRaw)) return [];

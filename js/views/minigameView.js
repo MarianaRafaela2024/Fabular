@@ -243,48 +243,32 @@ function embaralhar(arr) {
 }
 
 function prepararMinigamesPreset(h) {
+  const faixa = h.faixa || (estado.perfil && estado.perfil.faixa) || 1;
+  const genero = h.genero || (estado.perfil && estado.perfil.genero) || 'narrativo';
+
+  // Sorteia aleatoriamente 4 minigames do banco para a faixa e gênero correspondentes
+  const tiposSorteados = obterMinigamesAleatoriosDoBanco(faixa, genero, 4);
+
   const presetSrc = Array.isArray(h.minigamesPreset) ? h.minigamesPreset : [];
   if (presetSrc.length) {
-    let preset = embaralhar(
-      presetSrc.map((p) => normalizarMinigamePreset(p) || p).filter(Boolean)
-    );
-    const vistos = new Set();
-    preset = preset.filter((p) => {
-      const chave = chaveUnicaMinigame(p.tipo);
-      if (vistos.has(chave)) return false;
-      vistos.add(chave);
-      return true;
-    });
-    if (preset.length < 4) {
-      const extras = escolherMinigamesTipos(estado.perfil.faixa, h.genero);
-      for (let i = 0; i < extras.length && preset.length < 4; i++) {
-        const chave = chaveUnicaMinigame(extras[i]);
-        if (vistos.has(chave)) continue;
-        vistos.add(chave);
-        preset.push({ tipo: extras[i], pergunta: '' });
-      }
-    }
-    preset = preset.slice(0, 4);
-    estado.minigamesLista = montarListaMinigamesUnica(
-      preset.map((p) => p.tipo),
-      estado.perfil.faixa,
-      h.genero
-    );
+    const presetNormalizado = presetSrc.map((p) => normalizarMinigamePreset(p) || p).filter(Boolean);
     const presetPorChave = {};
-    preset.forEach((p) => { presetPorChave[chaveUnicaMinigame(p.tipo)] = p; });
-    estado.minigamesPreset = estado.minigamesLista.map((tipo) =>
+    presetNormalizado.forEach((p) => {
+      if (p && p.tipo) {
+        presetPorChave[chaveUnicaMinigame(p.tipo)] = p;
+      }
+    });
+
+    estado.minigamesLista = tiposSorteados;
+    estado.minigamesPreset = tiposSorteados.map((tipo) =>
       presetPorChave[chaveUnicaMinigame(tipo)] || { tipo, pergunta: '' }
     );
   } else {
-    estado.minigamesPreset = null;
-    const tiposBase = escolherMinigamesTipos(estado.perfil.faixa, h.genero);
-    estado.minigamesLista = montarListaMinigamesUnica(
-      embaralhar(tiposBase),
-      estado.perfil.faixa,
-      h.genero
-    );
+    estado.minigamesLista = tiposSorteados;
+    estado.minigamesPreset = tiposSorteados.map((tipo) => ({ tipo, pergunta: '' }));
   }
 }
+
 
 function registrarEventoMG(tipo, acao, dados) {
   estado.relatorioEventos.push({
