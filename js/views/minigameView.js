@@ -118,22 +118,10 @@ function limparRespostaEsperada(container) {
 }
 
 function mostrarRespostaEsperada(texto, container) {
-  const alvo = container || document.getElementById('minigame-corpo');
-  if (!alvo) return;
-  const textoLimpo = String(texto || '').trim();
-  if (!textoLimpo) return;
-  limparRespostaEsperada(alvo);
-  const el = document.createElement('div');
-  el.className = 'mg-resposta-esperada';
-  const strong = document.createElement('strong');
-  strong.textContent = 'Resposta esperada:';
-  const span = document.createElement('span');
-  span.textContent = textoLimpo;
-  el.appendChild(strong);
-  el.appendChild(document.createTextNode(' '));
-  el.appendChild(span);
-  alvo.appendChild(el);
+  // As respostas agora são reveladas visualmente e interativamente em cada minigame
+  limparRespostaEsperada(container);
 }
+
 
 function mostrarFeedbackMG(ok, mostrarProximo = true) {
   if (ok) estado.mgAcertos++;
@@ -244,48 +232,32 @@ function embaralhar(arr) {
 }
 
 function prepararMinigamesPreset(h) {
+  const faixa = h.faixa || (estado.perfil && estado.perfil.faixa) || 1;
+  const genero = h.genero || (estado.perfil && estado.perfil.genero) || 'narrativo';
+
+  // Sorteia aleatoriamente 4 minigames do banco para a faixa e gênero correspondentes
+  const tiposSorteados = obterMinigamesAleatoriosDoBanco(faixa, genero, 4);
+
   const presetSrc = Array.isArray(h.minigamesPreset) ? h.minigamesPreset : [];
   if (presetSrc.length) {
-    let preset = embaralhar(
-      presetSrc.map((p) => normalizarMinigamePreset(p) || p).filter(Boolean)
-    );
-    const vistos = new Set();
-    preset = preset.filter((p) => {
-      const chave = chaveUnicaMinigame(p.tipo);
-      if (vistos.has(chave)) return false;
-      vistos.add(chave);
-      return true;
-    });
-    if (preset.length < 4) {
-      const extras = escolherMinigamesTipos(estado.perfil.faixa, h.genero);
-      for (let i = 0; i < extras.length && preset.length < 4; i++) {
-        const chave = chaveUnicaMinigame(extras[i]);
-        if (vistos.has(chave)) continue;
-        vistos.add(chave);
-        preset.push({ tipo: extras[i], pergunta: '' });
-      }
-    }
-    preset = preset.slice(0, 4);
-    estado.minigamesLista = montarListaMinigamesUnica(
-      preset.map((p) => p.tipo),
-      estado.perfil.faixa,
-      h.genero
-    );
+    const presetNormalizado = presetSrc.map((p) => normalizarMinigamePreset(p) || p).filter(Boolean);
     const presetPorChave = {};
-    preset.forEach((p) => { presetPorChave[chaveUnicaMinigame(p.tipo)] = p; });
-    estado.minigamesPreset = estado.minigamesLista.map((tipo) =>
+    presetNormalizado.forEach((p) => {
+      if (p && p.tipo) {
+        presetPorChave[chaveUnicaMinigame(p.tipo)] = p;
+      }
+    });
+
+    estado.minigamesLista = tiposSorteados;
+    estado.minigamesPreset = tiposSorteados.map((tipo) =>
       presetPorChave[chaveUnicaMinigame(tipo)] || { tipo, pergunta: '' }
     );
   } else {
-    estado.minigamesPreset = null;
-    const tiposBase = escolherMinigamesTipos(estado.perfil.faixa, h.genero);
-    estado.minigamesLista = montarListaMinigamesUnica(
-      embaralhar(tiposBase),
-      estado.perfil.faixa,
-      h.genero
-    );
+    estado.minigamesLista = tiposSorteados;
+    estado.minigamesPreset = tiposSorteados.map((tipo) => ({ tipo, pergunta: '' }));
   }
 }
+
 
 function registrarEventoMG(tipo, acao, dados) {
   estado.relatorioEventos.push({
@@ -416,10 +388,14 @@ function renderMemoria(fase, h, corpo, spec) {
     <p class="mg-desc">Encontre os pares! Clique nos cards para virá-los e encontrar a palavra com seu emoji! 🃏</p>
     <div class="mem-grid" id="memGrid"></div>
     <div class="mem-status" id="memStatus">Pares encontrados: <strong id="memPares">0</strong> / ${pares.length}</div>
+    <div style="text-align:center;margin-top:12px;">
+      <button class="btn-desistir-mg" id="btnDesistirMemoria">🏳️ Desistir / Ver Solução</button>
+    </div>
   `;
   corpo.appendChild(wrap);
 
   const grid = document.getElementById('memGrid');
+  const btnDesistir = document.getElementById('btnDesistirMemoria');
   let virados = [];
   let paresEncontrados = 0;
   let bloqueado = false;
@@ -455,6 +431,7 @@ function renderMemoria(fase, h, corpo, spec) {
             virados = [];
             bloqueado = false;
             if (paresEncontrados >= pares.length) {
+              if (btnDesistir) btnDesistir.style.display = 'none';
               setTimeout(() => mostrarFeedbackMG(true, true), 300);
             }
           }, 500);
@@ -476,6 +453,33 @@ function renderMemoria(fase, h, corpo, spec) {
     });
     grid.appendChild(el);
   });
+
+  const revelarTodosOsPares = () => {
+    bloqueado = true;
+    if (btnDesistir) btnDesistir.disabled = true;
+
+    grid.querySelectorAll('.mem-card').forEach(el => {
+      el.classList.add('mem-virado');
+      const pairId = parseInt(el.dataset.pairId, 10);
+      const colorClass = `pair-color-${pairId % 5}`;
+      el.classList.add(colorClass);
+
+      const verso = el.querySelector('.mem-verso');
+      if (verso && !verso.querySelector('.pair-badge-tag')) {
+        const badge = document.createElement('span');
+        badge.className = 'pair-badge-tag';
+        badge.textContent = `Par ${pairId + 1}`;
+        verso.appendChild(badge);
+      }
+    });
+
+    registrarEventoMG('jogo_memoria', 'erro');
+    mostrarFeedbackMG(false, true);
+  };
+
+  if (btnDesistir) {
+    btnDesistir.addEventListener('click', revelarTodosOsPares);
+  }
 }
 
 // ─── 2. SOM E PALAVRA ────────────────────────────────────────────────────────
@@ -502,9 +506,12 @@ function renderSomPalavra(fase, corpo, spec) {
         🔊 Ouvir a palavra
       </button>
     </div>
-    <div style="text-align:center;margin:0 0 12px">
+    <div style="text-align:center;margin:0 0 12px;display:flex;justify-content:center;gap:10px;">
       <button class="btn-secundario" id="btnNaoOuco" aria-label="Não consigo ouvir">
         Não consigo ouvir
+      </button>
+      <button class="btn-desistir-mg" id="btnDesistirSomPalavra" style="margin-top:0;">
+        🏳️ Solução
       </button>
     </div>
     <div class="sp-grid">
@@ -529,23 +536,34 @@ function renderSomPalavra(fase, corpo, spec) {
     mostrarToast('Tudo bem! Vamos para outro jogo sem perder pontos 💛');
   });
 
-  wrap.querySelectorAll('.sp-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const ok = btn.dataset.palavra === alvo;
-      registrarEventoMG('som_palavra', ok ? 'acerto' : 'erro');
-      wrap.querySelectorAll('.sp-btn').forEach(b => {
-        b.disabled = true;
-        if (b.dataset.palavra === alvo) b.classList.add('correta');
-      });
-      if (!ok) {
-        btn.classList.add('errada');
-        mostrarRespostaEsperada(alvo, wrap);
-      } else {
-        limparRespostaEsperada(wrap);
+  const revelarResposta = (clicouResp, btnClicado) => {
+    const btnDesistir = document.getElementById('btnDesistirSomPalavra');
+    if (btnDesistir) btnDesistir.disabled = true;
+
+    const ok = clicouResp ? (btnClicado && btnClicado.dataset.palavra === alvo) : false;
+    registrarEventoMG('som_palavra', ok ? 'acerto' : 'erro');
+
+    wrap.querySelectorAll('.sp-btn').forEach(b => {
+      b.disabled = true;
+      if (b.dataset.palavra === alvo) {
+        b.classList.add('correta');
+        b.innerHTML = `${alvo} ✓`;
       }
-      mostrarFeedbackMG(ok);
     });
+
+    if (clicouResp && !ok && btnClicado) {
+      btnClicado.classList.add('errada');
+      btnClicado.innerHTML = `${btnClicado.dataset.palavra} ✗`;
+    }
+
+    mostrarFeedbackMG(ok);
+  };
+
+  wrap.querySelectorAll('.sp-btn').forEach(btn => {
+    btn.addEventListener('click', () => revelarResposta(true, btn));
   });
+
+  document.getElementById('btnDesistirSomPalavra')?.addEventListener('click', () => revelarResposta(false, null));
 }
 
 function renderEscolhaMG(fase, corpo, spec) {
@@ -568,26 +586,42 @@ function renderEscolhaMG(fase, corpo, spec) {
     <div class="mc-opcoes">
       ${opcoes.map((op, i) => `<button class="mc-btn" data-idx="${i}">${op}</button>`).join('')}
     </div>
+    <div style="text-align:center;margin-top:12px;">
+      <button class="btn-desistir-mg" id="btnDesistirEscolha">🏳️ Desistir / Ver Solução</button>
+    </div>
   `;
   corpo.appendChild(wrap);
-  wrap.querySelectorAll('.mc-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const idx = parseInt(btn.dataset.idx, 10);
-      const ok = idx === correta;
-      registrarEventoMG('escolha', ok ? 'acerto' : 'erro');
-      wrap.querySelectorAll('.mc-btn').forEach(b => {
-        b.disabled = true;
-        if (parseInt(b.dataset.idx, 10) === correta) b.classList.add('correta');
-      });
-      if (!ok) {
-        btn.classList.add('errada');
-        mostrarRespostaEsperada(opcoes[correta] || 'Opção correta', wrap);
-      } else {
-        limparRespostaEsperada(wrap);
+
+  const revelarResposta = (clicou, btnClicado) => {
+    const btnDesistir = document.getElementById('btnDesistirEscolha');
+    if (btnDesistir) btnDesistir.disabled = true;
+
+    const idx = btnClicado ? parseInt(btnClicado.dataset.idx, 10) : -1;
+    const ok = clicou ? (idx === correta) : false;
+    registrarEventoMG('escolha', ok ? 'acerto' : 'erro');
+
+    wrap.querySelectorAll('.mc-btn').forEach(b => {
+      b.disabled = true;
+      const bIdx = parseInt(b.dataset.idx, 10);
+      if (bIdx === correta) {
+        b.classList.add('correta');
+        b.innerHTML = `${opcoes[correta]} ✓`;
       }
-      mostrarFeedbackMG(ok);
     });
+
+    if (clicou && !ok && btnClicado) {
+      btnClicado.classList.add('errada');
+      btnClicado.innerHTML = `${opcoes[idx]} ✗`;
+    }
+
+    mostrarFeedbackMG(ok);
+  };
+
+  wrap.querySelectorAll('.mc-btn').forEach(btn => {
+    btn.addEventListener('click', () => revelarResposta(true, btn));
   });
+
+  document.getElementById('btnDesistirEscolha')?.addEventListener('click', () => revelarResposta(false, null));
 }
 
 function renderCompletarMG(fase, corpo, spec) {
@@ -604,32 +638,60 @@ function renderCompletarMG(fase, corpo, spec) {
         placeholder="Digite uma palavra..." autocomplete="off" aria-label="Palavra para completar a frase" maxlength="40" />
       <button class="btn-confirmar" id="mgBtnCompletar">✓ OK</button>
     </div>
+    <div style="text-align:center;margin-top:10px;">
+      <button class="btn-desistir-mg" id="mgBtnDesistirCompletar">🏳️ Desistir / Ver Solução</button>
+    </div>
   `;
   corpo.appendChild(wrap);
   const norm = (s) => String(s || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const input = document.getElementById('mgInputCompletar');
   const btn = document.getElementById('mgBtnCompletar');
+  const btnDesistir = document.getElementById('mgBtnDesistirCompletar');
   const resposta = dados.resposta;
-  const validar = () => {
+
+  const validar = (isDesistir = false) => {
+    if (btnDesistir) btnDesistir.disabled = true;
+    input.disabled = true;
+    btn.disabled = true;
+
+    if (isDesistir) {
+      document.getElementById('mgFraseLacuna').innerHTML =
+        limparTextoCompletar(String(dados.frase || '').replace(/<[^>]+>/g, ''))
+          .replace(/_{2,}|___/g, `<span class="lacuna-correta">${resposta} ✓</span>`);
+      input.value = resposta;
+      input.classList.add('correta');
+      registrarEventoMG('completar', 'erro');
+      mostrarFeedbackMG(false);
+      return;
+    }
+
     const v = norm(input.value);
     const c = norm(resposta);
     const completo = v === c;
     const parcial = Boolean(v && (c.includes(v) || v.includes(c)));
     const temAcerto = completo || parcial;
     registrarEventoMG('completar', temAcerto ? 'acerto' : 'erro');
-    input.disabled = true;
-    btn.disabled = true;
-    input.value = resposta;
-    input.classList.add(temAcerto ? 'correta' : 'errada');
-    if (completo) {
-      limparRespostaEsperada(wrap);
+
+    if (temAcerto) {
+      document.getElementById('mgFraseLacuna').innerHTML =
+        limparTextoCompletar(String(dados.frase || '').replace(/<[^>]+>/g, ''))
+          .replace(/_{2,}|___/g, `<span class="lacuna-correta">${resposta} ✓</span>`);
+      input.value = resposta;
+      input.classList.add('correta');
     } else {
-      mostrarRespostaEsperada(resposta, wrap);
+      document.getElementById('mgFraseLacuna').innerHTML =
+        limparTextoCompletar(String(dados.frase || '').replace(/<[^>]+>/g, ''))
+          .replace(/_{2,}|___/g, `<span class="lacuna-correta" style="border-color:#EF4444;color:#B91C1C;background:#FEE2E2;">${resposta} ✗</span>`);
+      input.value = resposta;
+      input.classList.add('errada');
     }
-    mostrarFeedbackMG(completo);
+
+    mostrarFeedbackMG(temAcerto);
   };
-  btn.addEventListener('click', validar);
-  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') validar(); });
+
+  btn.addEventListener('click', () => validar(false));
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') validar(false); });
+  btnDesistir?.addEventListener('click', () => validar(true));
 }
 
 function renderColorirMG(h, corpo, spec) {
@@ -648,7 +710,10 @@ function renderColorirMG(h, corpo, spec) {
     <div class="rima-opcoes-grid">
       ${itens.map((it, i) => `<button class="rima-opc" data-idx="${i}">${it.p}</button>`).join('')}
     </div>
-    <button class="btn-confirmar" id="btnConfColorir" style="margin-top:12px;width:100%">✔ Confirmar</button>
+    <div style="display:flex;gap:10px;margin-top:12px;">
+      <button class="btn-confirmar" id="btnConfColorir" style="flex:1;">✔ Confirmar</button>
+      <button class="btn-desistir-mg" id="btnDesistirColorir" style="margin-top:0;">🏳️ Solução</button>
+    </div>
   `;
   corpo.appendChild(wrap);
   const selecionadas = new Set();
@@ -664,27 +729,37 @@ function renderColorirMG(h, corpo, spec) {
       }
     });
   });
-  document.getElementById('btnConfColorir').addEventListener('click', () => {
+
+  const finalizar = (isDesistir = false) => {
     let ok = true;
-    itens.forEach((it, idx) => {
-      const marcado = selecionadas.has(idx);
-      if (marcado !== it.correta) ok = false;
-    });
+    if (isDesistir) ok = false;
+    else {
+      itens.forEach((it, idx) => {
+        const marcado = selecionadas.has(idx);
+        if (marcado !== it.correta) ok = false;
+      });
+    }
+
     registrarEventoMG('colorir', ok ? 'acerto' : 'erro');
     wrap.querySelectorAll('.rima-opc').forEach((btn, idx) => {
       btn.disabled = true;
       btn.classList.remove('correta');
-      if (itens[idx].correta) btn.classList.add('correta');
-      else if (selecionadas.has(idx)) btn.classList.add('errada');
+      if (itens[idx].correta) {
+        btn.classList.add('correta');
+        btn.innerHTML = `${itens[idx].p} ✓`;
+      } else if (selecionadas.has(idx)) {
+        btn.classList.add('errada');
+        btn.innerHTML = `${itens[idx].p} ✗`;
+      }
     });
+
     document.getElementById('btnConfColorir').disabled = true;
-    if (ok) {
-      limparRespostaEsperada(wrap);
-    } else {
-      mostrarRespostaEsperada(alvo.join(', '), wrap);
-    }
+    document.getElementById('btnDesistirColorir').disabled = true;
     mostrarFeedbackMG(ok);
-  });
+  };
+
+  document.getElementById('btnConfColorir').addEventListener('click', () => finalizar(false));
+  document.getElementById('btnDesistirColorir')?.addEventListener('click', () => finalizar(true));
 }
 
 // ─── 3. MONTA-FRASE ──────────────────────────────────────────────────────────
@@ -710,7 +785,10 @@ function renderMontaFrase(fase, corpo, spec) {
       <p class="mg-desc">Monte a frase clicando nas palavras. Clique em uma palavra já colocada para removê-la.</p>
       <div class="mf-espaco" id="mfEspaco"><span class="mf-placeholder">Clique nas palavras abaixo…</span></div>
       <div class="mf-pool" id="mfPool"></div>
-      <button class="btn-confirmar" id="btnConfMF" style="margin-top:12px;width:100%">✔ Verificar</button>
+      <div style="display:flex;gap:10px;margin-top:12px;">
+        <button class="btn-confirmar" id="btnConfMF" style="flex:1;">✔ Verificar</button>
+        <button class="btn-desistir-mg" id="btnDesistirMF" style="margin-top:0;">🏳️ Solução</button>
+      </div>
     `;
     corpo.appendChild(wrap);
     function atualizarPreset() {
@@ -741,21 +819,35 @@ function renderMontaFrase(fase, corpo, spec) {
     }
     atualizarPreset();
     const norm = (s) => String(s || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    document.getElementById('btnConfMF').addEventListener('click', () => {
-      if (colocadosIdx.length < 2) { mostrarToast('Monte a frase primeiro! 😊'); return; }
+
+    const verificarMF = (isDesistir = false) => {
+      document.getElementById('btnConfMF').disabled = true;
+      document.getElementById('btnDesistirMF').disabled = true;
+
+      if (isDesistir) {
+        revelarMontaFraseCorreta(palavrasCorretas);
+        registrarEventoMG('monta_frase', 'erro');
+        mostrarFeedbackMG(false);
+        return;
+      }
+
+      if (colocadosIdx.length < 2) {
+        document.getElementById('btnConfMF').disabled = false;
+        document.getElementById('btnDesistirMF').disabled = false;
+        mostrarToast('Monte a frase primeiro! 😊');
+        return;
+      }
+
       const tentativa = norm(colocadosIdx.map(i => embaralhadas[i]).join(' '));
       const correta = norm(palavrasCorretas.join(' '));
       const ok = tentativa === correta;
-      document.getElementById('btnConfMF').disabled = true;
       revelarMontaFraseCorreta(palavrasCorretas);
       registrarEventoMG('monta_frase', ok ? 'acerto' : 'erro');
-      if (ok) {
-        limparRespostaEsperada(wrap);
-      } else {
-        mostrarRespostaEsperada(palavrasCorretas.join(' '), wrap);
-      }
       mostrarFeedbackMG(ok);
-    });
+    };
+
+    document.getElementById('btnConfMF').addEventListener('click', () => verificarMF(false));
+    document.getElementById('btnDesistirMF')?.addEventListener('click', () => verificarMF(true));
     return;
   }
 
@@ -777,7 +869,10 @@ function renderMontaFrase(fase, corpo, spec) {
     <p class="mg-desc">Monte a frase clicando nas palavras. Clique em uma palavra já colocada para removê-la.</p>
     <div class="mf-espaco" id="mfEspaco"><span class="mf-placeholder">Clique nas palavras abaixo…</span></div>
     <div class="mf-pool" id="mfPool"></div>
-    <button class="btn-confirmar" id="btnConfMF" style="margin-top:12px;width:100%">✔ Verificar</button>
+    <div style="display:flex;gap:10px;margin-top:12px;">
+      <button class="btn-confirmar" id="btnConfMF" style="flex:1;">✔ Verificar</button>
+      <button class="btn-desistir-mg" id="btnDesistirMF" style="margin-top:0;">🏳️ Solução</button>
+    </div>
   `;
   corpo.appendChild(wrap);
 
@@ -813,21 +908,34 @@ function renderMontaFrase(fase, corpo, spec) {
   }
   atualizar();
 
-  document.getElementById('btnConfMF').addEventListener('click', () => {
-    if (colocadosIdx.length < 2) { mostrarToast('Monte a frase primeiro! 😊'); return; }
+  const verificarMF = (isDesistir = false) => {
+    document.getElementById('btnConfMF').disabled = true;
+    document.getElementById('btnDesistirMF').disabled = true;
+
+    if (isDesistir) {
+      revelarMontaFraseCorreta(palavrasCorretas);
+      registrarEventoMG('monta_frase', 'erro');
+      mostrarFeedbackMG(false);
+      return;
+    }
+
+    if (colocadosIdx.length < 2) {
+      document.getElementById('btnConfMF').disabled = false;
+      document.getElementById('btnDesistirMF').disabled = false;
+      mostrarToast('Monte a frase primeiro! 😊');
+      return;
+    }
+
     const tentativa = colocadosIdx.map(i => embaralhadas[i]).join(' ').toLowerCase().trim();
     const correta = palavrasCorretas.join(' ').toLowerCase().trim();
     const ok = tentativa === correta;
-    document.getElementById('btnConfMF').disabled = true;
     revelarMontaFraseCorreta(palavrasCorretas);
     registrarEventoMG('monta_frase', ok ? 'acerto' : 'erro');
-    if (ok) {
-      limparRespostaEsperada(wrap);
-    } else {
-      mostrarRespostaEsperada(palavrasCorretas.join(' '), wrap);
-    }
     mostrarFeedbackMG(ok);
-  });
+  };
+
+  document.getElementById('btnConfMF').addEventListener('click', () => verificarMF(false));
+  document.getElementById('btnDesistirMF')?.addEventListener('click', () => verificarMF(true));
 }
 
 // ─── 4. VERDADEIRO OU FALSO ──────────────────────────────────────────────────
@@ -860,27 +968,36 @@ function renderVerdadeiroFalso(fase, h, corpo, spec) {
       <button class="tf-btn tf-v" id="tfV" aria-label="Verdadeiro">✅ Verdadeiro</button>
       <button class="tf-btn tf-f" id="tfF" aria-label="Falso">❌ Falso</button>
     </div>
+    <div style="text-align:center;margin-top:12px;">
+      <button class="btn-desistir-mg" id="btnDesistirTF">🏳️ Desistir / Ver Solução</button>
+    </div>
   `;
   corpo.appendChild(wrap);
 
-  const verificar = (resp) => {
-    const ok = resp === item.correta;
+  const verificar = (clicou, resp) => {
     document.getElementById('tfV').disabled = true;
     document.getElementById('tfF').disabled = true;
+    const btnDesistir = document.getElementById('btnDesistirTF');
+    if (btnDesistir) btnDesistir.disabled = true;
+
+    const ok = clicou ? (resp === item.correta) : false;
     const btnCorreto = item.correta ? document.getElementById('tfV') : document.getElementById('tfF');
     btnCorreto.classList.add('correta');
-    if (!ok) {
-      (resp ? document.getElementById('tfV') : document.getElementById('tfF')).classList.add('errada');
-      mostrarRespostaEsperada(item.correta ? 'Verdadeiro' : 'Falso', wrap);
-    } else {
-      limparRespostaEsperada(wrap);
+    btnCorreto.innerHTML = (item.correta ? '✅ Verdadeiro' : '❌ Falso') + ' ✓';
+
+    if (clicou && !ok) {
+      const btnErrado = resp ? document.getElementById('tfV') : document.getElementById('tfF');
+      btnErrado.classList.add('errada');
+      btnErrado.innerHTML = (resp ? '✅ Verdadeiro' : '❌ Falso') + ' ✗';
     }
+
     registrarEventoMG('verdadeiro_falso', ok ? 'acerto' : 'erro');
     mostrarFeedbackMG(ok);
   };
 
-  document.getElementById('tfV').addEventListener('click', () => verificar(true));
-  document.getElementById('tfF').addEventListener('click', () => verificar(false));
+  document.getElementById('tfV').addEventListener('click', () => verificar(true, true));
+  document.getElementById('tfF').addEventListener('click', () => verificar(true, false));
+  document.getElementById('btnDesistirTF')?.addEventListener('click', () => verificar(false, false));
 }
 
 // ─── 5. CAÇA-PALAVRAS ────────────────────────────────────────────────────────
@@ -944,7 +1061,10 @@ function renderCacaPalavras(fase, h, corpo) {
     <div class="cp-scroll-wrap">
       <div class="cp-grade" id="cpGrade" style="grid-template-columns:repeat(${TAM},${CEL}px);width:${TAM * CEL + TAM * 2}px"></div>
     </div>
-    <button class="btn-confirmar" id="btnConfCP" style="margin-top:14px;width:100%">✔ Terminei</button>
+    <div style="display:flex;gap:10px;margin-top:14px;">
+      <button class="btn-confirmar" id="btnConfCP" style="flex:1;">✔ Terminei</button>
+      <button class="btn-desistir-mg" id="btnDesistirCP" style="margin-top:0;">🏳️ Solução</button>
+    </div>
   `;
   corpo.appendChild(wrap);
 
@@ -1029,6 +1149,7 @@ function renderCacaPalavras(fase, h, corpo) {
       if (encontradas.size >= palavrasAlvo.length) {
         mostrarFeedbackMG(true, true);
         document.getElementById('btnConfCP').disabled = true;
+        document.getElementById('btnDesistirCP').disabled = true;
       } else {
         const area = document.getElementById('mg-feedback');
         const card = document.getElementById('mg-feedback-card');
@@ -1137,8 +1258,10 @@ function renderCacaPalavras(fase, h, corpo) {
     }
   });
 
-  document.getElementById('btnConfCP').addEventListener('click', () => {
+  const finalizarCP = (isDesistir = false) => {
     document.getElementById('btnConfCP').disabled = true;
+    document.getElementById('btnDesistirCP').disabled = true;
+
     palavrasAlvo.forEach(palavra => {
       if (!encontradas.has(palavra) && posicoes[palavra]) {
         const cor = CORES_PALAVRAS[palavrasAlvo.indexOf(palavra) % CORES_PALAVRAS.length];
@@ -1152,15 +1275,14 @@ function renderCacaPalavras(fase, h, corpo) {
         document.getElementById('cpa-' + palavra)?.classList.add('cp-alvo-found');
       }
     });
-    const ok = encontradas.size >= palavrasAlvo.length;
+
+    const ok = isDesistir ? false : (encontradas.size >= palavrasAlvo.length);
     registrarEventoMG('caca_palavras', ok ? 'acerto' : 'erro');
-    if (ok) {
-      limparRespostaEsperada(wrap);
-    } else {
-      mostrarRespostaEsperada(palavrasAlvo.join(', '), wrap);
-    }
     mostrarFeedbackMG(ok);
-  });
+  };
+
+  document.getElementById('btnConfCP').addEventListener('click', () => finalizarCP(false));
+  document.getElementById('btnDesistirCP')?.addEventListener('click', () => finalizarCP(true));
 }
 
 // ─── 6. LIGAR OS PONTOS ──────────────────────────────────────────────────────
@@ -1233,7 +1355,10 @@ function renderLigarPontos(fase, h, corpo) {
       </div>
     </div>
     <svg class="lp-svg" id="lpSvg"></svg>
-    <button class="btn-confirmar" id="btnConfLP" style="margin-top:14px;width:100%">✔ Verificar</button>
+    <div style="display:flex;gap:10px;margin-top:14px;">
+      <button class="btn-confirmar" id="btnConfLP" style="flex:1;">✔ Verificar</button>
+      <button class="btn-desistir-mg" id="btnDesistirLP" style="margin-top:0;">🏳️ Solução</button>
+    </div>
   `;
   corpo.appendChild(wrap);
 
@@ -1314,6 +1439,7 @@ function renderLigarPontos(fase, h, corpo) {
         if (acertos >= pares.length) {
           setTimeout(() => mostrarFeedbackMG(true, true), 400);
           document.getElementById('btnConfLP').disabled = true;
+          document.getElementById('btnDesistirLP').disabled = true;
         }
       } else {
         [eEl, dEl].forEach(el => {
@@ -1325,8 +1451,10 @@ function renderLigarPontos(fase, h, corpo) {
     });
   });
 
-  document.getElementById('btnConfLP').addEventListener('click', () => {
+  const finalizarLP = (isDesistir = false) => {
     document.getElementById('btnConfLP').disabled = true;
+    document.getElementById('btnDesistirLP').disabled = true;
+
     pares.forEach(par => {
       const k = norm(par.palavra);
       const eEl = wrap.querySelector(`#lpEsq [data-k="${k}"]`);
@@ -1337,15 +1465,14 @@ function renderLigarPontos(fase, h, corpo) {
       }
     });
     requestAnimationFrame(() => redrawSvg());
-    const ok = acertos >= pares.length;
-    if (ok) {
-      limparRespostaEsperada(wrap);
-    } else {
-      const expectativa = pares.map(par => `${par.palavra} → ${par.def}`).join(' | ');
-      mostrarRespostaEsperada(expectativa, wrap);
-    }
+
+    const ok = isDesistir ? false : (acertos >= pares.length);
+    registrarEventoMG('ligar_pontos', ok ? 'acerto' : 'erro');
     mostrarFeedbackMG(ok, true);
-  });
+  };
+
+  document.getElementById('btnConfLP').addEventListener('click', () => finalizarLP(false));
+  document.getElementById('btnDesistirLP')?.addEventListener('click', () => finalizarLP(true));
 }
 
 // ─── 7. RIMA ────────────────────────────────────────────────────────────────
@@ -1384,25 +1511,39 @@ function renderRima(h, corpo, spec) {
     <div class="rima-opcoes-grid">
       ${opcoes.map(op => `<button class="rima-opc" data-rima="${op}" aria-label="${op}">${op}</button>`).join('')}
     </div>
+    <div style="text-align:center;margin-top:12px;">
+      <button class="btn-desistir-mg" id="btnDesistirRima">🏳️ Desistir / Ver Solução</button>
+    </div>
   `;
   corpo.appendChild(wrap);
 
-  wrap.querySelectorAll('.rima-opc').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const ok = btn.dataset.rima === par.rima;
-      wrap.querySelectorAll('.rima-opc').forEach(b => {
-        b.disabled = true;
-        if (b.dataset.rima === par.rima) b.classList.add('correta');
-      });
-      if (!ok) {
-        btn.classList.add('errada');
-        mostrarRespostaEsperada(par.rima, wrap);
-      } else {
-        limparRespostaEsperada(wrap);
+  const revelarResposta = (clicou, btnClicado) => {
+    const btnDesistir = document.getElementById('btnDesistirRima');
+    if (btnDesistir) btnDesistir.disabled = true;
+
+    const ok = clicou ? (btnClicado && btnClicado.dataset.rima === par.rima) : false;
+    wrap.querySelectorAll('.rima-opc').forEach(b => {
+      b.disabled = true;
+      if (b.dataset.rima === par.rima) {
+        b.classList.add('correta');
+        b.innerHTML = `🎵 ${par.rima} ✓`;
       }
-      mostrarFeedbackMG(ok);
     });
+
+    if (clicou && !ok && btnClicado) {
+      btnClicado.classList.add('errada');
+      btnClicado.innerHTML = `${btnClicado.dataset.rima} ✗`;
+    }
+
+    registrarEventoMG('rima', ok ? 'acerto' : 'erro');
+    mostrarFeedbackMG(ok);
+  };
+
+  wrap.querySelectorAll('.rima-opc').forEach(btn => {
+    btn.addEventListener('click', () => revelarResposta(true, btn));
   });
+
+  document.getElementById('btnDesistirRima')?.addEventListener('click', () => revelarResposta(false, null));
 }
 
 // ─── 8. QUEM DISSE ISSO? ────────────────────────────────────────────────────
@@ -1436,25 +1577,39 @@ function renderQuemDisse(fase, h, corpo, spec) {
     <div class="qd-opcoes">
       ${opcoes.map(op => `<button class="qd-btn" data-nome="${op}" aria-label="${op}">${op}</button>`).join('')}
     </div>
+    <div style="text-align:center;margin-top:12px;">
+      <button class="btn-desistir-mg" id="btnDesistirQuemDisse">🏳️ Desistir / Ver Solução</button>
+    </div>
   `;
   corpo.appendChild(wrap);
 
-  wrap.querySelectorAll('.qd-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const ok = btn.dataset.nome === alvo;
-      wrap.querySelectorAll('.qd-btn').forEach(b => {
-        b.disabled = true;
-        if (b.dataset.nome === alvo) b.classList.add('correta');
-      });
-      if (!ok) {
-        btn.classList.add('errada');
-        mostrarRespostaEsperada(alvo, wrap);
-      } else {
-        limparRespostaEsperada(wrap);
+  const revelarResposta = (clicou, btnClicado) => {
+    const btnDesistir = document.getElementById('btnDesistirQuemDisse');
+    if (btnDesistir) btnDesistir.disabled = true;
+
+    const ok = clicou ? (btnClicado && btnClicado.dataset.nome === alvo) : false;
+    wrap.querySelectorAll('.qd-btn').forEach(b => {
+      b.disabled = true;
+      if (b.dataset.nome === alvo) {
+        b.classList.add('correta');
+        b.innerHTML = `💬 ${alvo} ✓`;
       }
-      mostrarFeedbackMG(ok);
     });
+
+    if (clicou && !ok && btnClicado) {
+      btnClicado.classList.add('errada');
+      btnClicado.innerHTML = `${btnClicado.dataset.nome} ✗`;
+    }
+
+    registrarEventoMG('quem_disse', ok ? 'acerto' : 'erro');
+    mostrarFeedbackMG(ok);
+  };
+
+  wrap.querySelectorAll('.qd-btn').forEach(btn => {
+    btn.addEventListener('click', () => revelarResposta(true, btn));
   });
+
+  document.getElementById('btnDesistirQuemDisse')?.addEventListener('click', () => revelarResposta(false, null));
 }
 
 // ─── 9. ORDENAR PASSOS ──────────────────────────────────────────────────────
@@ -1484,7 +1639,10 @@ function renderOrdenarPassos(h, corpo, spec) {
   wrap.innerHTML = `
     <p class="mg-desc">Use as setas ↑↓ para colocar os eventos da história na ordem correta!</p>
     <ul class="op-lista" id="opLista"></ul>
-    <button class="btn-confirmar" id="btnConfOP" style="margin-top:12px;width:100%">✔ Confirmar Ordem</button>
+    <div style="display:flex;gap:10px;margin-top:12px;">
+      <button class="btn-confirmar" id="btnConfOP" style="flex:1;">✔ Confirmar Ordem</button>
+      <button class="btn-desistir-mg" id="btnDesistirOP" style="margin-top:0;">🏳️ Solução</button>
+    </div>
   `;
   corpo.appendChild(wrap);
 
@@ -1516,23 +1674,25 @@ function renderOrdenarPassos(h, corpo, spec) {
   }
   renderLista();
 
-  document.getElementById('btnConfOP').addEventListener('click', () => {
+  const finalizarOP = (isDesistir = false) => {
     const correta = passos.map((_, i) => i);
     const ordemOriginal = [...ordem];
-    const ok = JSON.stringify(ordem) === JSON.stringify(correta);
+    const ok = isDesistir ? false : (JSON.stringify(ordem) === JSON.stringify(correta));
+
     ordem = [...correta];
     renderLista();
+
     document.querySelectorAll('.op-item').forEach((li, idx) => {
-      li.classList.add(ordemOriginal[idx] === correta[idx] ? 'correta' : 'errada');
+      li.classList.add(isDesistir ? 'correta' : (ordemOriginal[idx] === correta[idx] ? 'correta' : 'errada'));
     });
     document.querySelectorAll('.op-seta').forEach(b => b.disabled = true);
     document.getElementById('btnConfOP').disabled = true;
+    document.getElementById('btnDesistirOP').disabled = true;
+
     registrarEventoMG('ordenar_passos', ok ? 'acerto' : 'erro');
-    if (ok) {
-      limparRespostaEsperada(wrap);
-    } else {
-      mostrarRespostaEsperada(passos.map((p, i) => `${i + 1}. ${p.texto}`).join(' • '), wrap);
-    }
     mostrarFeedbackMG(ok);
-  });
+  };
+
+  document.getElementById('btnConfOP').addEventListener('click', () => finalizarOP(false));
+  document.getElementById('btnDesistirOP')?.addEventListener('click', () => finalizarOP(true));
 }
