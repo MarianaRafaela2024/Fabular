@@ -1476,29 +1476,122 @@ function renderLigarPontos(fase, h, corpo) {
 }
 
 // ─── 7. RIMA ────────────────────────────────────────────────────────────────
-function renderRima(h, corpo, spec) {
-  const pares = [
-    { palavra: 'sol', rima: 'farol', erradas: ['livro', 'pedra', 'chuva'] },
-    { palavra: 'mar', rima: 'voar', erradas: ['correr', 'dormir', 'andar'] },
-    { palavra: 'flor', rima: 'amor', erradas: ['pedra', 'vento', 'carro'] },
-    { palavra: 'lua', rima: 'rua', erradas: ['livro', 'estrela', 'pedra'] },
-    { palavra: 'pão', rima: 'mão', erradas: ['neve', 'chuva', 'bola'] },
-    { palavra: 'gato', rima: 'prato', erradas: ['nuvem', 'janela', 'caixa'] },
-    { palavra: 'fada', rima: 'espada', erradas: ['livro', 'pedra', 'carro'] },
-    { palavra: 'chuva', rima: 'uva', erradas: ['pedra', 'livro', 'nuvem'] },
-    { palavra: 'leão', rima: 'balão', erradas: ['pedra', 'carro', 'livro'] },
-    { palavra: 'fogo', rima: 'jogo', erradas: ['pedra', 'livro', 'carro'] }
+const DICIONARIO_RIMAS = [
+  { palavra: 'leão', rimas: ['balão', 'coração', 'pão', 'mão', 'botão', 'dragão', 'avião', 'canção'], erradas: ['livro', 'pedra', 'floresta', 'vento'] },
+  { palavra: 'dragão', rimas: ['balão', 'coração', 'leão', 'botão', 'avião', 'canção', 'sabão'], erradas: ['nuvem', 'janela', 'árvore', 'sol'] },
+  { palavra: 'coração', rimas: ['canção', 'balão', 'leão', 'pão', 'mão', 'botão'], erradas: ['rio', 'estrela', 'casa', 'mar'] },
+  { palavra: 'pão', rimas: ['mão', 'coração', 'balão', 'leão', 'canção'], erradas: ['suco', 'pedra', 'neve', 'bola'] },
+  { palavra: 'balão', rimas: ['leão', 'dragão', 'pão', 'coração', 'botão'], erradas: ['vento', 'passarinho', 'terra', 'lua'] },
+  { palavra: 'dia', rimas: ['alegria', 'magia', 'poesia', 'fantasia', 'folia'], erradas: ['noite', 'sol', 'estrela', 'nuvem'] },
+  { palavra: 'magia', rimas: ['alegria', 'dia', 'poesia', 'fantasia'], erradas: ['varinha', 'livro', 'castelo', 'pedra'] },
+  { palavra: 'alegria', rimas: ['magia', 'dia', 'poesia', 'fantasia', 'folia'], erradas: ['tristeza', 'riso', 'festa', 'brinquedo'] },
+  { palavra: 'fada', rimas: ['espada', 'risada', 'estrada', 'caminhada', 'enxada'], erradas: ['magia', 'livro', 'floresta', 'vento'] },
+  { palavra: 'espada', rimas: ['fada', 'risada', 'estrada', 'enxada'], erradas: ['escudo', 'rei', 'cavalo', 'pedra'] },
+  { palavra: 'estrela', rimas: ['janela', 'vela', 'amarela', 'tigela', 'fivela'], erradas: ['lua', 'céu', 'noite', 'brilho'] },
+  { palavra: 'janela', rimas: ['estrela', 'vela', 'amarela', 'tigela'], erradas: ['porta', 'casa', 'vidro', 'vento'] },
+  { palavra: 'corajoso', rimas: ['bondoso', 'gostoso', 'famoso', 'grandioso', 'medroso'], erradas: ['forte', 'valente', 'leão', 'medo'] },
+  { palavra: 'passarinho', rimas: ['carinho', 'caminho', 'ninho', 'pinguinho'], erradas: ['asa', 'voar', 'árvore', 'céu'] },
+  { palavra: 'pinguinho', rimas: ['passarinho', 'carinho', 'caminho', 'ninho'], erradas: ['chuva', 'gota', 'água', 'nuvem'] },
+  { palavra: 'carinho', rimas: ['passarinho', 'caminho', 'ninho', 'pinguinho'], erradas: ['amor', 'abraço', 'amigo', 'festa'] },
+  { palavra: 'chuva', rimas: ['uva', 'luva'], erradas: ['água', 'nuvem', 'vento', 'pingo'] },
+  { palavra: 'sol', rimas: ['farol', 'caracol', 'girassol'], erradas: ['lua', 'dia', 'calor', 'céu'] },
+  { palavra: 'lua', rimas: ['rua', 'sua'], erradas: ['noite', 'estrela', 'céu', 'brilho'] },
+  { palavra: 'mar', rimas: ['voar', 'cantar', 'olhar', 'brincar', 'luar'], erradas: ['água', 'peixe', 'onda', 'barco'] },
+  { palavra: 'voar', rimas: ['cantar', 'olhar', 'brincar', 'mar', 'luar'], erradas: ['asa', 'passarinho', 'céu', 'nuvem'] },
+  { palavra: 'flor', rimas: ['amor', 'calor', 'pintor', 'tambor', 'valor'], erradas: ['jardim', 'pétala', 'planta', 'cheiro'] },
+  { palavra: 'amor', rimas: ['flor', 'calor', 'pintor', 'valor'], erradas: ['coração', 'carinho', 'amigo', 'festa'] },
+  { palavra: 'gato', rimas: ['prato', 'sapato', 'pato', 'fato'], erradas: ['cachorro', 'miado', 'caixa', 'rato'] },
+  { palavra: 'fogo', rimas: ['jogo'], erradas: ['calor', 'chama', 'cinza', 'fumaça'] },
+  { palavra: 'presente', rimas: ['valente', 'dente', 'diferente', 'contente'], erradas: ['caixa', 'festa', 'laço', 'amigo'] }
+];
+
+function extrairPalavraERimaDoTexto(h) {
+  let textoBruto = String(h?.textoCompleto || '').replace(/<[^>]+>/g, '').toLowerCase();
+  if (!textoBruto && Array.isArray(h?.fases)) {
+    textoBruto = h.fases.map(f => String(f.texto || '').replace(/<[^>]+>/g, '')).join(' ').toLowerCase();
+  }
+  const palavrasChave = (h?.palavrasChave || []).map(p => p.toLowerCase());
+  const palavrasTexto = textoBruto.match(/[a-záàâãéèêíïóôõúçñ]{3,}/gi) || [];
+  const todasPalavras = [...new Set([...palavrasChave, ...palavrasTexto])];
+
+  for (const item of DICIONARIO_RIMAS) {
+    if (todasPalavras.some(w => w === item.palavra || w.includes(item.palavra) || item.palavra.includes(w))) {
+      const rimasDiferentes = item.rimas.filter(r => r.toLowerCase() !== item.palavra.toLowerCase());
+      if (rimasDiferentes.length > 0) {
+        const rimaSorteada = rimasDiferentes[Math.floor(Math.random() * rimasDiferentes.length)];
+        return {
+          palavra: item.palavra,
+          rima: rimaSorteada,
+          erradas: item.erradas
+        };
+      }
+    }
+  }
+
+  const sufixosMap = [
+    { sufixo: 'ão', rimas: ['balão', 'coração', 'pão', 'mão', 'canção'], erradas: ['livro', 'pedra', 'vento', 'lua'] },
+    { sufixo: 'ia', rimas: ['alegria', 'magia', 'poesia', 'folia'], erradas: ['noite', 'sol', 'estrela', 'pedra'] },
+    { sufixo: 'ada', rimas: ['espada', 'risada', 'estrada', 'enxada'], erradas: ['livro', 'vento', 'floresta', 'céu'] },
+    { sufixo: 'ela', rimas: ['janela', 'estrela', 'vela', 'amarela'], erradas: ['lua', 'noite', 'porta', 'vidro'] },
+    { sufixo: 'inho', rimas: ['carinho', 'passarinho', 'caminho', 'ninho'], erradas: ['asa', 'árvore', 'céu', 'vento'] },
+    { sufixo: 'oso', rimas: ['bondoso', 'gostoso', 'famoso', 'grandioso'], erradas: ['forte', 'leão', 'pedra', 'sol'] },
+    { sufixo: 'ar', rimas: ['cantar', 'voar', 'olhar', 'brincar'], erradas: ['água', 'peixe', 'nuvem', 'terra'] },
+    { sufixo: 'or', rimas: ['amor', 'calor', 'pintor', 'flor'], erradas: ['jardim', 'céu', 'festa', 'casa'] }
   ];
+
+  for (const pal of todasPalavras) {
+    if (pal.length >= 4) {
+      for (const suf of sufixosMap) {
+        if (pal.endsWith(suf.sufixo)) {
+          const rimasDiferentes = suf.rimas.filter(r => r.toLowerCase() !== pal.toLowerCase());
+          if (rimasDiferentes.length > 0) {
+            const rimaSorteada = rimasDiferentes[Math.floor(Math.random() * rimasDiferentes.length)];
+            return {
+              palavra: pal,
+              rima: rimaSorteada,
+              erradas: suf.erradas
+            };
+          }
+        }
+      }
+    }
+  }
+
+  const fallback = DICIONARIO_RIMAS[Math.floor(Math.random() * DICIONARIO_RIMAS.length)];
+  const rimasValidas = fallback.rimas.filter(r => r.toLowerCase() !== fallback.palavra.toLowerCase());
+  return {
+    palavra: fallback.palavra,
+    rima: rimasValidas[Math.floor(Math.random() * rimasValidas.length)],
+    erradas: fallback.erradas
+  };
+}
+
+function renderRima(h, corpo, spec) {
   let par;
   let opcoes;
+
   if (spec && spec.palavra && spec.rima && Array.isArray(spec.opcoes) && spec.opcoes.length >= 2) {
-    par = { palavra: String(spec.palavra), rima: String(spec.rima), erradas: [] };
-    opcoes = embaralhar(spec.opcoes.map(String));
+    let palavraTarget = String(spec.palavra).trim();
+    let rimaCorreta = String(spec.rima).trim();
+    let opcoesBrutas = spec.opcoes.map(String).map(s => s.trim());
+
+    if (palavraTarget.toLowerCase() === rimaCorreta.toLowerCase()) {
+      const extraido = extrairPalavraERimaDoTexto({ textoCompleto: palavraTarget });
+      rimaCorreta = extraido.rima;
+    }
+
+    let opcoesFiltradas = opcoesBrutas.filter(op => op.toLowerCase() !== palavraTarget.toLowerCase());
+
+    if (!opcoesFiltradas.some(op => op.toLowerCase() === rimaCorreta.toLowerCase())) {
+      opcoesFiltradas.push(rimaCorreta);
+    }
+
+    par = { palavra: palavraTarget, rima: rimaCorreta };
+    opcoes = embaralhar(opcoesFiltradas);
   } else {
-    const kws = (h.palavrasChave || []).map(p => p.toLowerCase());
-    par = pares.find(pr => kws.some(k => k.includes(pr.palavra) || pr.palavra.includes(k)));
-    if (!par) par = pares[Math.floor(Math.random() * pares.length)];
-    opcoes = embaralhar([par.rima, ...par.erradas.slice(0, 3)]);
+    const extraido = extrairPalavraERimaDoTexto(h);
+    par = { palavra: extraido.palavra, rima: extraido.rima };
+    opcoes = embaralhar([par.rima, ...extraido.erradas.slice(0, 3)]);
   }
 
   const wrap = document.createElement('div');
@@ -1521,10 +1614,10 @@ function renderRima(h, corpo, spec) {
     const btnDesistir = document.getElementById('btnDesistirRima');
     if (btnDesistir) btnDesistir.disabled = true;
 
-    const ok = clicou ? (btnClicado && btnClicado.dataset.rima === par.rima) : false;
+    const ok = clicou ? (btnClicado && btnClicado.dataset.rima.toLowerCase() === par.rima.toLowerCase()) : false;
     wrap.querySelectorAll('.rima-opc').forEach(b => {
       b.disabled = true;
-      if (b.dataset.rima === par.rima) {
+      if (b.dataset.rima.toLowerCase() === par.rima.toLowerCase()) {
         b.classList.add('correta');
         b.innerHTML = `🎵 ${par.rima} ✓`;
       }
@@ -1547,33 +1640,144 @@ function renderRima(h, corpo, spec) {
 }
 
 // ─── 8. QUEM DISSE ISSO? ────────────────────────────────────────────────────
+function extrairFalasEAlvosDaHistoria(h) {
+  const paresValidos = [];
+  const textoBruto = obterTextoBaseHistoria(h).replace(/<[^>]+>/g, '').trim();
+
+  // Dicionário de falas conhecidas em histórias pré-definidas
+  const falasConhecidas = [
+    { regex: /Léo, onde você está/i, fala: 'Léo, onde você está?', alvo: 'Amigos' },
+    { regex: /não tenha medo.*fico aqui com você/i, fala: 'Léo, não tenha medo! Eu fico aqui com você toda noite.', alvo: 'Lua' },
+    { regex: /Nuvens\? Mas elas somem/i, fala: 'Nuvens? Mas elas somem!', alvo: 'Colegas' },
+    { regex: /Você demorou/i, fala: 'Você demorou.', alvo: 'Raposa' },
+    { regex: /Cada guardião demora/i, fala: 'Cada guardião demora um tempo diferente para encontrar a biblioteca.', alvo: 'Raposa' },
+    { regex: /Três o quê/i, fala: 'Três o quê?', alvo: 'Pedro' },
+    { regex: /Anos de escola/i, fala: 'Anos de escola.', alvo: 'Raposa' },
+    { regex: /Histórias verdadeiras precisam ser lidas/i, fala: 'Histórias verdadeiras precisam ser lidas.', alvo: 'Raposa' },
+    { regex: /A história desaparece/i, fala: 'A história desaparece. Como se nunca tivesse acontecido.', alvo: 'Raposa' }
+  ];
+
+  for (const item of falasConhecidas) {
+    if (item.regex.test(textoBruto)) {
+      paresValidos.push({ trecho: item.fala, alvo: item.alvo });
+    }
+  }
+
+  // Extração por Regex para histórias dinâmicas (como geradas por IA)
+  const regexAspas = /["“«]([^"”»]{5,180})["”»]/g;
+  const regexTravessao = /(?:^|\n)\s*[—–-]\s*([^\n]{5,180})/g;
+  let match;
+
+  const extraisDinamicos = [];
+
+  const extrairDoMatch = (falaTexto, index) => {
+    falaTexto = falaTexto.trim();
+    if (paresValidos.some(p => p.trecho.includes(falaTexto) || falaTexto.includes(p.trecho))) return;
+
+    const inicioContexto = Math.max(0, index - 120);
+    const fimContexto = Math.min(textoBruto.length, index + falaTexto.length + 120);
+    const contextoAntes = textoBruto.substring(inicioContexto, index);
+    const contextoDepois = textoBruto.substring(index + falaTexto.length, fimContexto);
+
+    const regexQuemDisseDepois = /(?:disse|perguntou|respondeu|explicou|falou|gritou|chamou|exclamou)\s+(?:a|o)?\s*([A-ZÁÉÍÓÚÂÊÔÃÕ][a-záéíóúâêôãõç]+)/i;
+    const regexQuemDisseAntes = /([A-ZÁÉÍÓÚÂÊÔÃÕ][a-záéíóúâêôãõç]+)\s+(?:disse|perguntou|respondeu|explicou|falou|gritou|chamou|exclamou)/i;
+
+    let mPersonagem = contextoAntes.match(regexQuemDisseAntes) || contextoDepois.match(regexQuemDisseDepois) || contextoAntes.match(regexQuemDisseDepois);
+
+    if (mPersonagem && mPersonagem[1]) {
+      const pNome = mPersonagem[1].trim();
+      const ignorar = ['Uma', 'Cada', 'Ele', 'Ela', 'Quando', 'Todos', 'Alguns', 'Outros'];
+      if (!ignorar.includes(pNome) && pNome.length >= 3) {
+        extraisDinamicos.push({ trecho: falaTexto, alvo: pNome });
+        return;
+      }
+    }
+  };
+
+  while ((match = regexAspas.exec(textoBruto)) !== null) {
+    extrairDoMatch(match[1], match.index);
+  }
+  while ((match = regexTravessao.exec(textoBruto)) !== null) {
+    extrairDoMatch(match[1], match.index);
+  }
+
+  paresValidos.push(...extraisDinamicos);
+
+  // Incluir opção narrativa (onde o alvo é o Narrador)
+  const frasesNarrativas = textoBruto.match(/[^.!?]+[.!?]+/g) || [textoBruto];
+  const frasesSemAspas = frasesNarrativas.filter(f => {
+    const fLimpa = f.trim();
+    return fLimpa.length >= 35 && fLimpa.length <= 110 && !/["“«—–-]/.test(fLimpa);
+  });
+
+  if (frasesSemAspas.length > 0) {
+    const idxNarrador = Math.floor(frasesSemAspas.length / 2);
+    paresValidos.push({
+      trecho: frasesSemAspas[idxNarrador].trim(),
+      alvo: 'Narrador'
+    });
+  } else {
+    paresValidos.push({
+      trecho: frasesNarrativas[0].trim(),
+      alvo: 'Narrador'
+    });
+  }
+
+  return paresValidos;
+}
+
 function renderQuemDisse(fase, h, corpo, spec) {
-  const todos = [...new Set(
-    (Array.isArray(h?.fases) ? h.fases : []).flatMap(f => (f.personagens || []))
-  )].filter(Boolean);
+  const todosPersonagens = [...new Set(
+    (Array.isArray(h?.fases) ? h.fases : [])
+      .flatMap(f => (f.personagens || []))
+      .concat(h?.personagens || [])
+      .concat(h?.palavrasChave || [])
+  )].filter(Boolean).map(p => String(p).trim());
 
   let alvo = 'Narrador';
   let opcoes = [];
   let trecho = '';
-  if (spec && Array.isArray(spec.opcoes) && spec.opcoes.length >= 2) {
+
+  const paresValidos = extrairFalasEAlvosDaHistoria(h);
+
+  if (spec && Array.isArray(spec.opcoes) && spec.opcoes.length >= 2 && spec.fala && spec.fala.length >= 5 && spec.fala !== spec.pergunta) {
     opcoes = spec.opcoes.map(String);
-    alvo = opcoes[Math.min(opcoes.length - 1, Math.max(0, normalizarCorreta(spec.correta)))];
-    trecho = String(spec.fala || spec.pergunta || '').trim();
+    alvo = opcoes[Math.min(opcoes.length - 1, Math.max(0, normalizarCorreta(spec.correta)))] || 'Narrador';
+    trecho = String(spec.fala).trim();
+
+    if (!opcoes.includes('Narrador')) {
+      if (opcoes.length >= 4) {
+        const idxSubstituir = opcoes.findIndex(op => op !== alvo);
+        if (idxSubstituir !== -1) opcoes[idxSubstituir] = 'Narrador';
+        else opcoes.push('Narrador');
+      } else {
+        opcoes.push('Narrador');
+      }
+    }
   } else {
-    const personagens = todos.length > 0 ? todos : (h.palavrasChave || []).slice(0, 3);
-    alvo = personagens[0] || 'Narrador';
-    const distratores = embaralhar(
-      ['Narrador', 'Dragão', 'Fada', 'Rei', 'Bruxo', 'Lobo', 'Gigante'].filter(p => p !== alvo)
-    ).slice(0, 3);
-    opcoes = embaralhar([alvo, ...distratores]);
-    const textoLimpo = String((fase && fase.texto) || obterTextoBaseHistoria(h) || '').replace(/<[^>]+>/g, '');
-    trecho = textoLimpo.substring(0, 90).trim() + '…';
+    const parSorteado = paresValidos[Math.floor(Math.random() * paresValidos.length)];
+    trecho = parSorteado.trecho;
+    alvo = parSorteado.alvo;
+
+    const distratoresPadrao = ['Narrador', 'Dragão', 'Fada', 'Rei', 'Bruxo', 'Lobo', 'Gigante', 'Urso', 'Pedro', 'Marina', 'Léo', 'Raposa'];
+    const candidatos = [...new Set([...todosPersonagens, ...distratoresPadrao])];
+
+    const distratoresFiltrados = candidatos.filter(p => p.toLowerCase() !== alvo.toLowerCase() && p !== 'Narrador');
+    const distratoresSorteados = embaralhar(distratoresFiltrados);
+
+    if (alvo === 'Narrador') {
+      opcoes = embaralhar(['Narrador', ...distratoresSorteados.slice(0, 3)]);
+    } else {
+      opcoes = embaralhar([alvo, 'Narrador', ...distratoresSorteados.slice(0, 2)]);
+    }
   }
+
+  const trechoLimpo = trecho.replace(/^["“«\s]+|["”»\s]+$/g, '');
 
   const wrap = document.createElement('div');
   wrap.innerHTML = `
     <p class="mg-desc">Leia o trecho e descubra quem disse isso na história!</p>
-    <div class="qd-trecho">"${trecho}"</div>
+    <div class="qd-trecho">"${trechoLimpo}"</div>
     <div class="qd-opcoes">
       ${opcoes.map(op => `<button class="qd-btn" data-nome="${op}" aria-label="${op}">${op}</button>`).join('')}
     </div>
@@ -1587,10 +1791,10 @@ function renderQuemDisse(fase, h, corpo, spec) {
     const btnDesistir = document.getElementById('btnDesistirQuemDisse');
     if (btnDesistir) btnDesistir.disabled = true;
 
-    const ok = clicou ? (btnClicado && btnClicado.dataset.nome === alvo) : false;
+    const ok = clicou ? (btnClicado && btnClicado.dataset.nome.toLowerCase() === alvo.toLowerCase()) : false;
     wrap.querySelectorAll('.qd-btn').forEach(b => {
       b.disabled = true;
-      if (b.dataset.nome === alvo) {
+      if (b.dataset.nome.toLowerCase() === alvo.toLowerCase()) {
         b.classList.add('correta');
         b.innerHTML = `💬 ${alvo} ✓`;
       }
