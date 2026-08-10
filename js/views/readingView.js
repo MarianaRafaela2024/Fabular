@@ -133,6 +133,7 @@ function registrarEstrelasHistoria(estrelasNovas) {
     estado.historiasLidas[idx].data = data;
     estado.historiasLidas[idx].dataIso = dataIso;
     salvarEstado();
+    if (typeof enviarSyncProgresso === 'function') enviarSyncProgresso().catch(() => {});
     atualizarHeader();
     renderizarBiblioteca();
   } else if (novas > 0) {
@@ -144,6 +145,7 @@ function registrarEstrelasHistoria(estrelasNovas) {
     });
     estado.totalEstrelas += novas;
     salvarEstado();
+    if (typeof enviarSyncProgresso === 'function') enviarSyncProgresso().catch(() => {});
     atualizarHeader();
     renderizarBiblioteca();
   }

@@ -80,10 +80,10 @@ function garantirContadoresRelatorio() {
 
 function obterVinculoCrianca() {
   try {
-    const criancaId = estado?.perfil?.id;
+    const criancaId = estado?.perfil?.id || estado?.perfil?.Id;
     const responsavelId = obterResponsavelId();
     if (!criancaId) return null;
-    return { criancaId: Number(criancaId), responsavelId };
+    return { criancaId: Number(criancaId), responsavelId: responsavelId ? Number(responsavelId) : null };
   } catch (_) {
     return null;
   }
@@ -92,7 +92,7 @@ function obterVinculoCrianca() {
 function obterResponsavelId() {
   try {
     const sessao = JSON.parse(localStorage.getItem('mundoHistorias_responsavel_sessao') || 'null');
-    return sessao?.responsavelId || null;
+    return sessao?.responsavelId || sessao?.ResponsavelId || null;
   } catch (_) {
     return null;
   }
@@ -102,7 +102,7 @@ function agendarSyncProgresso() {
   clearTimeout(syncTimer);
   syncTimer = setTimeout(() => {
     enviarSyncProgresso().catch(() => {});
-  }, 800);
+  }, 500);
 }
 
 async function enviarSyncProgresso() {
@@ -110,26 +110,33 @@ async function enviarSyncProgresso() {
     try { return JSON.parse(localStorage.getItem('mundoHistorias_responsavel_sessao') || 'null'); } catch (_) { return null; }
   })();
   const vinculo = obterVinculoCrianca();
-  if (!sessao?.responsavelId || !vinculo?.criancaId) return;
+  const respId = sessao?.responsavelId || sessao?.ResponsavelId || vinculo?.responsavelId;
+  const childId = vinculo?.criancaId || estado?.perfil?.id || estado?.perfil?.Id;
 
-  await apiPost('/api/v1/sync/progress', {
-    responsavelId: sessao.responsavelId,
-    criancaId: vinculo.criancaId,
-    faixaEtaria: estado.perfil.faixa,
-    progressoHistorias: {
-      totalEstrelas: estado.totalEstrelas,
-      historiasLidas: estado.historiasLidas,
-      tempoTotal: estado.tempoTotal
-    },
-    resumoMinigames: {
-      minigamesJogados: estado.minigamesJogados,
-      tentativasReprovadas: estado.tentativasReprovadas,
-      acertosMG: estado.acertosMG || 0,
-      errosMG: estado.errosMG || 0,
-      naoConsigoOuvir: estado.naoConsigoOuvir || 0
-    },
-    updatedAt: new Date().toISOString()
-  });
+  if (!respId || !childId) return;
+
+  try {
+    await apiPost('/api/v1/sync/progress', {
+      responsavelId: Number(respId),
+      criancaId: Number(childId),
+      faixaEtaria: Number(estado.perfil?.faixa) || 1,
+      progressoHistorias: {
+        totalEstrelas: estado.totalEstrelas || 0,
+        historiasLidas: estado.historiasLidas || [],
+        tempoTotal: estado.tempoTotal || 0
+      },
+      resumoMinigames: {
+        minigamesJogados: estado.minigamesJogados || 0,
+        tentativasReprovadas: estado.tentativasReprovadas || 0,
+        acertosMG: estado.acertosMG || 0,
+        errosMG: estado.errosMG || 0,
+        naoConsigoOuvir: estado.naoConsigoOuvir || 0
+      },
+      updatedAt: new Date().toISOString()
+    });
+  } catch (err) {
+    console.warn('Falha ao sincronizar progresso com o banco:', err);
+  }
 }
 
 async function carregarProgressoDoServidor() {
@@ -137,17 +144,22 @@ async function carregarProgressoDoServidor() {
     try { return JSON.parse(localStorage.getItem('mundoHistorias_responsavel_sessao') || 'null'); } catch (_) { return null; }
   })();
   const vinculo = obterVinculoCrianca();
-  if (!sessao?.responsavelId || !vinculo?.criancaId) return;
+  const respId = sessao?.responsavelId || sessao?.ResponsavelId || vinculo?.responsavelId;
+  const childId = vinculo?.criancaId || estado?.perfil?.id || estado?.perfil?.Id;
+
+  if (!respId || !childId) return;
 
   try {
     const query = new URLSearchParams({
-      responsavelId: String(sessao.responsavelId),
-      criancaId: String(vinculo.criancaId)
+      responsavelId: String(respId),
+      criancaId: String(childId)
     });
     const data = await apiGet(`/api/v1/sync/progress?${query.toString()}`);
-    mesclarProgressoServidor(data);
-  } catch (_) {
-    // Mantém progresso local se a API estiver indisponível.
+    if (data) {
+      mesclarProgressoServidor(data);
+    }
+  } catch (err) {
+    console.warn('Falha ao carregar progresso do banco:', err);
   }
 }
 
@@ -174,7 +186,7 @@ function mesclarProgressoServidor(servidor) {
     const estrelasAtuais = Number(atual?.estrelas) || 0;
     const dataRemota = r.data || atual?.data || new Date().toLocaleDateString('pt-BR');
     const dataIsoRemota = r.dataIso || atual?.dataIso || obterDataIsoHistoria({ data: dataRemota }) || '';
-    if (!atual || estrelasRemotas > estrelasAtuais) {
+    if (!atual || estrelasRemotas >= estrelasAtuais) {
       mapa.set(id, {
         id,
         estrelas: Math.max(estrelasRemotas, estrelasAtuais),
