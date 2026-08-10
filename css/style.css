@@ -167,6 +167,8 @@ body {
   display: block;
 }
 
+
+
 /* ==============================================
    LOGIN PAGE
    ============================================== */
@@ -468,6 +470,23 @@ body.login-body {
 
 .btn-entrar {
   margin-top: 4px;
+}
+
+/*IMG BOT*/
+.bot-chat-avatar {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.bot-chat-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
 }
 
 /* ==============================================

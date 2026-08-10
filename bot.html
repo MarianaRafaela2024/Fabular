@@ -83,19 +83,23 @@
         <!-- BOT IA -->
         <section id="tela-bot-ia" class="tela-app ativa">
           <div class="tela-header">
-            <h2> Vamos criar Histórias?</h2>
+            <h2><!--ESPAÇAMENTO, ARRUMAR NO CSS--></h2>
           </div>
           <div class="bot-ia-wrap">
             <div class="bot-ia-card">
               <div class="bot-chat">
                 <div class="bot-chat-msg bot-chat-msg-ai">
-                  <span class="bot-chat-avatar">🤖</span>
+                  <span class="bot-chat-avatar">
+                    <img src="midia/IconeRaposa.png" alt="Assistente de IA">
+                  </span>
                   <div class="bot-chat-bubble">
-                    Oi! Me conte sua ideia e eu crio uma história com 4 minigames para você.
+                    Olá! Me conte sua ideia e eu crio uma história completa para você.
                   </div>
                 </div>
                 <div class="bot-chat-msg bot-chat-msg-ai">
-                  <span class="bot-chat-avatar"></span>
+                  <span class="bot-chat-avatar">
+                    <img src="midia/IconeRaposa.png" alt="Assistente de IA">
+                  </span>
                   <div class="bot-chat-bubble">
                     Escolha o gênero textual para começar:
                   </div>
@@ -115,8 +119,7 @@
               <label class="bot-ia-label" for="bot-ia-prompt">Tema ou ideia da história</label>
               <textarea id="bot-ia-prompt" class="bot-ia-textarea" rows="4" maxlength="700"
                 placeholder="Ex.: um coelho que aprende a colaborar com os amigos para montar uma horta..."></textarea>
-              <button type="button" class="btn-principal bot-ia-btn" id="btn-bot-ia-gerar">Criar história com IA
-                ✨</button>
+              <button type="button" class="btn-principal bot-ia-btn" id="btn-bot-ia-gerar">Criar história</button>
               <p id="bot-ia-erro" class="bot-ia-erro oculto" role="alert"></p>
             </div>
           </div>
