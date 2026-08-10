@@ -123,17 +123,18 @@ function registrarEstrelasHistoria(estrelasNovas) {
   const novas = Math.max(0, Math.min(3, Number(estrelasNovas) || 0));
   const { data, dataIso } = obterDataConclusaoAtual();
   const idx = estado.historiasLidas.findIndex(r => r.id === id);
+
   if (idx >= 0) {
     const antigas = Number(estado.historiasLidas[idx].estrelas) || 0;
     if (novas > antigas) {
       estado.totalEstrelas += novas - antigas;
       estado.historiasLidas[idx].estrelas = novas;
-      estado.historiasLidas[idx].data = data;
-      estado.historiasLidas[idx].dataIso = dataIso;
-      salvarEstado();
-      atualizarHeader();
-      renderizarBiblioteca();
     }
+    estado.historiasLidas[idx].data = data;
+    estado.historiasLidas[idx].dataIso = dataIso;
+    salvarEstado();
+    atualizarHeader();
+    renderizarBiblioteca();
   } else if (novas > 0) {
     estado.historiasLidas.push({
       id,

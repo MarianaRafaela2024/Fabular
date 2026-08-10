@@ -107,6 +107,7 @@ CREATE TABLE Sessao_Leitura (
 
 CREATE TABLE Relatorio_Crianca (
     Id_Crianca INT NOT NULL PRIMARY KEY,
+    HistoriasConcluidasJson NVARCHAR(MAX) NULL,
     TentativasReprovadas INT NOT NULL DEFAULT 0,
     AcertosMG INT NOT NULL DEFAULT 0,
     ErrosMG INT NOT NULL DEFAULT 0,
