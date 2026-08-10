@@ -217,6 +217,9 @@ function finalizarMinigames() {
   estado.nivel = calcularNivelPorXp(estado.totalEstrelas);
 
   salvarEstado();
+  if (typeof enviarSyncProgresso === 'function') {
+    enviarSyncProgresso().catch(() => {});
+  }
   atualizarHeader();
   renderizarBiblioteca();
   mostrarResultado(estrelas, tempoMin, acertosTotal);
