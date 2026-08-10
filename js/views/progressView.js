@@ -71,35 +71,61 @@ function atualizarTelaProgresso() {
 function renderizarAcessoRelatorioResponsavel(metricas) {
   const secoes = document.getElementById('area-relatorio-responsavel');
   if (!secoes) return;
-  let bloco = document.getElementById('prog-extra-relatorio');
-  if (!bloco) {
-    bloco = document.createElement('div');
-    bloco.id = 'prog-extra-relatorio';
-    bloco.className = 'progresso-secao';
-    secoes.appendChild(bloco);
+
+  const nomeCrianca = estado.perfil?.nome || 'Criança';
+  const totalHistorias = (estado.historiasLidas || []).length;
+  const totalEstrelas = estado.totalEstrelas || 0;
+  const tempoTotal = estado.tempoTotal || 0;
+
+  let historiasHtml = '';
+  if (!estado.historiasLidas || estado.historiasLidas.length === 0) {
+    historiasHtml = '<p class="vazio-msg">Nenhuma história concluída ainda. Comece a ler! 📚</p>';
+  } else {
+    historiasHtml = '<div class="historias-concluidas">';
+    estado.historiasLidas.forEach(r => {
+      if (!r || r.id == null) return;
+      const h = (typeof HISTORIAS !== 'undefined' ? HISTORIAS : []).find(x => String(x.id) === String(r.id));
+      const titulo = h ? h.titulo : (r.titulo || 'História Concluída');
+      const emoji = h ? h.emoji : '📖';
+      const genero = h ? (typeof labelGenero === 'function' ? labelGenero(h.genero) : h.genero) : 'Geral';
+      const dataStr = r.data || (r.dataIso ? new Date(r.dataIso + 'T00:00:00').toLocaleDateString('pt-BR') : '');
+      const estrelasHtml = typeof renderEstrelas === 'function' ? renderEstrelas(r.estrelas, 3) : '⭐'.repeat(Number(r.estrelas) || 1);
+
+      historiasHtml += `
+        <div class="historia-concluida-item">
+          <div class="hci-esq">
+            <span class="hci-emoji">${emoji}</span>
+            <div class="hci-info">
+              <span class="hci-titulo">${titulo}</span>
+              <span class="hci-genero">${genero}${dataStr ? ' · ' + dataStr : ''}</span>
+            </div>
+          </div>
+          <span class="hci-estrelas">${estrelasHtml}</span>
+        </div>
+      `;
+    });
+    historiasHtml += '</div>';
   }
 
-  //const sessaoResponsavel = (() => {
- //   try {
- //    const raw = localStorage.getItem('mundoHistorias_responsavel_sessao');
- //     return raw ? JSON.parse(raw) : null;
-//} catch (_) {
- //     return null;
- //   }
- // })();
+  secoes.innerHTML = `
+    <div class="progresso-secao" id="prog-extra-relatorio">
+      <h3>📄 Relatório Geral — ${nomeCrianca}</h3>
+      <div class="stats-grid" id="stats-relatorio-grid">
+        <div class="stat-card-prog"><span class="scp-icon">📚</span><span class="scp-valor">${totalHistorias}</span><span class="scp-label">Histórias Concluídas</span></div>
+        <div class="stat-card-prog"><span class="scp-icon">⭐</span><span class="scp-valor">${totalEstrelas}</span><span class="scp-label">Estrelas Acumuladas</span></div>
+        <div class="stat-card-prog"><span class="scp-icon">⏰</span><span class="scp-valor">${tempoTotal} min</span><span class="scp-label">Tempo Total</span></div>
+        <div class="stat-card-prog"><span class="scp-icon">❌</span><span class="scp-valor">${estado.tentativasReprovadas || 0}</span><span class="scp-label">Tentativas reprovadas</span></div>
+        <div class="stat-card-prog"><span class="scp-icon">✅</span><span class="scp-valor">${metricas.acertosMG}</span><span class="scp-label">Acertos MG</span></div>
+        <div class="stat-card-prog"><span class="scp-icon">⚠️</span><span class="scp-valor">${metricas.errosMG}</span><span class="scp-label">Erros MG</span></div>
+        <div class="stat-card-prog"><span class="scp-icon">🔊</span><span class="scp-valor">${metricas.naoOuco}</span><span class="scp-label">Não consigo ouvir</span></div>
+      </div>
+    </div>
 
-  if (!sessaoResponsavel || !sessaoResponsavel.email) {
-    bloco.innerHTML = '';
-    return;
-  }
-
-  bloco.innerHTML = `
-    <h3>📄 Relatório do Responsável</h3>
-    <div class="stats-grid" id="stats-relatorio-grid">
-      <div class="stat-card-prog"><span class="scp-icon">❌</span><span class="scp-valor">${estado.tentativasReprovadas || 0}</span><span class="scp-label">Tentativas reprovadas</span></div>
-      <div class="stat-card-prog"><span class="scp-icon">✅</span><span class="scp-valor">${metricas.acertosMG}</span><span class="scp-label">Acertos MG</span></div>
-      <div class="stat-card-prog"><span class="scp-icon">⚠️</span><span class="scp-valor">${metricas.errosMG}</span><span class="scp-label">Erros MG</span></div>
-      <div class="stat-card-prog"><span class="scp-icon">🔊</span><span class="scp-valor">${metricas.naoOuco}</span><span class="scp-label">Não consigo ouvir</span></div>
+    <div class="progresso-secao progresso-secao-historias">
+      <h3>📖 Histórias Concluídas no Relatório</h3>
+      <div class="historias-concluidas-wrap">
+        ${historiasHtml}
+      </div>
     </div>
   `;
 }

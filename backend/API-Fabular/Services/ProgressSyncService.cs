@@ -60,7 +60,7 @@ public class ProgressSyncService
 
         await PersistirEstrelasPorHistoriaAsync(conn, request.CriancaId, request.ProgressoHistorias);
         await PersistirAtividadeDiariaAsync(conn, request.CriancaId, request.ProgressoHistorias);
-        await PersistirRelatorioCriancaAsync(conn, request.CriancaId, request.ResumoMinigames);
+        await PersistirRelatorioCriancaAsync(conn, request.CriancaId, request.ResumoMinigames, request.ProgressoHistorias);
 
         return ApplicationResult<object>.Ok(new { syncStatus = "ok", lastServerStateVersion = DateTime.UtcNow.Ticks });
     }
@@ -118,6 +118,26 @@ public class ProgressSyncService
             acertosMG = Math.Max(acertosMG, relatorioDb.Value.AcertosMG);
             errosMG = Math.Max(errosMG, relatorioDb.Value.ErrosMG);
             naoConsigoOuvir = Math.Max(naoConsigoOuvir, relatorioDb.Value.NaoConsigoOuvir);
+
+            if (!string.IsNullOrWhiteSpace(relatorioDb.Value.HistoriasConcluidasJson))
+            {
+                try
+                {
+                    var ids = JsonSerializer.Deserialize<List<string>>(relatorioDb.Value.HistoriasConcluidasJson);
+                    if (ids != null)
+                    {
+                        foreach (var id in ids)
+                        {
+                            if (!string.IsNullOrWhiteSpace(id) && !historiasMap.ContainsKey(id))
+                            {
+                                historiasMap[id] = new HistoriaProgressoDto(id, 1, DateTime.Today.ToString("dd/MM/yyyy"), DateTime.Today.ToString("yyyy-MM-dd"));
+                            }
+                        }
+                    }
+                }
+                catch { }
+            }
+
             updatedAt = updatedAt.HasValue
                 ? (relatorioDb.Value.UpdatedAt > updatedAt.Value ? relatorioDb.Value.UpdatedAt : updatedAt)
                 : relatorioDb.Value.UpdatedAt;
@@ -251,14 +271,28 @@ public class ProgressSyncService
         }
     }
 
-    private async Task PersistirRelatorioCriancaAsync(System.Data.Common.DbConnection conn, int criancaId, object resumoMinigames)
+    private async Task PersistirRelatorioCriancaAsync(
+        System.Data.Common.DbConnection conn,
+        int criancaId,
+        object resumoMinigames,
+        object progressoHistorias)
     {
         var resumo = ExtrairResumoMinigames(resumoMinigames);
+        var historiasLidas = ExtrairHistoriasLidas(progressoHistorias);
+        var historiasIds = historiasLidas
+            .Where(h => !string.IsNullOrWhiteSpace(h.Id) && h.Estrelas > 0)
+            .Select(h => h.Id!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var historiasConcluidasJson = historiasIds.Count > 0 ? JsonSerializer.Serialize(historiasIds) : null;
+
         if (resumo.TentativasReprovadas == 0 &&
             resumo.AcertosMG == 0 &&
             resumo.ErrosMG == 0 &&
             resumo.NaoConsigoOuvir == 0 &&
-            resumo.MinigamesJogados == 0)
+            resumo.MinigamesJogados == 0 &&
+            historiasIds.Count == 0)
         {
             return;
         }
@@ -267,23 +301,36 @@ public class ProgressSyncService
         {
             await conn.ExecuteAsync(
                 """
+                IF NOT EXISTS (
+                    SELECT 1 FROM sys.columns 
+                    WHERE object_id = OBJECT_ID('Relatorio_Crianca') AND name = 'HistoriasConcluidasJson'
+                )
+                BEGIN
+                    ALTER TABLE Relatorio_Crianca ADD HistoriasConcluidasJson NVARCHAR(MAX) NULL;
+                END
+                """);
+
+            await conn.ExecuteAsync(
+                """
                 MERGE Relatorio_Crianca AS alvo
                 USING (SELECT @CriancaId AS Id_Crianca) AS origem
                 ON alvo.Id_Crianca = origem.Id_Crianca
                 WHEN MATCHED THEN
                     UPDATE SET
+                        HistoriasConcluidasJson = CASE WHEN @HistoriasConcluidasJson IS NOT NULL THEN @HistoriasConcluidasJson ELSE alvo.HistoriasConcluidasJson END,
                         TentativasReprovadas = CASE WHEN @TentativasReprovadas > alvo.TentativasReprovadas THEN @TentativasReprovadas ELSE alvo.TentativasReprovadas END,
                         AcertosMG = CASE WHEN @AcertosMG > alvo.AcertosMG THEN @AcertosMG ELSE alvo.AcertosMG END,
                         ErrosMG = CASE WHEN @ErrosMG > alvo.ErrosMG THEN @ErrosMG ELSE alvo.ErrosMG END,
                         NaoConsigoOuvir = CASE WHEN @NaoConsigoOuvir > alvo.NaoConsigoOuvir THEN @NaoConsigoOuvir ELSE alvo.NaoConsigoOuvir END,
                         UpdatedAt = SYSUTCDATETIME()
                 WHEN NOT MATCHED THEN
-                    INSERT (Id_Crianca, TentativasReprovadas, AcertosMG, ErrosMG, NaoConsigoOuvir, UpdatedAt)
-                    VALUES (@CriancaId, @TentativasReprovadas, @AcertosMG, @ErrosMG, @NaoConsigoOuvir, SYSUTCDATETIME());
+                    INSERT (Id_Crianca, HistoriasConcluidasJson, TentativasReprovadas, AcertosMG, ErrosMG, NaoConsigoOuvir, UpdatedAt)
+                    VALUES (@CriancaId, @HistoriasConcluidasJson, @TentativasReprovadas, @AcertosMG, @ErrosMG, @NaoConsigoOuvir, SYSUTCDATETIME());
                 """,
                 new
                 {
                     CriancaId = criancaId,
+                    HistoriasConcluidasJson = historiasConcluidasJson,
                     resumo.TentativasReprovadas,
                     resumo.AcertosMG,
                     resumo.ErrosMG,
@@ -296,15 +343,15 @@ public class ProgressSyncService
         }
     }
 
-    private async Task<(int TentativasReprovadas, int AcertosMG, int ErrosMG, int NaoConsigoOuvir, DateTime UpdatedAt)?> CarregarRelatorioCriancaAsync(
+    private async Task<(int TentativasReprovadas, int AcertosMG, int ErrosMG, int NaoConsigoOuvir, string? HistoriasConcluidasJson, DateTime UpdatedAt)?> CarregarRelatorioCriancaAsync(
         System.Data.Common.DbConnection conn,
         int criancaId)
     {
         try
         {
-            return await conn.QueryFirstOrDefaultAsync<(int TentativasReprovadas, int AcertosMG, int ErrosMG, int NaoConsigoOuvir, DateTime UpdatedAt)?>(
+            return await conn.QueryFirstOrDefaultAsync<(int TentativasReprovadas, int AcertosMG, int ErrosMG, int NaoConsigoOuvir, string? HistoriasConcluidasJson, DateTime UpdatedAt)?>(
                 """
-                SELECT TentativasReprovadas, AcertosMG, ErrosMG, NaoConsigoOuvir, UpdatedAt
+                SELECT TentativasReprovadas, AcertosMG, ErrosMG, NaoConsigoOuvir, HistoriasConcluidasJson, UpdatedAt
                 FROM Relatorio_Crianca
                 WHERE Id_Crianca = @CriancaId
                 """,
@@ -312,7 +359,25 @@ public class ProgressSyncService
         }
         catch
         {
-            return null;
+            try
+            {
+                var r = await conn.QueryFirstOrDefaultAsync<(int TentativasReprovadas, int AcertosMG, int ErrosMG, int NaoConsigoOuvir, DateTime UpdatedAt)?>(
+                    """
+                    SELECT TentativasReprovadas, AcertosMG, ErrosMG, NaoConsigoOuvir, UpdatedAt
+                    FROM Relatorio_Crianca
+                    WHERE Id_Crianca = @CriancaId
+                    """,
+                    new { CriancaId = criancaId });
+                if (r.HasValue)
+                {
+                    return (r.Value.TentativasReprovadas, r.Value.AcertosMG, r.Value.ErrosMG, r.Value.NaoConsigoOuvir, null, r.Value.UpdatedAt);
+                }
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 
@@ -611,12 +676,12 @@ public class ProgressSyncService
             return false;
         }
 
-        if (!storyId.StartsWith("api-", StringComparison.OrdinalIgnoreCase))
+        if (storyId.StartsWith("api-", StringComparison.OrdinalIgnoreCase))
         {
-            return false;
+            return int.TryParse(storyId.AsSpan(4), out historiaId) && historiaId > 0;
         }
 
-        return int.TryParse(storyId.AsSpan(4), out historiaId) && historiaId > 0;
+        return int.TryParse(storyId, out historiaId) && historiaId > 0;
     }
 
     private static int ExtrairTotalEstrelas(object progressoHistorias)
