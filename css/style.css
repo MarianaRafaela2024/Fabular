@@ -717,12 +717,6 @@ body.login-body {
   text-transform: uppercase;
 }
 
-.header-centro {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
 .header-logo {
   font-family: 'Baloo 2', cursive;
   font-weight: 800;
