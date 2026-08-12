@@ -782,6 +782,18 @@ body.login-body {
   border-bottom: 1px solid rgba(229, 231, 235, .6);
   margin-bottom: 10px;
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, .1));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.sidebar-logo img {
+  width: 80px;
+  height: 80px;
+  max-width: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .nav-item {
@@ -2515,8 +2527,15 @@ body.login-body {
 }
 
 @keyframes flameBounce {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-4px) scale(1.18); }
+
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  50% {
+    transform: translateY(-4px) scale(1.18);
+  }
 }
 
 .cal-streak-info {
@@ -2555,8 +2574,17 @@ body.login-body {
 }
 
 @keyframes crownGlow {
-  0%, 100% { transform: scale(1); box-shadow: 0 3px 8px rgba(234, 179, 8, 0.35); }
-  50% { transform: scale(1.05); box-shadow: 0 4px 14px rgba(234, 179, 8, 0.55); }
+
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 3px 8px rgba(234, 179, 8, 0.35);
+  }
+
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 4px 14px rgba(234, 179, 8, 0.55);
+  }
 }
 
 .calendario-header {
@@ -2697,8 +2725,15 @@ body.login-body {
 }
 
 @keyframes pulseHoje {
-  0%, 100% { box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3), 0 4px 12px rgba(245, 158, 11, 0.25); }
-  50% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.15), 0 6px 16px rgba(245, 158, 11, 0.4); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3), 0 4px 12px rgba(245, 158, 11, 0.25);
+  }
+
+  50% {
+    box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.15), 0 6px 16px rgba(245, 158, 11, 0.4);
+  }
 }
 
 .cal-dia-hoje-badge {
@@ -2753,8 +2788,15 @@ body.login-body {
 }
 
 @keyframes crownBounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-2px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-2px);
+  }
 }
 
 .calendario-legenda {
