@@ -442,6 +442,6 @@ Gere a história seguindo TODAS as regras acima com máxima precisão, garantind
 - qualidade literária
 - clareza e naturalidade
 - JSON válido
-- 4 minigames obrigatórios
+- 5 minigames obrigatórios
 - fidelidade total ao gênero selecionado`;
 }
