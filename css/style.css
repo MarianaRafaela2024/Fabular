@@ -101,35 +101,35 @@ body.alto-contraste {
 }
 
 .home {
-  background-image: url("midia/home.png");
+  background-image: url("../midia/home.png");
 }
 
 .icon-book {
-  background-image: url("midia/open-book.png");
+  background-image: url("../midia/open-book.png");
 }
 
 .award {
-  background-image: url("midia/award.png");
+  background-image: url("../midia/award.png");
 }
 
 .bot {
-  background-image: url("midia/bot.png");
+  background-image: url("../midia/bot.png");
 }
 
 .nav-item.ativo .home {
-  background-image: url("midia/home-active.png");
+  background-image: url("../midia/home-active.png");
 }
 
 .nav-item.ativo .icon-book {
-  background-image: url("midia/book-active.png");
+  background-image: url("../midia/book-active.png");
 }
 
 .nav-item.ativo .award {
-  background-image: url("midia/award-active.png");
+  background-image: url("../midia/award-active.png");
 }
 
 .nav-item.ativo .bot {
-  background-image: url("midia/bot-active.png");
+  background-image: url("../midia/bot-active.png");
 }
 
 
