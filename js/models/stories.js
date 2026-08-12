@@ -642,6 +642,13 @@ function normalizarMinigamePreset(minigame) {
     if (fonte.justificativa != null) base.justificativa = String(fonte.justificativa);
   } else if (tipo === 'jogo_memoria') {
     base.pares = enriquecerParesMemoria(fonte.pares);
+  } else if (tipo === 'ligar_pontos') {
+    if (Array.isArray(fonte.pares)) {
+      base.pares = fonte.pares.map(p => ({
+        palavra: String(p.palavra || p.Palavra || p.termo || '').trim(),
+        def: String(p.def || p.Definicao || p.definicao || p.dica || '').trim()
+      })).filter(p => p.palavra && p.def);
+    }
   } else if (tipo === 'som_palavra') {
     base.alvo = fonte.alvo != null ? String(fonte.alvo) : '';
     base.opcoes = Array.isArray(fonte.opcoes) ? fonte.opcoes.map(String) : [];

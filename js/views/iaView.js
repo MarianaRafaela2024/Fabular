@@ -388,6 +388,7 @@ Tipos possíveis:
 - colorir
 - rima
 - jogo_memoria
+- ligar_pontos
 
 REGRAS DOS MINIGAMES
 
@@ -410,6 +411,11 @@ jogo_memoria:
 - cada par deve ter "palavra" e "emoji" ligados semanticamente (ex.: leão → 🦁, floresta → 🌳, chuva → 🌧️)
 - NUNCA usar emoji genérico (⭐, 🌟) se existir emoji que represente a palavra
 - NUNCA incluir sufixos de par como "par1" ou "par 1" no campo palavra (escreva apenas a palavra simples, ex: "leão")
+
+ligar_pontos:
+- usar 3 a 4 palavras importantes do texto
+- cada item deve ter "palavra" e "def" (definição simples e fácil para a criança)
+- ex.: { "palavra": "leão", "def": "Rei da selva corajoso" }
 
 Sempre coerentes com a história
 

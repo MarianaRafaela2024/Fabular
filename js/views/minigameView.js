@@ -99,7 +99,7 @@ function renderizarMinigame() {
     case 'monta_frase': renderMontaFrase(fase, corpo, spec); break;
     case 'verdadeiro_falso': renderVerdadeiroFalso(fase, h, corpo, spec); break;
     case 'caca_palavras': renderCacaPalavras(fase, h, corpo); break;
-    case 'ligar_pontos': renderLigarPontos(fase, h, corpo); break;
+    case 'ligar_pontos': renderLigarPontos(fase, h, corpo, spec); break;
     case 'rima': renderRima(h, corpo, spec); break;
     case 'quem_disse': renderQuemDisse(fase, h, corpo, spec); break;
     case 'ordenar_passos': renderOrdenarPassos(h, corpo, spec); break;
@@ -218,7 +218,7 @@ function finalizarMinigames() {
 
   salvarEstado();
   if (typeof enviarSyncProgresso === 'function') {
-    enviarSyncProgresso().catch(() => {});
+    enviarSyncProgresso().catch(() => { });
   }
   atualizarHeader();
   renderizarBiblioteca();
@@ -1310,52 +1310,175 @@ function renderCacaPalavras(fase, h, corpo) {
 }
 
 // ─── 6. LIGAR OS PONTOS ──────────────────────────────────────────────────────
-function renderLigarPontos(fase, h, corpo) {
+function renderLigarPontos(fase, h, corpo, spec) {
   const BANCO_DEFS = {
-    sol: 'Estrela que ilumina o dia', lua: 'Astro que brilha à noite',
-    agua: 'Líquido essencial à vida', fogo: 'Chama que aquece e ilumina',
-    vento: 'Movimento do ar', chuva: 'Água que cai do céu',
-    flor: 'Parte colorida da planta', arvore: 'Planta de tronco grande',
-    peixe: 'Animal que vive na água', passaro: 'Animal que voa com asas',
-    casa: 'Lugar onde a família vive', escola: 'Lugar onde se aprende',
-    livro: 'Objeto cheio de histórias', menino: 'Criança do sexo masculino',
-    menina: 'Criança do sexo feminino', gato: 'Animal doméstico que mia',
-    cachorro: 'Animal doméstico que late', cavalo: 'Animal que galopa',
-    leao: 'Rei da selva com juba', floresta: 'Conjunto de muitas árvores',
-    mar: 'Grande extensão de água salgada', rio: 'Corrente de água doce',
-    montanha: 'Elevação grande de terra', estrela: 'Ponto de luz no céu',
-    nuvem: 'Massa de vapor no céu', pedra: 'Material sólido da natureza',
-    terra: 'Solo onde as plantas crescem', mel: 'Alimento doce das abelhas',
-    rei: 'Governante de um reino', rainha: 'Governante de um reino',
-    fada: 'Ser mágico das histórias', dragao: 'Criatura mítica que cospe fogo',
-    gigante: 'Ser de tamanho enorme', bruxa: 'Personagem mágica das fábulas',
-    castelo: 'Grande construção de pedra', magia: 'Poder sobrenatural',
-    coragem: 'Força para enfrentar o medo', amizade: 'Laço afetivo entre pessoas',
-    pao: 'Alimento feito de farinha', barco: 'Veículo que navega na água',
-    ponte: 'Estrutura que une dois lados', navio: 'Grande barco do mar',
-    praia: 'Areia à beira do mar', campo: 'Área aberta de terra',
-    cidade: 'Local com muitas casas', aldeia: 'Pequeno grupo de casas',
+    // ── Palavras Principais de Histórias Específicas ─────────────
+    leo: 'Leão forte que venceu o medo do escuro',
+    leao: 'Rei da selva com juba',
+    marina: 'Menina que desenhava nuvens no seu caderno',
+    pedro: 'Menino curioso que descobriu a biblioteca secreta',
+    vovo: 'Mãe de um dos nossos pais, muito carinhosa',
+    vovoa: 'Vovó carinhosa do jardim',
+    amazonica: 'Maior floresta tropical do planeta',
+    amazonia: 'Maior floresta tropical do planeta',
+
+    // ── Natureza, Clima e Universo ──────────────────────────────
+    sol: 'Estrela brilhante que ilumina o dia', lua: 'Astro luminoso que brilha no céu à noite',
+    agua: 'Líquido essencial à vida de todos', fogo: 'Chama quente que aquece e ilumina',
+    vento: 'Ar em movimento que sopra no rosto', chuva: 'Água preciosa que cai do céu',
+    pingo: 'Gotinha refrescante de chuva', pingos: 'Gotinhas de chuva caindo do céu',
+    flor: 'Parte bonita e colorida das plantas', flores: 'Plantas coloridas e perfumadas do jardim',
+    arvore: 'Planta alta de tronco forte e folhas verdes', arvores: 'Conjunto de plantas altas da floresta',
+    nuvem: 'Massa macia de vapor no céu', nuvens: 'Formações de vapor de água no céu',
+    pedra: 'Material sólido e duro da natureza', terra: 'Solo onde as plantas crescem fortes',
+    floresta: 'Conjunto imenso de muitas árvores', mar: 'Grande extensão de água salgada',
+    rio: 'Corrente de água doce que flui para o mar', lago: 'Belo espelho d\'água entre as árvores',
+    montanha: 'Grande e alta elevação de terra', estrela: 'Ponto luminoso no céu noturno',
+    estrelas: 'Pontos brilhantes no céu à noite', praia: 'Areia fina à beira do oceano',
+    campo: 'Área aberta cheia de verde e natureza', arcoiris: 'Arco colorido formado pela luz na chuva',
+    neve: 'Flocos de gelo macio caindo do céu', jardim: 'Lugar florido, colorido e bem cuidado',
+    semente: 'Pequena origem de uma nova planta', folha: 'Parte verde que cresce nos galhos',
+    vulcao: 'Montanha especial que solta lava quente', caverna: 'Abrigo natural de pedra na montanha',
+    ilha: 'Porção de terra cercada de água', deserto: 'Lugar quente e seco cheio de areia',
+    atmosfera: 'Camada protetora de ar ao redor da Terra', luz: 'Energia radiante que permite enxergar tudo',
+    azul: 'Cor linda do céu em dia ensolarado', particulas: 'Pequeníssimas porções de matéria no ar',
+    noite: 'Período de escuridão quando o sol se põe',
+    // ── Animais e Criaturas ─────────────────────────────────────
+    gato: 'Animal doméstico fofinho que mia', cachorro: 'Animal amigo e leal que late',
+    cavalo: 'Animal elegante e forte que galopa', coelho: 'Animal de orelhas compridas que pula',
+    urso: 'Animal grande, forte e peludo', passaro: 'Ave graciosa que voa com asas',
+    passaros: 'Aves com asas que voam pelo céu', passarinho: 'Pequena ave graciosa que canta',
+    peixe: 'Animal que nada alegremente na água', peixes: 'Animais aquáticos que nadam em cardumes',
+    borboleta: 'Inseto delicado com asas coloridas', borboletas: 'Insetos voadores de asas coloridas',
+    tartaruga: 'Animal calmo com casco resistente', sapo: 'Anfíbio que pula alto e coaxa na lagoa',
+    coruja: 'Ave sábia de olhos grandes', raposa: 'Animal esperto de cauda peluda',
+    lobo: 'Animal forte que uiva para a lua', elefante: 'Animal gigante de tromba enorme',
+    girafa: 'Animal de pescoço muito alto', macaco: 'Animal divertido que adora pular em árvores',
+    baleia: 'Gigante amigável dos oceanos', tubarao: 'Peixe grande e rápido dos mares',
+    golfinho: 'Animal marinho muito inteligente', abelha: 'Inseto trabalhador que produz mel',
+    formiga: 'Inseto pequenino e organizado', aranha: 'Inseto de oito patas que tece teias',
+    dragao: 'Criatura mítica lendária que cospe fogo', unicornio: 'Cavalo mágico com chifre brilhante',
+    dinossauro: 'Réptil gigante que viveu no passado', pato: 'Ave que nada alegremente na lagoa',
+    galinha: 'Ave do sítio que bota ovos', ovelha: 'Animal dócil que nos dá lã macia',
+    porco: 'Animal simpático de focinho redondo', vaca: 'Animal que nos dá leite bem fresquinho',
+    jacare: 'Réptil forte que vive nos rios', pinguim: 'Ave divertida que vive no gelo',
+    zebra: 'Animal africano listrado de preto e branco', algas: 'Plantas marinhas que balançam nas correntes',
+    corais: 'Estruturas coloridas e vivas do mar', polvo: 'Animal marinho de oito tentáculos',
+    tentaculos: 'Braços flexíveis e fortes dos polvos', especies: 'Diferentes tipos de plantas e animais',
+
+    // ── Fantasia, Reinos e Histórias ───────────────────────────
+    rei: 'Governante sábio de um reino', rainha: 'Governante soberana e nobre',
+    princesa: 'Filha dos reis que vive no castelo', principe: 'Filho dos reis, corajoso e nobre',
+    fada: 'Ser mágico e bondoso das fábulas', gigante: 'Personagem de tamanho enorme',
+    bruxa: 'Personagem mágica das fábulas', castelo: 'Grande construção fortificada de pedra',
+    magia: 'Poder encantado e fantástico', coroa: 'Símbolo brilhante usado pelos reis',
+    tesouro: 'Coleção de riquezas, joias e moedas', mapa: 'Desenho especial que guia navegadores',
+    espada: 'Arma antiga dos nobres cavaleiros', escudo: 'Proteção forte dos cavaleiros',
+    heroi: 'Personagem valente que faz o bem', heroina: 'Personagem corajosa que salva o dia',
+    robo: 'Máquina inteligente que ajuda pessoas', foguete: 'Nave espacial que viaja até as estrelas',
+    planeta: 'Grande corpo celeste que gira no espaço', astronauta: 'Explorador corajoso do espaço',
+
+    // ── Objetos, Artefatos e Cotidiano ──────────────────────────
+    casa: 'Lugar acolhedor onde a família mora', escola: 'Lugar especial onde aprendemos coisas novas',
+    livro: 'Objeto mágico cheio de páginas e histórias', livros: 'Páginas cheias de sabedoria e imaginação',
+    brinquedo: 'Objeto feito para brincar e se divertir', bola: 'Objeto redondo usado em muitos jogos',
+    lapis: 'Utensílio para desenhar e escrever', espelho: 'Superfície limpa que reflete a imagem',
+    chave: 'Objeto metálico que abre portas e baús', bau: 'Caixa de madeira para guardar segredos',
+    barco: 'Embarcação para navegar nas águas', navio: 'Grande embarcação que cruza oceanos',
+    aviao: 'Veículo potente que voa nos céus', ponte: 'Estrutura que conecta dois lados',
+    cidade: 'Local grande com casas, ruas e prédios', aldeia: 'Pequeno povoado tranquilo de casas',
+    pao: 'Alimento quentinho e saboroso', maca: 'Fruta doce, crocante e vermelha',
+    banana: 'Fruta amarela e cheia de energia', cenoura: 'Alimento alaranjado e crocante',
+    sapato: 'Calçado confortável usado nos pés', palitos: 'Pequenas varetas de madeira',
+    tinta: 'Líquido colorido usado para pintar', poleiro: 'Apoio de madeira para os pássaros',
+    buraco: 'Abertura de entrada na casinha', casinha: 'Pequeno lar construído com carinho',
+    caderno: 'Livro de folhas em branco para desenhar', desenho: 'Arte criada com lápis e tintas',
+    desenhos: 'Ilustrações feitas com amor no papel', papel: 'Folha para escrever, desenhar e criar',
+    bota: 'Calçado alto para caminhar na aventura', guardachuva: 'Proteção colorida contra a chuva',
+    poca: 'Pequeno acúmulo de água no chão', banco: 'Assento confortável de madeira no jardim', recipiente: 'Caixa ou pote para guardar objetos',
+    fotografias: 'Imagens que registram momentos felizes',
+    // ── Emoções, Valores e Conceitos ────────────────────────────
+    coragem: 'Força no coração para enfrentar medos', corajoso: 'Que tem força e coragem para vencer o medo',
+    amizade: 'Laço carinhoso de amor entre amigos', amor: 'Sentimento profundo de afeto e cuidado',
+    alegria: 'Felicidade radiante e sorrisos', sonho: 'Imaginação bonita enquanto dormimos',
+    segredo: 'Informação guardada com carinho', segredos: 'Pensamentos guardados com carinho',
+    musica: 'Sons harmoniosos que embalam a alma', festa: 'Comemoração alegre com amigos',
+    escuro: 'Noite tranquila sem luz', luzes: 'Focos brilhantes que iluminam tudo',
+    guardiao: 'Pessoa responsável por proteger algo valioso', reconhecimento: 'Sensação de identificar algo especial',
+    civilizacao: 'Sociedade de pessoas vivendo em conjunto', historias: 'Narrativas incríveis cheias de imaginação',
+    historia: 'Narrativa cheia de imaginação e aventura', palavra: 'Termo usado para comunicar ideias',
+    palavras: 'Termos usados para expressar pensamentos', asas: 'Estruturas fortes que permitem voar',
+    vela: 'Pequena chama que ilumina suavemente', oxigenio: 'Ar puro essencial para a nossa respiração',
+    desmatamento: 'Corte indevido de árvores que afeta o clima', clima: 'Condições de temperatura e tempo da Terra',
+    pertencimento: 'Sensação acolhedora de fazer parte', simbolico: 'Objeto com significado especial',
+    identidade: 'Conjunto de marcas que nos tornam únicos', ambiguidade: 'Mistura de sentimentos diferentes',
+    vibrantes: 'Cores intensas, radiantes e alegres', vermelhas: 'Cores quentes como as rosas do jardim',
+    gostoso: 'Sabor ou aroma muito agradável', tranquilo: 'Lugar calmo, sereno e em paz',
+    margaridas: 'Flores delicadas de pétalas brancas', girassois: 'Flores amarelas que acompanham o sol'
   };
 
-  const norm = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]/g, '');
-  const FALLBACK = [
-    { palavra: 'Sol', def: 'Estrela que ilumina o dia' },
-    { palavra: 'Lua', def: 'Astro que brilha à noite' },
-    { palavra: 'Livro', def: 'Objeto cheio de histórias' },
-    { palavra: 'Flor', def: 'Parte colorida da planta' },
-  ];
+  const norm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]/g, '');
 
   let pares = [];
-  (h.palavrasChave || []).forEach(kw => {
-    const k = norm(kw);
-    if (BANCO_DEFS[k] && !pares.find(p => norm(p.palavra) === k))
-      pares.push({ palavra: kw, def: BANCO_DEFS[k] });
-  });
-  while (pares.length < 3) {
-    const fb = FALLBACK[pares.length % FALLBACK.length];
-    if (!pares.find(p => norm(p.palavra) === norm(fb.palavra))) pares.push(fb);
-    else pares.push(FALLBACK[(pares.length + 1) % FALLBACK.length]);
+
+  // 1. Usar spec.pares se fornecido pela história / IA
+  if (spec && Array.isArray(spec.pares) && spec.pares.length >= 2) {
+    spec.pares.forEach(p => {
+      const palavra = String(p.palavra || p.termo || '').trim();
+      const def = String(p.def || p.definicao || p.dica || '').trim();
+      if (palavra && def && !pares.find(x => norm(x.palavra) === norm(palavra))) {
+        pares.push({ palavra, def });
+      }
+    });
   }
+
+  // 2. Extrair palavras diretamente das palavrasChave e do texto da história
+  if (pares.length < 4) {
+    const palavrasCandidatas = [];
+
+    (h.palavrasChave || []).forEach(w => {
+      const clean = String(w || '').trim();
+      if (clean && clean.length >= 3 && !palavrasCandidatas.map(norm).includes(norm(clean))) {
+        palavrasCandidatas.push(clean);
+      }
+    });
+
+    const textoCompleto = String(h.texto || fase.texto || '');
+    const matches = textoCompleto.match(/class=["']palavra-chave["']>([^<]+)</gi) || [];
+    matches.forEach(m => {
+      const w = m.replace(/class=["']palavra-chave["']>/i, '').replace('<', '').trim();
+      if (w && w.length >= 3 && !palavrasCandidatas.map(norm).includes(norm(w))) {
+        palavrasCandidatas.push(w);
+      }
+    });
+
+    palavrasCandidatas.forEach(kw => {
+      if (pares.length >= 4) return;
+      const k = norm(kw);
+      if (!pares.find(p => norm(p.palavra) === k)) {
+        if (BANCO_DEFS[k]) {
+          pares.push({ palavra: kw, def: BANCO_DEFS[k] });
+        } else {
+          pares.push({ palavra: kw, def: `Elemento especial da história (${kw})` });
+        }
+      }
+    });
+  }
+
+  // 3. Complementar com itens do banco genérico apenas se faltar para fechar 3 ou 4
+  if (pares.length < 3) {
+    const chavesBanco = Object.keys(BANCO_DEFS);
+    let i = 0;
+    while (pares.length < 4 && i < chavesBanco.length) {
+      const k = chavesBanco[i];
+      if (!pares.find(p => norm(p.palavra) === k)) {
+        const palavraFormatada = k.charAt(0).toUpperCase() + k.slice(1);
+        pares.push({ palavra: palavraFormatada, def: BANCO_DEFS[k] });
+      }
+      i++;
+    }
+  }
+
   pares = pares.slice(0, 4);
 
   const esquerda = embaralhar([...pares]);
