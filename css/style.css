@@ -3782,6 +3782,34 @@ body.alto-contraste .cal-modal-h-info strong {
   color: #991B1B;
 }
 
+.op-corpo-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.op-gabarito {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  width: fit-content;
+}
+
+.op-gabarito.ok {
+  background: #22C55E;
+  color: #ffffff;
+}
+
+.op-gabarito.erro {
+  background: #EF4444;
+  color: #ffffff;
+}
+
 .mf-resposta-correta {
   background: #DCFCE7 !important;
   border: 2px solid var(--cor-verde) !important;
