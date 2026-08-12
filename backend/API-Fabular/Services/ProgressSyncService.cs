@@ -155,7 +155,7 @@ public class ProgressSyncService
         foreach (var sessao in sessoes)
         {
             var id = $"api-{sessao.IdHistoria}";
-            var estrelas = Math.Clamp(sessao.Estrelas, 0, 3);
+            var estrelas = Math.Clamp(sessao.Estrelas, 0, 5);
             if (estrelas <= 0)
             {
                 continue;

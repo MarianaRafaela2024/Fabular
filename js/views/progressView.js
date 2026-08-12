@@ -47,7 +47,7 @@ function atualizarTelaProgresso() {
               <span class="hci-genero">${labelGenero(h.genero)} · ${r.data || ''}</span>
             </div>
           </div>
-          <span class="hci-estrelas">${renderEstrelas(r.estrelas, 3)}</span>
+          <span class="hci-estrelas">${renderEstrelas(r.estrelas, 5)}</span>
         `;
         cont.appendChild(item);
       });
@@ -89,7 +89,7 @@ function renderizarAcessoRelatorioResponsavel(metricas) {
       const emoji = h ? h.emoji : '📖';
       const genero = h ? (typeof labelGenero === 'function' ? labelGenero(h.genero) : h.genero) : 'Geral';
       const dataStr = r.data || (r.dataIso ? new Date(r.dataIso + 'T00:00:00').toLocaleDateString('pt-BR') : '');
-      const estrelasHtml = typeof renderEstrelas === 'function' ? renderEstrelas(r.estrelas, 3) : '⭐'.repeat(Number(r.estrelas) || 1);
+      const estrelasHtml = typeof renderEstrelas === 'function' ? renderEstrelas(r.estrelas, 5) : '⭐'.repeat(Number(r.estrelas) || 1);
 
       historiasHtml += `
         <div class="historia-concluida-item">
