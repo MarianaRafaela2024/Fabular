@@ -12,9 +12,8 @@ function renderizarBiblioteca() {
 
   let lista = HISTORIAS.filter(h => {
     const okGenero = estado.filtroGenero === 'todos' || h.genero === estado.filtroGenero;
-    const okFaixaPerfil = parseInt(h.faixa, 10) === faixaPerfil;
     const okFaixaFiltro = estado.filtroFaixa === 'todos' || parseInt(h.faixa, 10) === parseInt(estado.filtroFaixa, 10);
-    return okGenero && okFaixaPerfil && okFaixaFiltro;
+    return okGenero && okFaixaFiltro;
   });
 
   if (lista.length === 0) {

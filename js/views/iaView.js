@@ -412,6 +412,12 @@ jogo_memoria:
 - NUNCA usar emoji genérico (⭐, 🌟) se existir emoji que represente a palavra
 - NUNCA incluir sufixos de par como "par1" ou "par 1" no campo palavra (escreva apenas a palavra simples, ex: "leão")
 
+escolha:
+- fazer uma pergunta direta e contextualizada sobre o gênero e o enredo da história
+- a pergunta deve ser adequada ao gênero (ex.: narrativo = fatos do enredo; poético = rimas/sentimentos; instrucional = passos/objetivo; descritivo = cores/detalhes; informativo = explicações/fatos)
+- fornecer 3 opções de resposta completas e significativas (NUNCA usar "Opção A" ou textos genéricos)
+- indicar o índice da resposta correta (0, 1 ou 2)
+
 ligar_pontos:
 - usar 3 a 4 palavras importantes do texto
 - cada item deve ter "palavra" e "def" (definição simples e fácil para a criança)

@@ -571,13 +571,13 @@ function renderSomPalavra(fase, corpo, spec) {
       b.disabled = true;
       if (b.dataset.palavra === alvo) {
         b.classList.add('correta');
-        b.innerHTML = `${alvo} ✓`;
+        b.innerHTML = `${alvo}`;
       }
     });
 
     if (clicouResp && !ok && btnClicado) {
       btnClicado.classList.add('errada');
-      btnClicado.innerHTML = `${btnClicado.dataset.palavra} ✗`;
+      btnClicado.innerHTML = `${btnClicado.dataset.palavra}`;
     }
 
     mostrarFeedbackMG(ok);
@@ -590,20 +590,204 @@ function renderSomPalavra(fase, corpo, spec) {
   document.getElementById('btnDesistirSomPalavra')?.addEventListener('click', () => revelarResposta(false, null));
 }
 
+function ehOpcaoGenerica(opcoes) {
+  if (!Array.isArray(opcoes) || opcoes.length < 2) return true;
+  return opcoes.some(op => {
+    const s = String(op || '').trim().toLowerCase();
+    return s.includes('opção a') || s.includes('opcao a') || s.includes('opção b') || s.includes('opcao b') || s === 'opcao 1' || s === 'opção 1';
+  });
+}
+
+function gerarEscolhaPorGenero(h, fase) {
+  const historia = h || estado.historiaAtual || {};
+  const id = historia.id;
+  const genero = String(historia.genero || 'narrativo').toLowerCase();
+  const titulo = historia.titulo || 'a história';
+  const palavras = historia.palavrasChave || [];
+  const p1 = palavras[0] || 'o elemento principal';
+  const p2 = palavras[1] || 'os acontecimentos';
+
+  const PERGUNTAS_PREDEFINIDAS = {
+    n1: {
+      pergunta: 'Qual era o grande segredo de Léo, o leão?',
+      correta: 'Ele tinha medo do escuro quando a noite chegava',
+      distratores: [
+        'Ele não sabia rugir alto com os outros animais',
+        'Ele não gostava de brincar com a zebra e o macaco'
+      ]
+    },
+    n2: {
+      pergunta: 'O que Marina colecionava em seu caderno azul?',
+      correta: 'Desenhos dos formatos curiosos das nuvens que via no céu',
+      distratores: [
+        'Folhas secas e flores coloridas coladas das árvores',
+        'Moedas antigas e carimbos de outros países'
+      ]
+    },
+    n3: {
+      pergunta: 'O que os livros brilhantes guardavam na biblioteca secreta?',
+      correta: 'Histórias verdadeiras que precisavam ser lidas para não desaparecer',
+      distratores: [
+        'Fórmulas científicas para inventar máquinas do futuro',
+        'Mapas antigos de ilhas escondidas com tesouros de piratas'
+      ]
+    },
+    p1: {
+      pergunta: 'No poema "A Chuva Cantando", como o personagem se diverte com a chuva?',
+      correta: 'Saindo de guarda-chuva para pular nas poças de água da rua',
+      distratores: [
+        'Ficando dormindo sob as cobertas até a tempestade passar',
+        'Desenhando a chuva no papel sentado dentro de casa'
+      ]
+    },
+    p2: {
+      pergunta: 'No poema "Palavras que Voam", com o que as palavras lidas são comparadas?',
+      correta: 'Com pássaros que ganham asas ao serem lidas e voam até as casas',
+      distratores: [
+        'Com estrelas que piscam bem alto no céu à noite',
+        'Com peixes coloridos que nadam velozes no oceano'
+      ]
+    },
+    i1: {
+      pergunta: 'Qual é o objetivo principal das instruções para a casinha de pássaros?',
+      correta: 'Construir um lar acolhedor para os passarinhos do jardim',
+      distratores: [
+        'Fazer um brinquedo com rodas para rolar no chão',
+        'Montar um barco de madeira para navegar na lagoa'
+      ]
+    },
+    i2: {
+      pergunta: 'O que é fundamental ao preparar uma cápsula do tempo?',
+      correta: 'Reunir cartas e objetos simbólicos com honestidade para o futuro',
+      distratores: [
+        'Comprar objetos muito caros para mostrar riqueza',
+        'Guardar alimentos perecíveis para provar depois de dez anos'
+      ]
+    },
+    d1: {
+      pergunta: 'Quais detalhes visuais se destacam na descrição do fundo do mar?',
+      correta: 'A luz filtrada pela água e a variedade de corais e peixes vibrantes',
+      distratores: [
+        'Uma rua movimentada cheia de carros e barulho de buzinas',
+        'Uma floresta fria com neve caindo sobre os pinheiros'
+      ]
+    },
+    d2: {
+      pergunta: 'Como o jardim da vovó é caracterizado no texto descritivo?',
+      correta: 'Um ambiente alegre, florido, cheiroso, colorido e tranquilo',
+      distratores: [
+        'Um deserto quente, seco e sem nenhuma flor',
+        'Um galpão escuro cheio de caixas de papelão'
+      ]
+    },
+    inf1: {
+      pergunta: 'Segundo o texto informativo, por que o céu aparece azul durante o dia?',
+      correta: 'Porque a luz azul do Sol é espalhada pelas partículas da atmosfera',
+      distratores: [
+        'Porque a água dos oceanos é refletida diretamente no céu',
+        'Porque as nuvens absorvem a luz amarela e soltam a tinta azul'
+      ]
+    },
+    inf2: {
+      pergunta: 'Por que a Floresta Amazônica é chamada de "pulmão do mundo"?',
+      correta: 'Porque suas árvores absorvem dióxido de carbono e liberam oxigênio',
+      distratores: [
+        'Porque ela sopra ventos fortes para todos os outros continentes',
+        'Porque é o único lugar do planeta onde chove todos os dias'
+      ]
+    }
+  };
+
+  if (id && PERGUNTAS_PREDEFINIDAS[id]) {
+    const item = PERGUNTAS_PREDEFINIDAS[id];
+    const opcoesObj = [
+      { texto: item.correta, correta: true },
+      { texto: item.distratores[0], correta: false },
+      { texto: item.distratores[1], correta: false }
+    ];
+    const emb = embaralhar(opcoesObj);
+    return {
+      pergunta: item.pergunta,
+      opcoes: emb.map(o => o.texto),
+      correta: emb.findIndex(o => o.correta)
+    };
+  }
+
+  let pergunta = '';
+  let respostaCorreta = '';
+  let distrator1 = '';
+  let distrator2 = '';
+
+  switch (genero) {
+    case 'poetico':
+      pergunta = `Sobre o poema "${titulo}", qual é o sentimento ou imagem poética principal?`;
+      respostaCorreta = `A beleza e o ritmo da linguagem ao tratar de ${p1}`;
+      distrator1 = `Instruções técnicas para montar uma estrutura de madeira`;
+      distrator2 = `Tabelas de dados numéricos sobre finanças urbanas`;
+      break;
+
+    case 'instrucional':
+      pergunta = `Qual é o objetivo principal das instruções do texto "${titulo}"?`;
+      respostaCorreta = `Ensinar passo a passo como realizar ou construir algo com ${p1}`;
+      distrator1 = `Narrar uma conto antigo sobre reinos e fadas mágicas`;
+      distrator2 = `Descrever as ondas e peixes do fundo do oceano`;
+      break;
+
+    case 'descritivo':
+      pergunta = `Quais características sensoriais principais são descritas em "${titulo}"?`;
+      respostaCorreta = `Cores, aromas e detalhes marcantes do ambiente de ${p1}`;
+      distrator1 = `Um diálogo rápido de suspense entre detetives`;
+      distrator2 = `Uma lista de pontuações de jogos esportivos`;
+      break;
+
+    case 'informativo':
+      pergunta = `Qual informação ou explicação factual central é tratada no texto "${titulo}"?`;
+      respostaCorreta = `A explicação clara e factual sobre a importância de ${p1}`;
+      distrator1 = `Uma lenda inventada sobre duendes e magia`;
+      distrator2 = `Um poema rimado sobre cantigas de roda`;
+      break;
+
+    case 'narrativo':
+    default:
+      pergunta = `Na história "${titulo}", qual acontecimento marcou o percurso dos personagens?`;
+      respostaCorreta = `A jornada e as descobertas envolvendo ${p1} e ${p2}`;
+      distrator1 = `A chegada repentina de um disco voador vindo do espaço`;
+      distrator2 = `Uma competição de corrida de fórmula 1 na cidade`;
+      break;
+  }
+
+  const opcoesObj = [
+    { texto: respostaCorreta, correta: true },
+    { texto: distrator1, correta: false },
+    { texto: distrator2, correta: false }
+  ];
+  const emb = embaralhar(opcoesObj);
+  return {
+    pergunta,
+    opcoes: emb.map(o => o.texto),
+    correta: emb.findIndex(o => o.correta)
+  };
+}
+
 function renderEscolhaMG(fase, corpo, spec) {
+  const h = estado.historiaAtual;
   let pergunta;
   let opcoes;
   let correta;
-  if (spec && spec.pergunta && Array.isArray(spec.opcoes) && spec.opcoes.length >= 2) {
+
+  const usarSpec = spec && spec.pergunta && Array.isArray(spec.opcoes) && !ehOpcaoGenerica(spec.opcoes);
+
+  if (usarSpec) {
     pergunta = spec.pergunta;
     opcoes = spec.opcoes.map(String);
     correta = typeof spec.correta === 'number' ? spec.correta : 0;
   } else {
-    const inter = fase.interacao && fase.interacao.tipo === 'escolha' ? fase.interacao : null;
-    pergunta = inter ? inter.pergunta : 'Qual opção está correta sobre a história?';
-    opcoes = inter ? inter.opcoes : ['Opção A', 'Opção B'];
-    correta = inter ? inter.correta : 0;
+    const gerado = gerarEscolhaPorGenero(h, fase);
+    pergunta = gerado.pergunta;
+    opcoes = gerado.opcoes;
+    correta = gerado.correta;
   }
+
   const wrap = document.createElement('div');
   wrap.innerHTML = `
     <p class="mg-desc">${pergunta}</p>
