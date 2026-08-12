@@ -68,6 +68,38 @@ public class BrevoEmailService
         await SendEmailAsync(body);
     }
 
+    public async Task SendReadingReminderAsync(
+        string email,
+        string nomeCrianca)
+    {
+        var nomeSanitizado = System.Net.WebUtility.HtmlEncode(nomeCrianca);
+
+        var body = new
+        {
+            sender = new
+            {
+                name = _options.FromName,
+                email = _options.FromEmail
+            },
+
+            to = new[]
+            {
+                new
+                {
+                    email
+                }
+            },
+
+            subject = "Hora da leitura! - FABULAR",
+
+            htmlContent = $@"
+                <h2>Hora da leitura!</h2>
+                <p>Está na hora de <strong>{nomeSanitizado}</strong> entrar no Fabular e continuar sua história!</p>"
+        };
+
+        await SendEmailAsync(body);
+    }
+
 
     private async Task SendEmailAsync(object body)
     {
