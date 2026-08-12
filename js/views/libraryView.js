@@ -58,12 +58,12 @@ function renderizarBiblioteca() {
 }
 
 function labelGenero(g) {
-  const m = { narrativo:'📖 Narrativo', poetico:'🎵 Poético', instrucional:'📋 Instrucional', descritivo:'🔍 Descritivo', informativo:'💡 Informativo' };
+  const m = { narrativo: 'Narrativo', poetico: 'Poético', instrucional: 'Instrucional', descritivo: 'Descritivo', informativo: 'Informativo' };
   return m[g] || g;
 }
 
 function labelFaixa(f) {
-  return { 1:'5–6 anos', 2:'7–8 anos', 3:'9–10 anos' }[f] || '';
+  return { 1: '5–6 anos', 2: '7–8 anos', 3: '9–10 anos' }[f] || '';
 }
 
 function renderEstrelas(ganhas, total = 5) {
@@ -84,7 +84,7 @@ function inicializarFiltros() {
       renderizarBiblioteca();
     });
   });
-  
+
   document.querySelectorAll('#filtro-faixa .chip').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('#filtro-faixa .chip').forEach(b => b.classList.remove('ativo'));
