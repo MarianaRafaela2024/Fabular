@@ -409,6 +409,7 @@ jogo_memoria:
 - usar 3 a 4 palavras-chave da história
 - cada par deve ter "palavra" e "emoji" ligados semanticamente (ex.: leão → 🦁, floresta → 🌳, chuva → 🌧️)
 - NUNCA usar emoji genérico (⭐, 🌟) se existir emoji que represente a palavra
+- NUNCA incluir sufixos de par como "par1" ou "par 1" no campo palavra (escreva apenas a palavra simples, ex: "leão")
 
 Sempre coerentes com a história
 

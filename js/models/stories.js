@@ -906,7 +906,8 @@ function enriquecerParesMemoria(paresRaw) {
   if (!Array.isArray(paresRaw)) return [];
   return paresRaw
     .map((p) => {
-      const palavra = String((p.palavra != null ? p.palavra : p.Palavra) || '').trim();
+      let palavra = String((p.palavra != null ? p.palavra : p.Palavra) || '').trim();
+      palavra = palavra.replace(/\s*\(?par\s*\d+\)?/gi, '').replace(/[\s\-_]+$/, '').trim();
       if (!palavra) return null;
       const emojiEnviado = String((p.emoji != null ? p.emoji : p.Emoji) || '').trim();
       const emojiMapeado = emojiParaPalavra(palavra);

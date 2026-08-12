@@ -366,19 +366,46 @@ function formatarFraseLacunaHtml(frase) {
 }
 
 // ─── 1. JOGO DA MEMÓRIA ──────────────────────────────────────────────────────
+const CORES_PARES_MEMORIA = [
+  { border: '#8B5CF6', bg: 'linear-gradient(135deg, #F3E8FF, #E9D5FF)', shadow: 'rgba(139, 92, 246, 0.4)' }, // Roxo
+  { border: '#EC4899', bg: 'linear-gradient(135deg, #FCE7F3, #FBCFE8)', shadow: 'rgba(236, 72, 153, 0.4)' }, // Rosa
+  { border: '#06B6D4', bg: 'linear-gradient(135deg, #CFFAFE, #A5F3FC)', shadow: 'rgba(6, 182, 212, 0.4)' }, // Ciano
+  { border: '#F59E0B', bg: 'linear-gradient(135deg, #FEF3C7, #FDE68A)', shadow: 'rgba(245, 158, 11, 0.4)' }, // Âmbar
+  { border: '#3B82F6', bg: 'linear-gradient(135deg, #DBEAFE, #BFDBFE)', shadow: 'rgba(59, 130, 246, 0.4)' }, // Azul
+  { border: '#10B981', bg: 'linear-gradient(135deg, #D1FAE5, #A7F3D0)', shadow: 'rgba(16, 185, 129, 0.4)' }, // Verde Esmeralda
+  { border: '#F97316', bg: 'linear-gradient(135deg, #FFEDD5, #FED7AA)', shadow: 'rgba(249, 115, 22, 0.4)' }, // Laranja
+  { border: '#84CC16', bg: 'linear-gradient(135deg, #ECFCCB, #D9F99D)', shadow: 'rgba(132, 204, 22, 0.4)' }, // Verde Lima
+  { border: '#D946EF', bg: 'linear-gradient(135deg, #FAE8FF, #F5D0FE)', shadow: 'rgba(217, 70, 239, 0.4)' }, // Magenta
+  { border: '#14B8A6', bg: 'linear-gradient(135deg, #CCFBF1, #99F6E4)', shadow: 'rgba(20, 184, 166, 0.4)' }, // Turquesa
+  { border: '#E11D48', bg: 'linear-gradient(135deg, #FFE4E6, #FECDD3)', shadow: 'rgba(225, 29, 72, 0.4)' }, // Rosa Choque
+  { border: '#6366F1', bg: 'linear-gradient(135deg, #E0E7FF, #C7D2FE)', shadow: 'rgba(99, 102, 241, 0.4)' }  // Índigo
+];
+
+function aplicarCorDoPar(el, pairId) {
+  const cor = CORES_PARES_MEMORIA[pairId % CORES_PARES_MEMORIA.length];
+  el.style.setProperty('--pair-border-color', cor.border);
+  el.style.setProperty('--pair-bg-color', cor.bg);
+  el.style.setProperty('--pair-shadow-color', cor.shadow);
+}
+
 function renderMemoria(fase, h, corpo, spec) {
+  const limparTextoPar = (s) => String(s || '').replace(/\s*\(?par\s*\d+\)?/gi, '').replace(/[\s\-_]+$/, '').trim();
+
   let pares;
   if (spec && Array.isArray(spec.pares) && spec.pares.length >= 2) {
-    pares = enriquecerParesMemoria(spec.pares).map((p, i) => ({ id: i, ...p }));
+    pares = enriquecerParesMemoria(spec.pares).map((p, i) => ({ id: i, palavra: limparTextoPar(p.palavra), emoji: p.emoji }));
   }
   if (!pares || pares.length < 2) {
     const palavras = (h.palavrasChave || []).slice(0, 5);
     if (palavras.length < 2) { renderVerdadeiroFalso(fase, h, corpo, null); return; }
-    pares = palavras.map((p, i) => ({
-      id: i,
-      palavra: p,
-      emoji: emojiParaPalavra(p)
-    }));
+    pares = palavras.map((p, i) => {
+      const pL = limparTextoPar(p);
+      return {
+        id: i,
+        palavra: pL,
+        emoji: emojiParaPalavra(pL)
+      };
+    });
   }
 
   const cards = embaralhar([
@@ -427,6 +454,8 @@ function renderMemoria(fase, h, corpo, spec) {
         const [a, b] = virados;
         if (a.card.pairId === b.card.pairId && a.card.tipo !== b.card.tipo) {
           setTimeout(() => {
+            aplicarCorDoPar(a.el, a.card.pairId);
+            aplicarCorDoPar(b.el, b.card.pairId);
             a.el.classList.add('mem-acertado');
             b.el.classList.add('mem-acertado');
             paresEncontrados++;
@@ -462,18 +491,10 @@ function renderMemoria(fase, h, corpo, spec) {
     if (btnDesistir) btnDesistir.disabled = true;
 
     grid.querySelectorAll('.mem-card').forEach(el => {
-      el.classList.add('mem-virado');
       const pairId = parseInt(el.dataset.pairId, 10);
-      const colorClass = `pair-color-${pairId % 5}`;
-      el.classList.add(colorClass);
-
-      const verso = el.querySelector('.mem-verso');
-      if (verso && !verso.querySelector('.pair-badge-tag')) {
-        const badge = document.createElement('span');
-        badge.className = 'pair-badge-tag';
-        badge.textContent = `Par ${pairId + 1}`;
-        verso.appendChild(badge);
-      }
+      aplicarCorDoPar(el, pairId);
+      el.classList.add('mem-virado');
+      el.classList.add('mem-acertado');
     });
 
     registrarEventoMG('jogo_memoria', 'erro');
