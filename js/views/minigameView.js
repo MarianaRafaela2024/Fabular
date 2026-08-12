@@ -168,15 +168,15 @@ function proximoMinigame() {
 }
 
 function mostrarResultado(estrelas, tempoMin, acertosTotal) {
-  const estrelasExibidas = Math.max(0, Math.min(3, Number(estrelas) || 0));
+  const estrelasExibidas = Math.max(0, Math.min(5, Number(estrelas) || 0));
   const mensagens = MSGS_RESULTADO[estrelasExibidas] || MSGS_RESULTADO[0] || ['Parabéns!'];
   const msg = mensagens[Math.floor(Math.random() * mensagens.length)];
 
   const resultadoEstrelas = document.getElementById('resultado-estrelas');
-  if (resultadoEstrelas) resultadoEstrelas.innerHTML = renderEstrelas(estrelasExibidas, 3);
+  if (resultadoEstrelas) resultadoEstrelas.innerHTML = renderEstrelas(estrelasExibidas, 5);
 
   const resultadoTitulo = document.getElementById('resultado-titulo');
-  if (resultadoTitulo) resultadoTitulo.textContent = estrelasExibidas >= 3 ? 'Incrível!' : estrelasExibidas === 2 ? 'Muito bem!' : 'Parabéns!';
+  if (resultadoTitulo) resultadoTitulo.textContent = estrelasExibidas >= 5 ? 'Perfeito!' : estrelasExibidas === 4 ? 'Excelente!' : estrelasExibidas === 3 ? 'Muito Bem!' : estrelasExibidas >= 2 ? 'Bom Trabalho!' : estrelasExibidas === 1 ? 'Parabéns!' : 'Continue!';
 
   const resultadoMsg = document.getElementById('resultado-msg');
   if (resultadoMsg) resultadoMsg.textContent = msg;
@@ -202,7 +202,7 @@ function finalizarMinigames() {
   estado.minigamesJogados += estado.minigamesLista.length;
 
   const acertosTotal = (estado.acertos || 0) + (estado.mgAcertos || 0);
-  const totalJogos = estado.minigamesLista.length || 4;
+  const totalJogos = estado.minigamesLista.length || 5;
   const estrelas = calcularEstrelasPorAcertos(acertosTotal, totalJogos);
 
   registrarEstrelasHistoria(estrelas);
@@ -238,8 +238,8 @@ function prepararMinigamesPreset(h) {
   const faixa = h.faixa || (estado.perfil && estado.perfil.faixa) || 1;
   const genero = h.genero || (estado.perfil && estado.perfil.genero) || 'narrativo';
 
-  // Sorteia aleatoriamente 4 minigames do banco para a faixa e gênero correspondentes
-  const tiposSorteados = obterMinigamesAleatoriosDoBanco(faixa, genero, 4);
+  // Sorteia aleatoriamente 5 minigames do banco para a faixa e gênero correspondentes
+  const tiposSorteados = obterMinigamesAleatoriosDoBanco(faixa, genero, 5);
 
   const presetSrc = Array.isArray(h.minigamesPreset) ? h.minigamesPreset : [];
   if (presetSrc.length) {

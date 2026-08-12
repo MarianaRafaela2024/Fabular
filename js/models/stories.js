@@ -501,9 +501,11 @@ const MSGS_ERRO = [
   'Cada erro nos ensina algo novo! Vamos em frente! 🌟'
 ];
 const MSGS_RESULTADO = {
-  3: ['Perfeito! Você é um(a) super leitor(a)! 🏆', 'Incrível! Você arrasou nesta história! 🌟'],
-  2: ['Muito bem! Continue assim! 🎉', 'Ótimo trabalho! Você está melhorando! 💪'],
-  1: ['Você concluiu! Continue praticando! 💪', 'Parabéns por terminar! Tente de novo! 🌈'],
+  5: ['Perfeito! 5 estrelas — você é um(a) lenda da leitura! 🏆🌟', 'INCRÍVEL! Pontuação máxima! Você arrasou em tudo! 🎉🌟'],
+  4: ['Quase perfeito! 4 estrelas — muito bem! 🌟', 'Excelente! Você só errou um — parabéns! 💪🎉'],
+  3: ['Muito bem! 3 estrelas conquistadas! 🎉', 'Ótimo trabalho! Continue assim e chegue às 5 estrelas! 💪'],
+  2: ['Bom esforço! Continue praticando! 🌈', 'Você está melhorando! Tente de novo para mais estrelas! ⭐'],
+  1: ['Você concluiu! Releia a história e tente de novo! 💪', 'Parabéns por terminar! Pratique mais para subir! 🌈'],
   0: ['Não desista! Releia a história e tente novamente! 📖', 'Vamos tentar de novo? Você consegue! 💪']
 };
 
@@ -846,7 +848,7 @@ if (typeof window !== 'undefined') {
   window.obterMinigamesAleatoriosDoBanco = obterMinigamesAleatoriosDoBanco;
 }
 
-function obterMinigamesAleatoriosDoBanco(faixa, genero, quantidade = 4) {
+function obterMinigamesAleatoriosDoBanco(faixa, genero, quantidade = 5) {
   const g = String(genero || 'narrativo').trim().toLowerCase();
   const f = Math.min(3, Math.max(1, parseInt(faixa, 10) || 1));
 
@@ -896,7 +898,7 @@ function obterMinigamesAleatoriosDoBanco(faixa, genero, quantidade = 4) {
 }
 
 function escolherMinigamesTipos(faixa, genero) {
-  return obterMinigamesAleatoriosDoBanco(faixa, genero, 4);
+  return obterMinigamesAleatoriosDoBanco(faixa, genero, 5);
 }
 
 

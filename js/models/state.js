@@ -182,7 +182,7 @@ function mesclarProgressoServidor(servidor) {
     if (!r || r.id == null) return;
     const id = String(r.id);
     const atual = mapa.get(id);
-    const estrelasRemotas = Math.max(0, Math.min(3, Number(r.estrelas) || 0));
+    const estrelasRemotas = Math.max(0, Math.min(5, Number(r.estrelas) || 0));
     const estrelasAtuais = Number(atual?.estrelas) || 0;
     const dataRemota = r.data || atual?.data || new Date().toLocaleDateString('pt-BR');
     const dataIsoRemota = r.dataIso || atual?.dataIso || obterDataIsoHistoria({ data: dataRemota }) || '';

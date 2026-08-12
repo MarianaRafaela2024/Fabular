@@ -44,7 +44,7 @@ function renderizarBiblioteca() {
         ${concluida ? `<span class="hc-tag concluida">✅ Concluída</span>` : ''}
       </div>
       <div class="hc-rodape">
-        <span class="hc-estrelas">${renderEstrelas(estrelas, 3)}</span>
+        <span class="hc-estrelas">${renderEstrelas(estrelas, 5)}</span>
         <button class="hc-jogar" aria-label="Jogar ${h.titulo}">Jogar 🎮</button>
       </div>
     `;
@@ -67,7 +67,7 @@ function labelFaixa(f) {
   return { 1:'5–6 anos', 2:'7–8 anos', 3:'9–10 anos' }[f] || '';
 }
 
-function renderEstrelas(ganhas, total = 3) {
+function renderEstrelas(ganhas, total = 5) {
   const n = Math.max(0, Math.min(total, Number(ganhas) || 0));
   let html = `<span class="estrelas-rating" aria-label="${n} de ${total} estrelas">`;
   for (let i = 0; i < total; i++) {

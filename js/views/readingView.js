@@ -120,7 +120,7 @@ function pularFase() {
 function registrarEstrelasHistoria(estrelasNovas) {
   const id = estado.historiaAtual && estado.historiaAtual.id;
   if (!id) return;
-  const novas = Math.max(0, Math.min(3, Number(estrelasNovas) || 0));
+  const novas = Math.max(0, Math.min(5, Number(estrelasNovas) || 0));
   const { data, dataIso } = obterDataConclusaoAtual();
   const idx = estado.historiasLidas.findIndex(r => r.id === id);
 
@@ -158,11 +158,10 @@ function atualizarEstrelasAposMinigame() {
   registrarEstrelasHistoria(calcularEstrelasPorAcertos(acertos, total));
 }
 
+// 1 estrela por minigame acertado (máximo de 5)
 function calcularEstrelasPorAcertos(acertos, total) {
   const a = Math.max(0, Number(acertos) || 0);
   const t = Math.max(1, Number(total) || 1);
-  if (a >= t) return 3;
-  if (a >= Math.ceil(t * 0.5)) return 2;
-  if (a >= 1) return 1;
-  return 0;
+  // Cada minigame vale 1 estrela — acertou todos os t, ganha t estrelas (max 5)
+  return Math.min(5, a);
 }
