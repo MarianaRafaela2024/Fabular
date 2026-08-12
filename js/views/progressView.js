@@ -240,7 +240,7 @@ function exibirModalDetalhesDia(iso, dia, mes, ano, qtd, estrelasStr) {
     historiasHtml = `<p class="cal-modal-vazio">Nenhuma história lida neste dia ainda. Que tal ler uma hoje? </p>`;
   }
 
-  
+
   modal.innerHTML = `
     <div class="cal-modal-card">
       <button type="button" class="cal-modal-fechar" aria-label="Fechar detalhes">✕</button>
@@ -358,17 +358,33 @@ function renderizarCalendarioAtividade() {
   const tituloMes = `${MESES_PT[mes]} ${ano}`;
   const fraseMotivacional = obterFraseMotivacionalRaposa(streak, totalMes);
 
-  el.innerHTML = `
+  const topoCalendario = streak > 0
+    ? `
     <div class="calendario-topo-bar">
       <div class="calendario-streak-badge">
         <span class="icon res-icon fire"></span>
+
         <div class="cal-streak-info">
-          <span class="cal-streak-valor">${streak} ${streak === 1 ? 'dia seguido' : 'dias seguidos'}</span>
-          <span class="cal-streak-label">Sequência de Leitura</span>
+          <span class="cal-streak-valor">
+            ${streak} ${streak === 1 ? 'dia seguido' : 'dias seguidos'}
+          </span>
+
+          <span class="cal-streak-label">
+            Sequência de Leitura
+          </span>
         </div>
       </div>
-      ${temAlgumaSemanaPerfeita ? '<div class="calendario-selo-topo">👑 Semana Perfeita!</div>' : ''}
+
+      ${temAlgumaSemanaPerfeita
+      ? '<div class="calendario-selo-topo">👑 Semana Perfeita!</div>'
+      : ''}
     </div>
+  `
+    : '';
+
+  el.innerHTML = `
+  ${topoCalendario}
+
     <div class="calendario-header">
       <div class="calendario-titulo">${tituloMes}</div>
       <div class="calendario-nav">
