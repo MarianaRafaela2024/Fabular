@@ -18,6 +18,7 @@ builder.Services.AddScoped<API_Fabular.Services.ParentAuthService>();
 builder.Services.AddScoped<API_Fabular.Services.ChildrenLinkService>();
 builder.Services.AddScoped<API_Fabular.Services.StoriesService>();
 builder.Services.AddScoped<API_Fabular.Services.ProgressSyncService>();
+builder.Services.AddHostedService<ReadingReminderBackgroundService>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("frontend", policy =>
