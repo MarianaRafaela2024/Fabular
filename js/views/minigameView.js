@@ -2181,48 +2181,72 @@ function renderOrdenarPassos(h, corpo, spec) {
   `;
   corpo.appendChild(wrap);
 
-  function renderLista() {
+  function renderLista(finalizado = false, isDesistir = false) {
     const lista = document.getElementById('opLista');
     if (!lista) return;
-    lista.innerHTML = ordem.map((id, i) => `
-      <li class="op-item">
-        <span class="op-num">${i + 1}</span>
-        <span class="op-texto">${passos[id].texto}</span>
-        <div class="op-setas">
-          <button class="op-seta" data-action="up"   data-i="${i}" aria-label="Mover para cima"  ${i === 0 ? 'disabled' : ''}>↑</button>
-          <button class="op-seta" data-action="down" data-i="${i}" aria-label="Mover para baixo" ${i === ordem.length - 1 ? 'disabled' : ''}>↓</button>
-        </div>
-      </li>
-    `).join('');
+    lista.innerHTML = ordem.map((stepId, i) => {
+      const ehCorreto = (stepId === i);
+      const posicaoCorreta = stepId + 1;
+      const classStatus = finalizado
+        ? (isDesistir || ehCorreto ? 'correta' : 'errada')
+        : '';
 
-    lista.querySelectorAll('.op-seta').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const i = parseInt(btn.dataset.i);
-        if (btn.dataset.action === 'up' && i > 0) {
-          [ordem[i], ordem[i - 1]] = [ordem[i - 1], ordem[i]];
-        } else if (btn.dataset.action === 'down' && i < ordem.length - 1) {
-          [ordem[i], ordem[i + 1]] = [ordem[i + 1], ordem[i]];
+      let gabaritoHtml = '';
+      if (finalizado) {
+        if (isDesistir || ehCorreto) {
+          gabaritoHtml = `<span class="op-gabarito ok">✓ Posição correta!</span>`;
+        } else {
+          gabaritoHtml = `<span class="op-gabarito erro">➔ Posição correta: nº ${posicaoCorreta}</span>`;
         }
-        renderLista();
+      }
+
+      return `
+        <li class="op-item ${classStatus}">
+          <span class="op-num">${i + 1}</span>
+          <div class="op-corpo-item">
+            <span class="op-texto">${passos[stepId].texto}</span>
+            ${gabaritoHtml}
+          </div>
+          ${!finalizado ? `
+          <div class="op-setas">
+            <button class="op-seta" data-action="up"   data-i="${i}" aria-label="Mover para cima"  ${i === 0 ? 'disabled' : ''}>↑</button>
+            <button class="op-seta" data-action="down" data-i="${i}" aria-label="Mover para baixo" ${i === ordem.length - 1 ? 'disabled' : ''}>↓</button>
+          </div>
+          ` : ''}
+        </li>
+      `;
+    }).join('');
+
+    if (!finalizado) {
+      lista.querySelectorAll('.op-seta').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const i = parseInt(btn.dataset.i, 10);
+          if (btn.dataset.action === 'up' && i > 0) {
+            [ordem[i], ordem[i - 1]] = [ordem[i - 1], ordem[i]];
+          } else if (btn.dataset.action === 'down' && i < ordem.length - 1) {
+            [ordem[i], ordem[i + 1]] = [ordem[i + 1], ordem[i]];
+          }
+          renderLista();
+        });
       });
-    });
+    }
   }
   renderLista();
 
   const finalizarOP = (isDesistir = false) => {
     const correta = passos.map((_, i) => i);
-    const ordemOriginal = [...ordem];
     const ok = isDesistir ? false : (JSON.stringify(ordem) === JSON.stringify(correta));
 
-    ordem = [...correta];
-    renderLista();
+    if (isDesistir) {
+      ordem = [...correta];
+    }
 
-    document.querySelectorAll('.op-item').forEach((li, idx) => {
-      li.classList.add(isDesistir ? 'correta' : (ordemOriginal[idx] === correta[idx] ? 'correta' : 'errada'));
-    });
-    document.querySelectorAll('.op-seta').forEach(b => b.disabled = true);
-    document.getElementById('btnConfOP').disabled = true;
-    document.getElementById('btnDesistirOP').disabled = true;
+    renderLista(true, isDesistir);
+
+    const btnConf = document.getElementById('btnConfOP');
+    const btnDesistir = document.getElementById('btnDesistirOP');
+    if (btnConf) btnConf.disabled = true;
+    if (btnDesistir) btnDesistir.disabled = true;
 
     registrarEventoMG('ordenar_passos', ok ? 'acerto' : 'erro');
     mostrarFeedbackMG(ok);
