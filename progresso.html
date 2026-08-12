@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,30 +9,33 @@
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/components/minigames.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700;800&display=swap"
+    rel="stylesheet">
 </head>
+
 <body>
 
-<div id="app-shell">
+  <div id="app-shell">
 
-  <!-- HEADER -->
-  <header class="app-header">
-    <div class="header-esq">
-      <div id="avatar-display" class="header-avatar"></div>
-      <div class="header-info">
-        <span class="header-nome" id="header-nome">Aventureiro</span>
-        <span class="header-nivel" id="header-nivel">Iniciante</span>
+    <!-- HEADER -->
+    <header class="app-header">
+      <div class="header-esq">
+        <div id="avatar-display" class="header-avatar"></div>
+        <div class="header-info">
+          <span class="header-nome" id="header-nome">Aventureiro</span>
+          <span class="header-nivel" id="header-nivel">Iniciante</span>
+        </div>
       </div>
-    </div>
-    <div class="header-centro">
-      <span class="header-logo">📚 Mundo das Histórias</span>
-    </div>
-    <div class="header-dir">
-      <div class="moedas-badge" title="Estrelas ganhas">
-        <span aria-hidden="true">⭐</span>
-        <span id="total-estrelas">0</span>
+      <div class="header-centro">
+        <span class="header-logo">📚 Mundo das Histórias</span>
       </div>
-      <button class="btn-icon" id="btn-contraste" title="Alternar alto contraste"
+      <div class="header-dir">
+        <div class="moedas-badge" title="Estrelas ganhas">
+          <span aria-hidden="true">⭐</span>
+          <span id="total-estrelas">0</span>
+        </div>
+        <button class="btn-icon" id="btn-contraste" title="Alternar alto contraste"
           aria-label="Alternar alto contraste">
           <img src="midia/contraste.png" alt="Alto contraste">
         </button>
@@ -42,125 +46,135 @@
         <button class="btn-icon btn-sair" id="btn-sair" title="Sair" aria-label="Sair e voltar ao login">
           <img src="midia/sair.png" alt="Sair">
         </button>
+      </div>
+    </header>
+
+    <!-- LAYOUTh -->
+    <div class="app-layout">
+
+      <!-- SIDEBAR -->
+      <nav class="sidebar" id="sidebar" role="navigation" aria-label="Menu principal">
+        <div class="sidebar-logo" aria-hidden="true">
+          <img src="midia/IconeRaposa.png">
+        </div>
+        <button class="nav-item" data-tela="biblioteca">
+          <span class="icon home"></span>
+          <span class="nav-label">Início</span>
+        </button>
+        <button class="nav-item" data-tela="leitura">
+          <span class="nav-icon icon icon-book"></span>
+          <span class="nav-label">História</span>
+        </button>
+        <button class="nav-item ativo" data-tela="progresso">
+          <span class="icon award"></span>
+          <span class="nav-label">Progresso</span>
+        </button>
+        <button class="nav-item" data-tela="responsavel">
+          <span class="icon award"></span>
+          <span class="nav-label">Área do Responsável</span>
+        </button>
+        <button class="nav-item" data-tela="bot-ia">
+          <span class="icon bot"></span>
+          <span class="nav-label">Criar histórias</span>
+        </button>
+      </nav>
+
+      <!-- MAIN -->
+      <main class="app-main" id="app-main">
+
+        <!-- PROGRESSO -->
+        <section id="tela-progresso" class="tela-app ativa">
+          <div class="tela-header">
+            <h2>🏆 Meu Progresso</h2>
+            <p class="tela-sub" id="progresso-sub">Continue assim, você está indo bem!</p>
+          </div>
+
+          <div class="progresso-secoes">
+            <div class="progresso-secao">
+              <div class="raposa-evolucao-card" id="raposa-evolucao-card">
+                <div class="raposa-imagem-wrapper">
+                  <img id="raposa-img" src="midia/raposa/raposa1.png" alt="Raposa Filhote" class="raposa-img" />
+                </div>
+                <div class="raposa-detalhes">
+                  <div class="raposa-fase-badge" id="raposa-fase-badge">🦊 Raposa Filhote</div>
+                  <p class="raposa-mensagem" id="raposa-mensagem">Sua raposinha acabou de nascer! Continue lendo
+                    histórias e completando minigames para ajudá-la a crescer. </p>
+                  <div class="raposa-progresso-bar-wrap">
+                    <div class="raposa-progresso-info">
+                      <span class="raposa-estrelas-atual" id="raposa-estrelas-texto">0 / 10 ⭐</span>
+                      <span class="raposa-proximo-estagio" id="raposa-proximo-texto">Faltam 10 ⭐ para Raposa
+                        Jovem</span>
+                    </div>
+                    <div class="raposa-bar-track">
+                      <div class="raposa-bar-fill" id="raposa-bar-fill"></div>
+                    </div>
+                  </div>
+                  <div class="raposa-estagios-mini">
+                    <div class="raposa-estagio-step" id="res-filhote" title="Raposa Filhote (0+ ⭐)">
+                      <span class="icon res-icon trofeuestrela"></span>
+                      <span class="res-nome">Filhote</span>
+                    </div>
+                    <div class="raposa-estagio-linha"></div>
+                    <div class="raposa-estagio-step" id="res-jovem" title="Raposa Jovem (10+ ⭐)">
+                      <span class="icon res-icon interrogacao"></span>
+                      <span class="res-nome">Jovem</span>
+                    </div>
+                    <div class="raposa-estagio-linha"></div>
+                    <div class="raposa-estagio-step" id="res-aventureira" title="Raposa Aventureira (25+ ⭐)">
+                      <span class="icon res-icon interrogacao"></span>
+                      <span class="res-nome">Aventureira</span>
+                    </div>
+                    <div class="raposa-estagio-linha"></div>
+                    <div class="raposa-estagio-step" id="res-mestre" title="Raposa Mestre (45+ ⭐)">
+                      <span class="icon res-icon interrogacao"></span>
+                      <span class="res-nome">Mestre</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="progresso-secao progresso-secao-historias">
+              <h3>📖 Histórias Concluídas</h3>
+              <div class="progresso-historias-layout">
+                <div class="historias-concluidas-wrap">
+                  <div class="historias-concluidas" id="historias-concluidas">
+                    <p class="vazio-msg">Nenhuma história concluída ainda. Comece a ler! 📚</p>
+                  </div>
+                </div>
+                <aside class="calendario-atividade" id="calendario-atividade"
+                  aria-label="Calendário de atividade de leitura"></aside>
+              </div>
+            </div>
+            <div class="progresso-secao">
+              <h3>⏱️ Estatísticas</h3>
+              <div class="stats-grid">
+                <div class="stat-card-prog"><span class="scp-icon">📚</span><span class="scp-valor"
+                    id="prog-historias">0</span><span class="scp-label">Histórias lidas</span></div>
+                <div class="stat-card-prog"><span class="scp-icon">⏰</span><span class="scp-valor" id="prog-tempo">0
+                    min</span><span class="scp-label">Tempo total</span></div>
+                <div class="stat-card-prog"><span class="scp-icon">⭐</span><span class="scp-valor"
+                    id="prog-estrelas">0</span><span class="scp-label">Estrelas</span></div>
+                <div class="stat-card-prog"><span class="scp-icon">🎮</span><span class="scp-valor"
+                    id="prog-minigames">0</span><span class="scp-label">Minigames</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
     </div>
-  </header>
-
-  <!-- LAYOUTh -->
-  <div class="app-layout">
-
-    <!-- SIDEBAR -->
-    <nav class="sidebar" id="sidebar" role="navigation" aria-label="Menu principal">
-      <div class="sidebar-logo" aria-hidden="true">📚</div>
-      <button class="nav-item" data-tela="biblioteca">
-        <span class="icon home"></span>
-        <span class="nav-label">Início</span>
-      </button>
-      <button class="nav-item" data-tela="leitura">
-        <span class="nav-icon icon icon-book"></span>
-        <span class="nav-label">História</span>
-      </button>
-      <button class="nav-item ativo" data-tela="progresso">
-        <span class="icon award"></span>
-        <span class="nav-label">Progresso</span>
-      </button>
-      <button class="nav-item" data-tela="responsavel">
-        <span class="icon award"></span>
-        <span class="nav-label">Área do Responsável</span>
-      </button>
-      <button class="nav-item" data-tela="bot-ia">
-        <span class="icon bot"></span>
-        <span class="nav-label">Criar histórias</span>
-      </button>
-    </nav>
-
-    <!-- MAIN -->
-    <main class="app-main" id="app-main">
-
-      <!-- PROGRESSO -->
-      <section id="tela-progresso" class="tela-app ativa">
-        <div class="tela-header">
-          <h2>🏆 Meu Progresso</h2>
-          <p class="tela-sub" id="progresso-sub">Continue assim, você está indo bem!</p>
-        </div>
-     
-        <div class="progresso-secoes">
-          <div class="progresso-secao">
-            <div class="raposa-evolucao-card" id="raposa-evolucao-card">
-              <div class="raposa-imagem-wrapper">
-                <img id="raposa-img" src="midia/raposa/raposa1.png" alt="Raposa Filhote" class="raposa-img" />
-              </div>
-              <div class="raposa-detalhes">
-                <div class="raposa-fase-badge" id="raposa-fase-badge">🦊 Raposa Filhote</div>
-                <p class="raposa-mensagem" id="raposa-mensagem">Sua raposinha acabou de nascer! Continue lendo histórias e completando minigames para ajudá-la a crescer. </p>
-                <div class="raposa-progresso-bar-wrap">
-                  <div class="raposa-progresso-info">
-                    <span class="raposa-estrelas-atual" id="raposa-estrelas-texto">0 / 10 ⭐</span>
-                    <span class="raposa-proximo-estagio" id="raposa-proximo-texto">Faltam 10 ⭐ para Raposa Jovem</span>
-                  </div>
-                  <div class="raposa-bar-track">
-                    <div class="raposa-bar-fill" id="raposa-bar-fill"></div>
-                  </div>
-                </div>
-                <div class="raposa-estagios-mini">
-                  <div class="raposa-estagio-step" id="res-filhote" title="Raposa Filhote (0+ ⭐)">
-                    <span class="icon res-icon trofeuestrela"></span>
-                    <span class="res-nome">Filhote</span>
-                  </div>
-                  <div class="raposa-estagio-linha"></div>
-                  <div class="raposa-estagio-step" id="res-jovem" title="Raposa Jovem (10+ ⭐)">
-                    <span class="icon res-icon interrogacao"></span>
-                    <span class="res-nome">Jovem</span>
-                  </div>
-                  <div class="raposa-estagio-linha"></div>
-                  <div class="raposa-estagio-step" id="res-aventureira" title="Raposa Aventureira (25+ ⭐)">
-                    <span class="icon res-icon interrogacao"></span>
-                    <span class="res-nome">Aventureira</span>
-                  </div>
-                  <div class="raposa-estagio-linha"></div>
-                  <div class="raposa-estagio-step" id="res-mestre" title="Raposa Mestre (45+ ⭐)">
-                    <span class="icon res-icon interrogacao"></span>
-                    <span class="res-nome">Mestre</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="progresso-secao progresso-secao-historias">
-            <h3>📖 Histórias Concluídas</h3>
-            <div class="progresso-historias-layout">
-              <div class="historias-concluidas-wrap">
-                <div class="historias-concluidas" id="historias-concluidas">
-                  <p class="vazio-msg">Nenhuma história concluída ainda. Comece a ler! 📚</p>
-                </div>
-              </div>
-              <aside class="calendario-atividade" id="calendario-atividade" aria-label="Calendário de atividade de leitura"></aside>
-            </div>
-          </div>
-          <div class="progresso-secao">
-            <h3>⏱️ Estatísticas</h3>
-            <div class="stats-grid">
-              <div class="stat-card-prog"><span class="scp-icon">📚</span><span class="scp-valor" id="prog-historias">0</span><span class="scp-label">Histórias lidas</span></div>
-              <div class="stat-card-prog"><span class="scp-icon">⏰</span><span class="scp-valor" id="prog-tempo">0 min</span><span class="scp-label">Tempo total</span></div>
-              <div class="stat-card-prog"><span class="scp-icon">⭐</span><span class="scp-valor" id="prog-estrelas">0</span><span class="scp-label">Estrelas</span></div>
-              <div class="stat-card-prog"><span class="scp-icon">🎮</span><span class="scp-valor" id="prog-minigames">0</span><span class="scp-label">Minigames</span></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-    </main>
   </div>
-</div>
 
-<script src="js/models/faixaEtaria.js"></script>
-<script src="js/models/stories.js"></script>
-<script src="js/models/state.js"></script>
-<script src="js/views/accessibilityView.js"></script>
-<script src="js/views/iaView.js"></script>
-<script src="js/views/libraryView.js"></script>
-<script src="js/views/readingView.js"></script>
-<script src="js/views/minigameView.js"></script>
-<script src="js/views/progressView.js"></script>
-<script src="js/controllers/appController.js"></script>
+  <script src="js/models/faixaEtaria.js"></script>
+  <script src="js/models/stories.js"></script>
+  <script src="js/models/state.js"></script>
+  <script src="js/views/accessibilityView.js"></script>
+  <script src="js/views/iaView.js"></script>
+  <script src="js/views/libraryView.js"></script>
+  <script src="js/views/readingView.js"></script>
+  <script src="js/views/minigameView.js"></script>
+  <script src="js/views/progressView.js"></script>
+  <script src="js/controllers/appController.js"></script>
 </body>
+
 </html>
