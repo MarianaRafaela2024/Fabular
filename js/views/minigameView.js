@@ -19,6 +19,10 @@ function obterTextoBaseHistoria(h) {
 }
 
 function iniciarMinigames() {
+  if (typeof verificarPodeJogarMinigame === 'function' && !verificarPodeJogarMinigame()) {
+    if (typeof mostrarModalVidasEsgotadas === 'function') mostrarModalVidasEsgotadas();
+    return;
+  }
   const h = estado.historiaAtual;
   if (!h) {
     mostrarToast('Escolha uma história primeiro! 📚');
@@ -32,6 +36,10 @@ function iniciarMinigames() {
 }
 
 function iniciarSequenciaMinigames() {
+  if (typeof verificarPodeJogarMinigame === 'function' && !verificarPodeJogarMinigame()) {
+    if (typeof mostrarModalVidasEsgotadas === 'function') mostrarModalVidasEsgotadas();
+    return;
+  }
   if (!estado.historiaAtual) {
     mostrarToast('Escolha uma história primeiro! 📚');
     return;
@@ -124,8 +132,26 @@ function mostrarRespostaEsperada(texto, container) {
 
 
 function mostrarFeedbackMG(ok, mostrarProximo = true) {
-  if (ok) estado.mgAcertos++;
-  else estado.tentativasReprovadas++;
+  let zerouVidas = false;
+  if (ok) {
+    estado.mgAcertos++;
+  } else {
+    estado.tentativasReprovadas++;
+    if (typeof perderVida === 'function') {
+      const statusVida = perderVida();
+      if (statusVida.zerou) {
+        zerouVidas = true;
+        mostrarProximo = false; // Não permite avançar se as vidas zerarem
+        if (typeof mostrarModalVidasEsgotadas === 'function') {
+          setTimeout(() => mostrarModalVidasEsgotadas(), 600);
+        }
+      } else {
+        if (typeof mostrarAvisoPerdaVida === 'function') {
+          mostrarAvisoPerdaVida(statusVida.vidasRestantes);
+        }
+      }
+    }
+  }
 
   const area = document.getElementById('mg-feedback');
   const card = document.getElementById('mg-feedback-card');
@@ -143,8 +169,8 @@ function mostrarFeedbackMG(ok, mostrarProximo = true) {
   } else {
     card.style.background = 'linear-gradient(135deg,#FEF3C7,#FDE68A)';
     card.style.borderColor = '#F59E0B';
-    emoji.textContent = '💛';
-    msg.textContent = MSGS_ERRO[Math.floor(Math.random() * MSGS_ERRO.length)];
+    emoji.textContent = '💔';
+    msg.textContent = zerouVidas ? 'Suas vidas acabaram! Recarregue suas energias ❤️' : MSGS_ERRO[Math.floor(Math.random() * MSGS_ERRO.length)];
     msg.style.color = '#92400E';
   }
 
@@ -156,12 +182,21 @@ function mostrarFeedbackMG(ok, mostrarProximo = true) {
     btnFin.classList.toggle('oculto', !isUltimo);
     if (isUltimo) btnFin.textContent = 'Ver Resultado 🏆';
     else btnProx.textContent = 'Próximo Jogo →';
+  } else if (zerouVidas) {
+    const btnProx = document.getElementById('btn-proximo-mg');
+    const btnFin = document.getElementById('btn-finalizar-mg');
+    if (btnProx) btnProx.classList.add('oculto');
+    if (btnFin) btnFin.classList.add('oculto');
   }
 
   area.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function proximoMinigame() {
+  if (typeof verificarPodeJogarMinigame === 'function' && !verificarPodeJogarMinigame()) {
+    if (typeof mostrarModalVidasEsgotadas === 'function') mostrarModalVidasEsgotadas();
+    return;
+  }
   estado.minigameAtual++;
   renderizarMinigame();
   document.getElementById('app-main').scrollTop = 0;
@@ -939,13 +974,16 @@ function renderColorirMG(h, corpo, spec) {
   });
 
   const finalizar = (isDesistir = false) => {
-    let ok = true;
-    if (isDesistir) ok = false;
-    else {
+    let ok = false;
+    if (isDesistir) {
+      ok = false;
+    } else {
+      let acertosCount = 0;
       itens.forEach((it, idx) => {
         const marcado = selecionadas.has(idx);
-        if (marcado !== it.correta) ok = false;
+        if (marcado === it.correta) acertosCount++;
       });
+      ok = (acertosCount / itens.length) > 0.5;
     }
 
     registrarEventoMG('colorir', ok ? 'acerto' : 'erro');
@@ -1484,7 +1522,7 @@ function renderCacaPalavras(fase, h, corpo) {
       }
     });
 
-    const ok = isDesistir ? false : (encontradas.size >= palavrasAlvo.length);
+    const ok = isDesistir ? false : ((encontradas.size / palavrasAlvo.length) > 0.5);
     registrarEventoMG('caca_palavras', ok ? 'acerto' : 'erro');
     mostrarFeedbackMG(ok);
   };
@@ -1797,7 +1835,7 @@ function renderLigarPontos(fase, h, corpo, spec) {
     });
     requestAnimationFrame(() => redrawSvg());
 
-    const ok = isDesistir ? false : (acertos >= pares.length);
+    const ok = isDesistir ? false : ((acertos / pares.length) > 0.5);
     registrarEventoMG('ligar_pontos', ok ? 'acerto' : 'erro');
     mostrarFeedbackMG(ok, true);
   };
@@ -2235,7 +2273,11 @@ function renderOrdenarPassos(h, corpo, spec) {
 
   const finalizarOP = (isDesistir = false) => {
     const correta = passos.map((_, i) => i);
-    const ok = isDesistir ? false : (JSON.stringify(ordem) === JSON.stringify(correta));
+    let corretosCount = 0;
+    ordem.forEach((stepId, i) => {
+      if (stepId === i) corretosCount++;
+    });
+    const ok = isDesistir ? false : ((corretosCount / passos.length) > 0.5);
 
     if (isDesistir) {
       ordem = [...correta];

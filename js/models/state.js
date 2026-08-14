@@ -27,7 +27,9 @@ let estado = {
   filtroFaixa: 'todos',
   destaqueAtivo: false,
   modoLeituraCompleta: false,
-  relatorioEventos: [] // eventos locais por minigame
+  relatorioEventos: [], // eventos locais por minigame
+  vidasPerdidas: [],   // fallback legado
+  vidasPerdidasPorCrianca: {} // mapa { [childKey]: [timestamps (ms)] } por perfil infantil
 };
 
 let syncTimer = null;
@@ -44,7 +46,9 @@ function salvarEstado() {
     acertosMG: estado.acertosMG || 0,
     errosMG: estado.errosMG || 0,
     naoConsigoOuvir: estado.naoConsigoOuvir || 0,
-    relatorioEventos: estado.relatorioEventos
+    relatorioEventos: estado.relatorioEventos,
+    vidasPerdidas: estado.vidasPerdidas || [],
+    vidasPerdidasPorCrianca: estado.vidasPerdidasPorCrianca || {}
   };
   localStorage.setItem('mundoHistorias_estado', JSON.stringify(dados));
   agendarSyncProgresso();
@@ -57,6 +61,12 @@ function carregarEstado() {
     const dados = JSON.parse(raw);
     const faixaAnterior = dados?.perfil?.faixa;
     Object.assign(estado, dados);
+    if (!Array.isArray(estado.vidasPerdidas)) {
+      estado.vidasPerdidas = [];
+    }
+    if (!estado.vidasPerdidasPorCrianca || typeof estado.vidasPerdidasPorCrianca !== 'object') {
+      estado.vidasPerdidasPorCrianca = {};
+    }
     if (estado.perfil) {
       estado.perfil = normalizarPerfilCrianca(estado.perfil);
       if (estado.perfil.faixa !== faixaAnterior) {
@@ -233,7 +243,9 @@ function mesclarProgressoServidor(servidor) {
     acertosMG: estado.acertosMG || 0,
     errosMG: estado.errosMG || 0,
     naoConsigoOuvir: estado.naoConsigoOuvir || 0,
-    relatorioEventos: estado.relatorioEventos
+    relatorioEventos: estado.relatorioEventos,
+    vidasPerdidas: estado.vidasPerdidas || [],
+    vidasPerdidasPorCrianca: estado.vidasPerdidasPorCrianca || {}
   };
   localStorage.setItem('mundoHistorias_estado', JSON.stringify(dados));
 }

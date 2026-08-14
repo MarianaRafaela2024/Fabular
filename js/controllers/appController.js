@@ -57,9 +57,15 @@ function atualizarHeader() {
   if (headerNome) headerNome.textContent = estado.perfil.nome;
   if (headerNivel) headerNivel.textContent = labelNivel(estado.nivel);
   if (totalEstrelas) totalEstrelas.textContent = estado.totalEstrelas;
+  if (typeof renderizarHeaderVidas === 'function') renderizarHeaderVidas();
 }
 
 function refazerAtividade() {
+  if (typeof verificarPodeJogarMinigame === 'function' && !verificarPodeJogarMinigame()) {
+    if (typeof mostrarModalVidasEsgotadas === 'function') mostrarModalVidasEsgotadas();
+    return;
+  }
+
   if (!estado.historiaAtual) {
     irParaTela('biblioteca');
     mostrarToast('Escolha uma história primeiro! 📚');
