@@ -27,14 +27,28 @@ let estado = {
   filtroFaixa: 'todos',
   destaqueAtivo: false,
   modoLeituraCompleta: false,
-  relatorioEventos: [] // eventos locais por minigame
+  relatorioEventos: [], // eventos locais por minigame
+  vidasPerdidas: [],   // fallback legado
+  vidasPerdidasPorCrianca: {} // mapa { [childKey]: [timestamps (ms)] } por perfil infantil
 };
 
 let syncTimer = null;
 
 function salvarEstado() {
   const dados = {
-    perfil: estado.perfil
+    perfil: estado.perfil,
+    nivel: estado.nivel,
+    totalEstrelas: estado.totalEstrelas,
+    historiasLidas: estado.historiasLidas,
+    tempoTotal: estado.tempoTotal,
+    minigamesJogados: estado.minigamesJogados,
+    tentativasReprovadas: estado.tentativasReprovadas,
+    acertosMG: estado.acertosMG || 0,
+    errosMG: estado.errosMG || 0,
+    naoConsigoOuvir: estado.naoConsigoOuvir || 0,
+    relatorioEventos: estado.relatorioEventos,
+    vidasPerdidas: estado.vidasPerdidas || [],
+    vidasPerdidasPorCrianca: estado.vidasPerdidasPorCrianca || {}
   };
   localStorage.setItem('mundoHistorias_estado', JSON.stringify(dados));
   agendarSyncProgresso();
@@ -57,9 +71,16 @@ function carregarEstado() {
   if (!raw) return;
   try {
     const dados = JSON.parse(raw);
-    if (dados?.perfil) {
-      const faixaAnterior = dados.perfil.faixa;
-      estado.perfil = normalizarPerfilCrianca(dados.perfil);
+    const faixaAnterior = dados?.perfil?.faixa;
+    Object.assign(estado, dados);
+    if (!Array.isArray(estado.vidasPerdidas)) {
+      estado.vidasPerdidas = [];
+    }
+    if (!estado.vidasPerdidasPorCrianca || typeof estado.vidasPerdidasPorCrianca !== 'object') {
+      estado.vidasPerdidasPorCrianca = {};
+    }
+    if (estado.perfil) {
+      estado.perfil = normalizarPerfilCrianca(estado.perfil);
       if (estado.perfil.faixa !== faixaAnterior) {
         salvarEstado();
       }
@@ -227,8 +248,22 @@ function mesclarProgressoServidor(servidor) {
     estado.naoConsigoOuvir = Math.max(Number(estado.naoConsigoOuvir) || 0, Number(servidor.naoConsigoOuvir) || 0);
   }
 
-  // Persiste apenas metadados do perfil ativo, mantendo todo progresso isolado na memória e no banco
-  localStorage.setItem('mundoHistorias_estado', JSON.stringify({ perfil: estado.perfil }));
+  const dados = {
+    perfil: estado.perfil,
+    nivel: estado.nivel,
+    totalEstrelas: estado.totalEstrelas,
+    historiasLidas: estado.historiasLidas,
+    tempoTotal: estado.tempoTotal,
+    minigamesJogados: estado.minigamesJogados,
+    tentativasReprovadas: estado.tentativasReprovadas,
+    acertosMG: estado.acertosMG || 0,
+    errosMG: estado.errosMG || 0,
+    naoConsigoOuvir: estado.naoConsigoOuvir || 0,
+    relatorioEventos: estado.relatorioEventos,
+    vidasPerdidas: estado.vidasPerdidas || [],
+    vidasPerdidasPorCrianca: estado.vidasPerdidasPorCrianca || {}
+  };
+  localStorage.setItem('mundoHistorias_estado', JSON.stringify(dados));
 }
 
 function recalcularTotalEstrelas() {
