@@ -335,7 +335,7 @@ function mapStorySummaryToLegacy(story) {
   };
 }
 
-function garantizarHistoriaNaBiblioteca(historia) {
+function garantirHistoriaNaBiblioteca(historia) {
   if (!historia || !historia.id) return;
   const idx = HISTORIAS.findIndex((h) => h.id === historia.id);
   if (idx >= 0) HISTORIAS[idx] = historia;
@@ -767,6 +767,7 @@ function mapStoryDetailToLegacy(story, serverId) {
     emoji: story?.emoji || '📖',
     cena: story?.cena || '🌟',
     duracao: story?.duracao || '6 min',
+    texto: story?.texto || 'Era uma vez...',
     fases: [
       {
         texto: story?.texto || 'Era uma vez...',

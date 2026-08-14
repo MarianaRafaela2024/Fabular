@@ -5,9 +5,20 @@
 'use strict';
 
 async function iniciarHistoria(id, opcoes) {
+  if (!id) return;
+  sessionStorage.setItem('historiaIdDesejada', String(id));
+
   let historia = HISTORIAS.find((h) => h.id === id);
 
-  if (String(id).startsWith('api-')) {
+  if (!historia && typeof carregarCacheHistorias === 'function') {
+    const cache = carregarCacheHistorias();
+    historia = cache.find((c) => c && c.id === id);
+    if (historia && typeof garantirHistoriaNaBiblioteca === 'function') {
+      garantirHistoriaNaBiblioteca(historia);
+    }
+  }
+
+  if (String(id).startsWith('api-') && (!historia || !historiaApiTemTextoCompleto(historia))) {
     try {
       const detalhe = await carregarDetalheHistoriaDaApi(id);
       if (detalhe) {
@@ -65,14 +76,22 @@ function lerTextoCompletoHistoria(opcoes) {
 
   irParaTela('leitura');
   setUiLeituraModoCompleto(true);
-  document.getElementById('leitura-titulo-badge').textContent = h.titulo;
-  document.getElementById('fase-atual-label').textContent = 'História completa';
-  document.getElementById('historia-emoji-cena').textContent = h.cena || (h.fases[0] && h.fases[0].cena) || '';
+
+  const badgeEl = document.getElementById('leitura-titulo-badge');
+  if (badgeEl) badgeEl.textContent = h.titulo;
+
+  const labelEl = document.getElementById('fase-atual-label');
+  if (labelEl) labelEl.textContent = 'História completa';
+
+  const cenaEl = document.getElementById('historia-emoji-cena');
+  if (cenaEl) cenaEl.textContent = h.cena || (h.fases && h.fases[0] && h.fases[0].cena) || '📖';
 
   const textoEl = document.getElementById('historia-texto');
-  textoEl.innerHTML = textoCompleto;
-  textoEl.classList.toggle('sem-destaque', !estado.destaqueAtivo);
-  textoEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (textoEl) {
+    textoEl.innerHTML = textoCompleto;
+    textoEl.classList.toggle('sem-destaque', !estado.destaqueAtivo);
+    textoEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 
   if (opts.somenteExibir) return;
 }
@@ -96,10 +115,12 @@ function mostrarLeituraCompleta() {
   estado.modoLeituraCompleta = true;
   lerTextoCompletoHistoria({ autoOuvir: estado.perfil.faixa === 1 });
 
-  const n = estado.minigamesLista.length;
+  const n = (estado.minigamesLista && estado.minigamesLista.length) || 0;
   const btn = document.getElementById('btn-continuar');
-  btn.textContent = `Vamos Jogar! 🚀 (${n} minigame${n > 1 ? 's' : ''})`;
-  btn.style.display = 'block';
+  if (btn) {
+    btn.textContent = `Vamos Jogar! 🚀 (${n} minigame${n > 1 ? 's' : ''})`;
+    btn.style.display = 'block';
+  }
 }
 
 function renderizarFase() {
