@@ -37,8 +37,11 @@ function irParaTela(nomeTela) {
   const main = document.getElementById('app-main');
   if (main) main.scrollTop = 0;
 
-  if (nomeTela === 'progresso') atualizarTelaProgresso();
-  if (nomeTela === 'responsavel') atualizarTelaProgresso();
+  if (nomeTela === 'progresso' || nomeTela === 'responsavel') {
+    carregarProgressoDoServidor()
+      .then(() => atualizarTelaProgresso())
+      .catch(() => atualizarTelaProgresso());
+  }
   if (nomeTela === 'biblioteca') {
     carregarProgressoDoServidor()
       .then(() => carregarHistoriasDaApi())

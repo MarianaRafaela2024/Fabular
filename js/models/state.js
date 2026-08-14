@@ -34,36 +34,36 @@ let syncTimer = null;
 
 function salvarEstado() {
   const dados = {
-    perfil: estado.perfil,
-    nivel: estado.nivel,
-    totalEstrelas: estado.totalEstrelas,
-    historiasLidas: estado.historiasLidas,
-    tempoTotal: estado.tempoTotal,
-    minigamesJogados: estado.minigamesJogados,
-    tentativasReprovadas: estado.tentativasReprovadas,
-    acertosMG: estado.acertosMG || 0,
-    errosMG: estado.errosMG || 0,
-    naoConsigoOuvir: estado.naoConsigoOuvir || 0,
-    relatorioEventos: estado.relatorioEventos
+    perfil: estado.perfil
   };
   localStorage.setItem('mundoHistorias_estado', JSON.stringify(dados));
   agendarSyncProgresso();
 }
 
 function carregarEstado() {
+  // Limpa estado de progresso em memória para evitar resquícios de outros perfis
+  estado.totalEstrelas = 0;
+  estado.historiasLidas = [];
+  estado.tempoTotal = 0;
+  estado.minigamesJogados = 0;
+  estado.tentativasReprovadas = 0;
+  estado.acertosMG = 0;
+  estado.errosMG = 0;
+  estado.naoConsigoOuvir = 0;
+  estado.atividadeDiaria = [];
+  estado.relatorioEventos = [];
+
   const raw = localStorage.getItem('mundoHistorias_estado');
   if (!raw) return;
   try {
     const dados = JSON.parse(raw);
-    const faixaAnterior = dados?.perfil?.faixa;
-    Object.assign(estado, dados);
-    if (estado.perfil) {
-      estado.perfil = normalizarPerfilCrianca(estado.perfil);
+    if (dados?.perfil) {
+      const faixaAnterior = dados.perfil.faixa;
+      estado.perfil = normalizarPerfilCrianca(dados.perfil);
       if (estado.perfil.faixa !== faixaAnterior) {
         salvarEstado();
       }
     }
-    garantirContadoresRelatorio();
   } catch (e) { /* ignora */ }
 }
 
@@ -203,6 +203,11 @@ function mesclarProgressoServidor(servidor) {
     estado.atividadeDiaria = servidor.atividadeDiaria;
   }
 
+  if (servidor.totalEstrelas != null && Number(servidor.totalEstrelas) > 0) {
+    estado.totalEstrelas = Math.max(estado.totalEstrelas, Number(servidor.totalEstrelas));
+  }
+  estado.nivel = calcularNivelPorXp(estado.totalEstrelas);
+
   if (servidor.tempoTotal != null) {
     estado.tempoTotal = Math.max(Number(estado.tempoTotal) || 0, Number(servidor.tempoTotal) || 0);
   }
@@ -222,20 +227,8 @@ function mesclarProgressoServidor(servidor) {
     estado.naoConsigoOuvir = Math.max(Number(estado.naoConsigoOuvir) || 0, Number(servidor.naoConsigoOuvir) || 0);
   }
 
-  const dados = {
-    perfil: estado.perfil,
-    nivel: estado.nivel,
-    totalEstrelas: estado.totalEstrelas,
-    historiasLidas: estado.historiasLidas,
-    tempoTotal: estado.tempoTotal,
-    minigamesJogados: estado.minigamesJogados,
-    tentativasReprovadas: estado.tentativasReprovadas,
-    acertosMG: estado.acertosMG || 0,
-    errosMG: estado.errosMG || 0,
-    naoConsigoOuvir: estado.naoConsigoOuvir || 0,
-    relatorioEventos: estado.relatorioEventos
-  };
-  localStorage.setItem('mundoHistorias_estado', JSON.stringify(dados));
+  // Persiste apenas metadados do perfil ativo, mantendo todo progresso isolado na memória e no banco
+  localStorage.setItem('mundoHistorias_estado', JSON.stringify({ perfil: estado.perfil }));
 }
 
 function recalcularTotalEstrelas() {
