@@ -241,13 +241,6 @@ function finalizarMinigames() {
   const estrelas = calcularEstrelasPorAcertos(acertosTotal, totalJogos);
 
   registrarEstrelasHistoria(estrelas);
-  const id = estado.historiaAtual.id;
-  const idx = estado.historiasLidas.findIndex(r => r.id === id);
-  if (idx >= 0) {
-    const { data, dataIso } = obterDataConclusaoAtual();
-    estado.historiasLidas[idx].data = data;
-    estado.historiasLidas[idx].dataIso = dataIso;
-  }
 
   estado.nivel = calcularNivelPorXp(estado.totalEstrelas);
 
