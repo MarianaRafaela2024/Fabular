@@ -37,16 +37,6 @@ let syncTimer = null;
 function salvarEstado() {
   const dados = {
     perfil: estado.perfil,
-    nivel: estado.nivel,
-    totalEstrelas: estado.totalEstrelas,
-    historiasLidas: estado.historiasLidas,
-    tempoTotal: estado.tempoTotal,
-    minigamesJogados: estado.minigamesJogados,
-    tentativasReprovadas: estado.tentativasReprovadas,
-    acertosMG: estado.acertosMG || 0,
-    errosMG: estado.errosMG || 0,
-    naoConsigoOuvir: estado.naoConsigoOuvir || 0,
-    relatorioEventos: estado.relatorioEventos,
     vidasPerdidas: estado.vidasPerdidas || [],
     vidasPerdidasPorCrianca: estado.vidasPerdidasPorCrianca || {}
   };
@@ -71,16 +61,23 @@ function carregarEstado() {
   if (!raw) return;
   try {
     const dados = JSON.parse(raw);
-    const faixaAnterior = dados?.perfil?.faixa;
-    Object.assign(estado, dados);
-    if (!Array.isArray(estado.vidasPerdidas)) {
+    if (!dados) return;
+
+    if (Array.isArray(dados.vidasPerdidas)) {
+      estado.vidasPerdidas = dados.vidasPerdidas;
+    } else {
       estado.vidasPerdidas = [];
     }
-    if (!estado.vidasPerdidasPorCrianca || typeof estado.vidasPerdidasPorCrianca !== 'object') {
+
+    if (dados.vidasPerdidasPorCrianca && typeof dados.vidasPerdidasPorCrianca === 'object') {
+      estado.vidasPerdidasPorCrianca = dados.vidasPerdidasPorCrianca;
+    } else {
       estado.vidasPerdidasPorCrianca = {};
     }
-    if (estado.perfil) {
-      estado.perfil = normalizarPerfilCrianca(estado.perfil);
+
+    if (dados?.perfil) {
+      const faixaAnterior = dados.perfil.faixa;
+      estado.perfil = normalizarPerfilCrianca(dados.perfil);
       if (estado.perfil.faixa !== faixaAnterior) {
         salvarEstado();
       }
@@ -122,7 +119,7 @@ function obterResponsavelId() {
 function agendarSyncProgresso() {
   clearTimeout(syncTimer);
   syncTimer = setTimeout(() => {
-    enviarSyncProgresso().catch(() => {});
+    enviarSyncProgresso().catch(() => { });
   }, 500);
 }
 
@@ -187,37 +184,16 @@ async function carregarProgressoDoServidor() {
 function mesclarProgressoServidor(servidor) {
   if (!servidor) return;
   const remoto = Array.isArray(servidor.historiasLidas) ? servidor.historiasLidas : [];
-  const mapa = new Map();
 
-  (estado.historiasLidas || []).forEach((r) => {
-    if (!r || r.id == null) return;
-    mapa.set(String(r.id), {
+  if (remoto.length > 0) {
+    estado.historiasLidas = remoto.map((r) => ({
       id: String(r.id),
       estrelas: Number(r.estrelas) || 0,
       data: r.data || '',
       dataIso: r.dataIso || obterDataIsoHistoria(r) || ''
-    });
-  });
+    }));
+  }
 
-  remoto.forEach((r) => {
-    if (!r || r.id == null) return;
-    const id = String(r.id);
-    const atual = mapa.get(id);
-    const estrelasRemotas = Math.max(0, Math.min(5, Number(r.estrelas) || 0));
-    const estrelasAtuais = Number(atual?.estrelas) || 0;
-    const dataRemota = r.data || atual?.data || new Date().toLocaleDateString('pt-BR');
-    const dataIsoRemota = r.dataIso || atual?.dataIso || obterDataIsoHistoria({ data: dataRemota }) || '';
-    if (!atual || estrelasRemotas >= estrelasAtuais) {
-      mapa.set(id, {
-        id,
-        estrelas: Math.max(estrelasRemotas, estrelasAtuais),
-        data: dataRemota,
-        dataIso: dataIsoRemota
-      });
-    }
-  });
-
-  estado.historiasLidas = Array.from(mapa.values());
   recalcularTotalEstrelas();
 
   if (Array.isArray(servidor.atividadeDiaria)) {
@@ -248,22 +224,8 @@ function mesclarProgressoServidor(servidor) {
     estado.naoConsigoOuvir = Math.max(Number(estado.naoConsigoOuvir) || 0, Number(servidor.naoConsigoOuvir) || 0);
   }
 
-  const dados = {
-    perfil: estado.perfil,
-    nivel: estado.nivel,
-    totalEstrelas: estado.totalEstrelas,
-    historiasLidas: estado.historiasLidas,
-    tempoTotal: estado.tempoTotal,
-    minigamesJogados: estado.minigamesJogados,
-    tentativasReprovadas: estado.tentativasReprovadas,
-    acertosMG: estado.acertosMG || 0,
-    errosMG: estado.errosMG || 0,
-    naoConsigoOuvir: estado.naoConsigoOuvir || 0,
-    relatorioEventos: estado.relatorioEventos,
-    vidasPerdidas: estado.vidasPerdidas || [],
-    vidasPerdidasPorCrianca: estado.vidasPerdidasPorCrianca || {}
-  };
-  localStorage.setItem('mundoHistorias_estado', JSON.stringify(dados));
+  // Persiste perfil e estado de vidas perdidas no localStorage (progresso mantido no banco)
+  salvarEstado();
 }
 
 function recalcularTotalEstrelas() {
