@@ -140,10 +140,12 @@ CREATE TABLE Sincronizacao_Progresso (
 CREATE TABLE Atividade_Diaria (
     Id INT IDENTITY(1,1) PRIMARY KEY,
     Id_Crianca INT NOT NULL,
+    Id_Historia INT NULL,
     Data DATE NOT NULL,
-    HistoriasConcluidas INT NOT NULL DEFAULT 0,
+    HistoriasConcluidas INT NOT NULL DEFAULT 1,
     CONSTRAINT FK_AD_Crianca FOREIGN KEY (Id_Crianca) REFERENCES Crianca(Id) ON DELETE CASCADE,
-    CONSTRAINT UQ_AD_CriancaData UNIQUE (Id_Crianca, Data)
+    CONSTRAINT FK_AD_Historia FOREIGN KEY (Id_Historia) REFERENCES Historia(Id) ON DELETE CASCADE,
+    CONSTRAINT UQ_AD_CriancaHistoriaData UNIQUE (Id_Crianca, Id_Historia, Data)
 );
 
 CREATE INDEX IX_Responsavel_Email ON Responsavel(Email);

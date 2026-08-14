@@ -9,6 +9,23 @@ public class ProgressSyncService
 {
     private readonly DbConnectionFactory _db;
 
+    private static readonly Dictionary<string, int> StaticStoryIdMap = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["n1"] = 1,
+        ["n2"] = 2,
+        ["n3"] = 3,
+        ["p1"] = 4,
+        ["p2"] = 5,
+        ["i1"] = 6,
+        ["i2"] = 7,
+        ["d1"] = 8,
+        ["d2"] = 9,
+        ["inf1"] = 10,
+        ["inf2"] = 11
+    };
+
+    private static readonly Dictionary<int, string> InverseStaticStoryIdMap = StaticStoryIdMap.ToDictionary(kv => kv.Value, kv => kv.Key);
+
     public ProgressSyncService(DbConnectionFactory db)
     {
         _db = db;
@@ -154,7 +171,7 @@ public class ProgressSyncService
 
         foreach (var sessao in sessoes)
         {
-            var id = $"api-{sessao.IdHistoria}";
+            var id = ConverterIdHistoriaParaString(sessao.IdHistoria);
             var estrelas = Math.Clamp(sessao.Estrelas, 0, 5);
             if (estrelas <= 0)
             {
@@ -408,30 +425,68 @@ public class ProgressSyncService
 
     private async Task PersistirAtividadeDiariaAsync(System.Data.Common.DbConnection conn, int criancaId, object progressoHistorias)
     {
-        var atividade = AgruparAtividadeDiaria(ExtrairHistoriasLidas(progressoHistorias));
-        if (atividade.Count == 0)
+        var historias = ExtrairHistoriasLidas(progressoHistorias);
+        if (historias.Count == 0)
         {
             return;
         }
 
-        foreach (var (data, quantidade) in atividade)
+        var temColunaHistoria = await conn.ExecuteScalarAsync<int?>(
+            "SELECT TOP 1 1 FROM sys.columns WHERE object_id = OBJECT_ID('Atividade_Diaria') AND name = 'Id_Historia'");
+
+        foreach (var historia in historias)
         {
+            if (historia.Estrelas <= 0)
+            {
+                continue;
+            }
+
+            var dataIso = NormalizarDataIso(historia.DataIso, historia.Data) ?? DateTime.Today.ToString("yyyy-MM-dd");
+
+            if (TryParseApiHistoriaId(historia.Id, out var historiaId))
+            {
+                var existeHistoria = await conn.ExecuteScalarAsync<int?>(
+                    "SELECT TOP 1 1 FROM Historia WHERE Id = @HistoriaId",
+                    new { HistoriaId = historiaId });
+
+                if (existeHistoria is not null && temColunaHistoria.HasValue && temColunaHistoria.Value == 1)
+                {
+                    await conn.ExecuteAsync(
+                        """
+                        MERGE Atividade_Diaria AS alvo
+                        USING (SELECT @CriancaId AS Id_Crianca, @HistoriaId AS Id_Historia, @Data AS Data) AS origem
+                        ON alvo.Id_Crianca = origem.Id_Crianca AND alvo.Id_Historia = origem.Id_Historia AND alvo.Data = origem.Data
+                        WHEN MATCHED THEN
+                            UPDATE SET HistoriasConcluidas = 1
+                        WHEN NOT MATCHED THEN
+                            INSERT (Id_Crianca, Id_Historia, Data, HistoriasConcluidas)
+                            VALUES (origem.Id_Crianca, origem.Id_Historia, origem.Data, 1);
+                        """,
+                        new
+                        {
+                            CriancaId = criancaId,
+                            HistoriaId = historiaId,
+                            Data = dataIso
+                        });
+                    continue;
+                }
+            }
+
             await conn.ExecuteAsync(
                 """
                 MERGE Atividade_Diaria AS alvo
-                USING (SELECT @CriancaId AS Id_Crianca, @Data AS Data, @Quantidade AS HistoriasConcluidas) AS origem
+                USING (SELECT @CriancaId AS Id_Crianca, @Data AS Data) AS origem
                 ON alvo.Id_Crianca = origem.Id_Crianca AND alvo.Data = origem.Data
-                WHEN MATCHED AND origem.HistoriasConcluidas > alvo.HistoriasConcluidas THEN
-                    UPDATE SET HistoriasConcluidas = origem.HistoriasConcluidas
+                WHEN MATCHED THEN
+                    UPDATE SET HistoriasConcluidas = alvo.HistoriasConcluidas + 1
                 WHEN NOT MATCHED THEN
                     INSERT (Id_Crianca, Data, HistoriasConcluidas)
-                    VALUES (origem.Id_Crianca, origem.Data, origem.HistoriasConcluidas);
+                    VALUES (origem.Id_Crianca, origem.Data, 1);
                 """,
                 new
                 {
                     CriancaId = criancaId,
-                    Data = data,
-                    Quantidade = quantidade
+                    Data = dataIso
                 });
         }
     }
@@ -445,24 +500,48 @@ public class ProgressSyncService
 
         try
         {
-            var linhas = await conn.QueryAsync<(DateTime Data, int HistoriasConcluidas)>(
-                """
-                SELECT Data, HistoriasConcluidas
-                FROM Atividade_Diaria
-                WHERE Id_Crianca = @CriancaId
-                ORDER BY Data DESC
-                """,
-                new { CriancaId = criancaId });
+            var temColunaHistoria = await conn.ExecuteScalarAsync<int?>(
+                "SELECT TOP 1 1 FROM sys.columns WHERE object_id = OBJECT_ID('Atividade_Diaria') AND name = 'Id_Historia'");
 
-            foreach (var linha in linhas)
+            if (temColunaHistoria.HasValue && temColunaHistoria.Value == 1)
             {
-                var chave = linha.Data.ToString("yyyy-MM-dd");
-                mapa[chave] = Math.Max(mapa.GetValueOrDefault(chave), linha.HistoriasConcluidas);
+                var linhas = await conn.QueryAsync<(DateTime Data, int HistoriasConcluidas)>(
+                    """
+                    SELECT Data, COUNT(DISTINCT ISNULL(Id_Historia, Id)) AS HistoriasConcluidas
+                    FROM Atividade_Diaria
+                    WHERE Id_Crianca = @CriancaId
+                    GROUP BY Data
+                    ORDER BY Data DESC
+                    """,
+                    new { CriancaId = criancaId });
+
+                foreach (var linha in linhas)
+                {
+                    var chave = linha.Data.ToString("yyyy-MM-dd");
+                    mapa[chave] = Math.Max(mapa.GetValueOrDefault(chave), linha.HistoriasConcluidas);
+                }
+            }
+            else
+            {
+                var linhas = await conn.QueryAsync<(DateTime Data, int HistoriasConcluidas)>(
+                    """
+                    SELECT Data, HistoriasConcluidas
+                    FROM Atividade_Diaria
+                    WHERE Id_Crianca = @CriancaId
+                    ORDER BY Data DESC
+                    """,
+                    new { CriancaId = criancaId });
+
+                foreach (var linha in linhas)
+                {
+                    var chave = linha.Data.ToString("yyyy-MM-dd");
+                    mapa[chave] = Math.Max(mapa.GetValueOrDefault(chave), linha.HistoriasConcluidas);
+                }
             }
         }
         catch
         {
-            // Tabela pode não existir em bancos antigos — usa fallback das histórias lidas.
+            // Fallback caso a tabela apresente incompatibilidade.
         }
 
         foreach (var (data, quantidade) in AgruparAtividadeDiaria(historiasLidas))
@@ -676,12 +755,26 @@ public class ProgressSyncService
             return false;
         }
 
+        if (StaticStoryIdMap.TryGetValue(storyId, out historiaId))
+        {
+            return true;
+        }
+
         if (storyId.StartsWith("api-", StringComparison.OrdinalIgnoreCase))
         {
             return int.TryParse(storyId.AsSpan(4), out historiaId) && historiaId > 0;
         }
 
         return int.TryParse(storyId, out historiaId) && historiaId > 0;
+    }
+
+    private static string ConverterIdHistoriaParaString(int historiaId)
+    {
+        if (InverseStaticStoryIdMap.TryGetValue(historiaId, out var staticId))
+        {
+            return staticId;
+        }
+        return $"api-{historiaId}";
     }
 
     private static int ExtrairTotalEstrelas(object progressoHistorias)

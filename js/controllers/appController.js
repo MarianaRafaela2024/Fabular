@@ -37,8 +37,11 @@ function irParaTela(nomeTela) {
   const main = document.getElementById('app-main');
   if (main) main.scrollTop = 0;
 
-  if (nomeTela === 'progresso') atualizarTelaProgresso();
-  if (nomeTela === 'responsavel') atualizarTelaProgresso();
+  if (nomeTela === 'progresso' || nomeTela === 'responsavel') {
+    carregarProgressoDoServidor()
+      .then(() => atualizarTelaProgresso())
+      .catch(() => atualizarTelaProgresso());
+  }
   if (nomeTela === 'biblioteca') {
     carregarProgressoDoServidor()
       .then(() => carregarHistoriasDaApi())
@@ -57,9 +60,15 @@ function atualizarHeader() {
   if (headerNome) headerNome.textContent = estado.perfil.nome;
   if (headerNivel) headerNivel.textContent = labelNivel(estado.nivel);
   if (totalEstrelas) totalEstrelas.textContent = estado.totalEstrelas;
+  if (typeof renderizarHeaderVidas === 'function') renderizarHeaderVidas();
 }
 
 function refazerAtividade() {
+  if (typeof verificarPodeJogarMinigame === 'function' && !verificarPodeJogarMinigame()) {
+    if (typeof mostrarModalVidasEsgotadas === 'function') mostrarModalVidasEsgotadas();
+    return;
+  }
+
   if (!estado.historiaAtual) {
     irParaTela('biblioteca');
     mostrarToast('Escolha uma história primeiro! 📚');

@@ -484,7 +484,6 @@
   }
 
   function entrarComPerfil(perfilApi) {
-    const estado = carregarJSON(CHAVE_ESTADO, {});
     const perfilObj = {
       id: perfilApi.id || perfilApi.Id,
       nome: perfilApi.nome || perfilApi.Nome,
@@ -495,11 +494,12 @@
       horarioBrincar: perfilApi.horarioBrincar || perfilApi.HorarioBrincar
     };
 
-    estado.perfil = typeof normalizarPerfilCrianca === 'function'
+    const perfilNorm = typeof normalizarPerfilCrianca === 'function'
       ? normalizarPerfilCrianca(perfilObj)
       : perfilObj;
 
-    salvarJSON(CHAVE_ESTADO, estado);
+    // Salva APENAS o perfil selecionado no localStorage (sem dados de progresso)
+    salvarJSON(CHAVE_ESTADO, { perfil: perfilNorm });
     window.location.href = "index.html";
   }
 
