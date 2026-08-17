@@ -348,7 +348,7 @@ function renderizarCalendarioAtividade() {
     grade += `
       <div class="${classes}" role="gridcell" tabindex="0" data-iso="${iso}" data-dia="${dia}" data-qtd="${qtd}" aria-label="${label}" title="${label}">
         <span class="cal-dia-num">${dia}</span>
-        ${estrelasStr ? `<span class="cal-dia-estrelas" aria-hidden="true">${estrelasStr}</span>` : ''}
+        ${estrelasStr ? `<span class="cal-dia-estrelas" data-qtd="${qtd}" aria-hidden="true">${estrelasStr}</span>` : ''}
         ${hoje ? '<span class="cal-dia-hoje-badge">HOJE</span>' : ''}
         ${seloHtml}
       </div>
