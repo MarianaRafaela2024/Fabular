@@ -3438,7 +3438,7 @@ body.login-body {
 
 /* ── 4. VERDADEIRO OU FALSO ── */
 .tf-afirmacao {
-  background: rgba(173, 16, 55, 0.7);
+  background: rgba(223, 211, 214, 0.7);
   border-left: 4px solid var(--cor-primaria);
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   padding: 16px 18px;

@@ -39,7 +39,16 @@ function salvarEstado() {
   const dados = {
     perfil: estado.perfil,
     vidasPerdidas: estado.vidasPerdidas || [],
-    vidasPerdidasPorCrianca: estado.vidasPerdidasPorCrianca || {}
+    vidasPerdidasPorCrianca: estado.vidasPerdidasPorCrianca || {},
+    historiasLidas: estado.historiasLidas || [],
+    atividadeDiaria: estado.atividadeDiaria || [],
+    totalEstrelas: estado.totalEstrelas || 0,
+    tempoTotal: estado.tempoTotal || 0,
+    minigamesJogados: estado.minigamesJogados || 0,
+    tentativasReprovadas: estado.tentativasReprovadas || 0,
+    acertosMG: estado.acertosMG || 0,
+    errosMG: estado.errosMG || 0,
+    naoConsigoOuvir: estado.naoConsigoOuvir || 0
   };
   localStorage.setItem('mundoHistorias_estado', JSON.stringify(dados));
   try {
@@ -81,6 +90,20 @@ function carregarEstado() {
     } else {
       estado.vidasPerdidasPorCrianca = {};
     }
+
+    if (Array.isArray(dados.historiasLidas)) {
+      estado.historiasLidas = dados.historiasLidas;
+    }
+    if (Array.isArray(dados.atividadeDiaria)) {
+      estado.atividadeDiaria = dados.atividadeDiaria;
+    }
+    if (dados.totalEstrelas != null) estado.totalEstrelas = Number(dados.totalEstrelas) || 0;
+    if (dados.tempoTotal != null) estado.tempoTotal = Number(dados.tempoTotal) || 0;
+    if (dados.minigamesJogados != null) estado.minigamesJogados = Number(dados.minigamesJogados) || 0;
+    if (dados.tentativasReprovadas != null) estado.tentativasReprovadas = Number(dados.tentativasReprovadas) || 0;
+    if (dados.acertosMG != null) estado.acertosMG = Number(dados.acertosMG) || 0;
+    if (dados.errosMG != null) estado.errosMG = Number(dados.errosMG) || 0;
+    if (dados.naoConsigoOuvir != null) estado.naoConsigoOuvir = Number(dados.naoConsigoOuvir) || 0;
 
     if (dados?.perfil) {
       const faixaAnterior = dados.perfil.faixa;
@@ -138,10 +161,10 @@ function obterResponsavelId() {
 }
 
 function agendarSyncProgresso() {
-  clearTimeout(syncTimer);
+  if (syncTimer) clearTimeout(syncTimer);
   syncTimer = setTimeout(() => {
-    enviarSyncProgresso().catch(() => { });
-  }, 500);
+    enviarSyncProgresso();
+  }, 1000);
 }
 
 async function enviarSyncProgresso() {
@@ -162,6 +185,7 @@ async function enviarSyncProgresso() {
       progressoHistorias: {
         totalEstrelas: estado.totalEstrelas || 0,
         historiasLidas: estado.historiasLidas || [],
+        atividadeDiaria: estado.atividadeDiaria || [],
         tempoTotal: estado.tempoTotal || 0
       },
       resumoMinigames: {
@@ -204,75 +228,110 @@ async function carregarProgressoDoServidor() {
 
 function mesclarProgressoServidor(servidor) {
   if (!servidor) return;
-  const remoto = Array.isArray(servidor.historiasLidas) ? servidor.historiasLidas : [];
 
-  const mapa = new Map();
-  (estado.historiasLidas || []).forEach((r) => {
-    if (!r || r.id == null) return;
-    const key = String(r.id);
-    mapa.set(key, {
-      id: key,
-      estrelas: Number(r.estrelas) || 0,
-      data: r.data || '',
-      dataIso: r.dataIso || (typeof obterDataIsoHistoria === 'function' ? obterDataIsoHistoria(r) : '') || ''
-    });
-  });
+  const prog = servidor.progressoHistorias || servidor.ProgressoHistorias || servidor;
+  const resumo = servidor.resumoMinigames || servidor.ResumoMinigames || servidor;
 
-  remoto.forEach((r) => {
-    if (!r || r.id == null) return;
-    const key = String(r.id);
-    const estRemoto = Number(r.estrelas) || 0;
-    const exist = mapa.get(key);
-    if (!exist) {
-      mapa.set(key, {
-        id: key,
-        estrelas: estRemoto,
-        data: r.data || '',
-        dataIso: r.dataIso || (typeof obterDataIsoHistoria === 'function' ? obterDataIsoHistoria(r) : '') || ''
-      });
-    } else {
-      mapa.set(key, {
-        id: key,
-        estrelas: Math.max(exist.estrelas, estRemoto),
-        data: r.data || exist.data || '',
-        dataIso: r.dataIso || exist.dataIso || (typeof obterDataIsoHistoria === 'function' ? obterDataIsoHistoria(r) : '') || ''
+  const remoto = Array.isArray(servidor.historiasLidas)
+    ? servidor.historiasLidas
+    : (Array.isArray(prog.historiasLidas)
+      ? prog.historiasLidas
+      : (Array.isArray(servidor.HistoriasLidas)
+        ? servidor.HistoriasLidas
+        : (Array.isArray(prog.HistoriasLidas)
+          ? prog.HistoriasLidas
+          : [])));
+
+  // Combina lista local e remota mantendo todos os eventos de leitura individuais
+  const listaCombinada = [...(estado.historiasLidas || []), ...remoto];
+  const unicos = [];
+  const chavesVistas = new Set();
+
+  listaCombinada.forEach((r) => {
+    if (!r || (r.id == null && r.Id == null)) return;
+    const idStr = String(r.id || r.Id);
+    const dataStr = r.dataIso || r.DataIso || r.data || r.Data || '';
+    const est = Number(r.estrelas || r.Estrelas) || 0;
+    const ts = r.timestamp || r.Timestamp || '';
+    // Chave única para evitar duplicações idênticas exatas por sincronização
+    const chave = ts ? `${idStr}_${ts}` : `${idStr}_${dataStr}_${est}`;
+
+    if (!chavesVistas.has(chave)) {
+      chavesVistas.add(chave);
+      unicos.push({
+        id: idStr,
+        titulo: r.titulo || r.Titulo || '',
+        emoji: r.emoji || r.Emoji || '📖',
+        genero: r.genero || r.Genero || 'narrativo',
+        estrelas: est,
+        data: r.data || r.Data || '',
+        dataIso: r.dataIso || r.DataIso || (typeof obterDataIsoHistoria === 'function' ? obterDataIsoHistoria(r) : '') || '',
+        timestamp: ts || Date.now()
       });
     }
   });
 
-  estado.historiasLidas = Array.from(mapa.values());
-
+  estado.historiasLidas = unicos;
   recalcularTotalEstrelas();
 
-  if (Array.isArray(servidor.atividadeDiaria)) {
-    estado.atividadeDiaria = servidor.atividadeDiaria;
+  const atividadeRemota = Array.isArray(servidor.atividadeDiaria)
+    ? servidor.atividadeDiaria
+    : (Array.isArray(prog.atividadeDiaria)
+      ? prog.atividadeDiaria
+      : (Array.isArray(servidor.AtividadeDiaria)
+        ? servidor.AtividadeDiaria
+        : null));
+
+  if (atividadeRemota) {
+    const mapaAtv = new Map();
+    (estado.atividadeDiaria || []).forEach(a => {
+      if (a && a.data) mapaAtv.set(a.data, Number(a.quantidade) || 0);
+    });
+    atividadeRemota.forEach(a => {
+      if (!a) return;
+      const dt = a.data || a.Data;
+      const qtd = Number(a.quantidade || a.Quantidade) || 0;
+      if (dt) mapaAtv.set(dt, Math.max(mapaAtv.get(dt) || 0, qtd));
+    });
+    estado.atividadeDiaria = Array.from(mapaAtv.entries()).map(([data, quantidade]) => ({ data, quantidade }));
   }
 
-  if (servidor.totalEstrelas != null && Number(servidor.totalEstrelas) > 0) {
-    estado.totalEstrelas = Math.max(estado.totalEstrelas, Number(servidor.totalEstrelas));
+  const estTotalRemoto = servidor.totalEstrelas || prog.totalEstrelas || servidor.TotalEstrelas;
+  if (estTotalRemoto != null && Number(estTotalRemoto) > 0) {
+    estado.totalEstrelas = Math.max(estado.totalEstrelas, Number(estTotalRemoto));
   }
   estado.nivel = calcularNivelPorXp(estado.totalEstrelas);
 
-  if (servidor.tempoTotal != null) {
-    estado.tempoTotal = Math.max(Number(estado.tempoTotal) || 0, Number(servidor.tempoTotal) || 0);
-  }
-  if (servidor.minigamesJogados != null) {
-    estado.minigamesJogados = Math.max(Number(estado.minigamesJogados) || 0, Number(servidor.minigamesJogados) || 0);
-  }
-  if (servidor.tentativasReprovadas != null) {
-    estado.tentativasReprovadas = Math.max(Number(estado.tentativasReprovadas) || 0, Number(servidor.tentativasReprovadas) || 0);
-  }
-  if (servidor.acertosMG != null) {
-    estado.acertosMG = Math.max(Number(estado.acertosMG) || 0, Number(servidor.acertosMG) || 0);
-  }
-  if (servidor.errosMG != null) {
-    estado.errosMG = Math.max(Number(estado.errosMG) || 0, Number(servidor.errosMG) || 0);
-  }
-  if (servidor.naoConsigoOuvir != null) {
-    estado.naoConsigoOuvir = Math.max(Number(estado.naoConsigoOuvir) || 0, Number(servidor.naoConsigoOuvir) || 0);
+  const tempoRemoto = servidor.tempoTotal || prog.tempoTotal || servidor.TempoTotal;
+  if (tempoRemoto != null) {
+    estado.tempoTotal = Math.max(Number(estado.tempoTotal) || 0, Number(tempoRemoto) || 0);
   }
 
-  // Persiste perfil e estado de vidas perdidas no localStorage (progresso mantido no banco)
+  const mgJogadosRemoto = resumo.minigamesJogados || servidor.minigamesJogados;
+  if (mgJogadosRemoto != null) {
+    estado.minigamesJogados = Math.max(Number(estado.minigamesJogados) || 0, Number(mgJogadosRemoto) || 0);
+  }
+
+  const tentReprovadasRemoto = resumo.tentativasReprovadas || servidor.tentativasReprovadas;
+  if (tentReprovadasRemoto != null) {
+    estado.tentativasReprovadas = Math.max(Number(estado.tentativasReprovadas) || 0, Number(tentReprovadasRemoto) || 0);
+  }
+
+  const acertosRemoto = resumo.acertosMG || servidor.acertosMG;
+  if (acertosRemoto != null) {
+    estado.acertosMG = Math.max(Number(estado.acertosMG) || 0, Number(acertosRemoto) || 0);
+  }
+
+  const errosRemoto = resumo.errosMG || servidor.errosMG;
+  if (errosRemoto != null) {
+    estado.errosMG = Math.max(Number(estado.errosMG) || 0, Number(errosRemoto) || 0);
+  }
+
+  const naoOucoRemoto = resumo.naoConsigoOuvir || servidor.naoConsigoOuvir;
+  if (naoOucoRemoto != null) {
+    estado.naoConsigoOuvir = Math.max(Number(estado.naoConsigoOuvir) || 0, Number(naoOucoRemoto) || 0);
+  }
+
   salvarEstado();
 }
 

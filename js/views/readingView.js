@@ -139,7 +139,8 @@ function pularFase() {
 }
 
 function registrarEstrelasHistoria(estrelasNovas) {
-  const id = estado.historiaAtual && estado.historiaAtual.id;
+  const historia = estado.historiaAtual;
+  const id = historia && historia.id;
   if (!id) return;
   const novas = Math.max(0, Math.min(5, Number(estrelasNovas) || 0));
   if (novas <= 0) return;
@@ -150,18 +151,28 @@ function registrarEstrelasHistoria(estrelasNovas) {
     estado.historiasLidas = [];
   }
 
-  const idx = estado.historiasLidas.findIndex(r => r && String(r.id) === idStr);
-  if (idx >= 0) {
-    estado.historiasLidas[idx].estrelas = Math.max(Number(estado.historiasLidas[idx].estrelas) || 0, novas);
-    estado.historiasLidas[idx].data = data || estado.historiasLidas[idx].data;
-    estado.historiasLidas[idx].dataIso = dataIso || estado.historiasLidas[idx].dataIso;
+  // Registra cada leitura como um novo item no histórico completo
+  estado.historiasLidas.push({
+    id: idStr,
+    titulo: historia.titulo || '',
+    emoji: historia.emoji || '📖',
+    genero: historia.genero || 'narrativo',
+    estrelas: novas,
+    data,
+    dataIso,
+    timestamp: Date.now()
+  });
+
+  // Atualiza registro de atividade diária para o calendário
+  if (!Array.isArray(estado.atividadeDiaria)) {
+    estado.atividadeDiaria = [];
+  }
+  const hojeIso = dataIso || new Date().toISOString().slice(0, 10);
+  const itemDia = estado.atividadeDiaria.find(a => a && a.data === hojeIso);
+  if (itemDia) {
+    itemDia.quantidade = (Number(itemDia.quantidade) || 0) + 1;
   } else {
-    estado.historiasLidas.push({
-      id: idStr,
-      estrelas: novas,
-      data,
-      dataIso
-    });
+    estado.atividadeDiaria.push({ data: hojeIso, quantidade: 1 });
   }
 
   if (typeof recalcularTotalEstrelas === 'function') {

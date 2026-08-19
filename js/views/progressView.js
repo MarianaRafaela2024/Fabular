@@ -31,23 +31,29 @@ function atualizarTelaProgresso() {
   const cont = document.getElementById('historias-concluidas');
   if (cont) {
     cont.innerHTML = '';
-    if (estado.historiasLidas.length === 0) {
+    if (!estado.historiasLidas || estado.historiasLidas.length === 0) {
       cont.innerHTML = '<p class="vazio-msg">Nenhuma história concluída ainda. Comece a ler! 📚</p>';
     } else {
       estado.historiasLidas.forEach(r => {
-        const h = HISTORIAS.find(x => x.id === r.id);
-        if (!h) return;
+        if (!r || r.id == null) return;
+        const h = (typeof HISTORIAS !== 'undefined' ? HISTORIAS : []).find(x => String(x.id) === String(r.id));
+        const titulo = h ? h.titulo : (r.titulo || 'História Concluída');
+        const emoji = h ? h.emoji : (r.emoji || '📖');
+        const generoRaw = h ? h.genero : (r.genero || 'narrativo');
+        const genero = typeof labelGenero === 'function' ? labelGenero(generoRaw) : generoRaw;
+        const dataStr = r.data || (r.dataIso ? new Date(r.dataIso + 'T00:00:00').toLocaleDateString('pt-BR') : '');
+
         const item = document.createElement('div');
         item.className = 'historia-concluida-item';
         item.innerHTML = `
           <div class="hci-esq">
-            <span class="hci-emoji">${h.emoji}</span>
+            <span class="hci-emoji">${emoji}</span>
             <div class="hci-info">
-              <span class="hci-titulo">${h.titulo}</span>
-              <span class="hci-genero">${labelGenero(h.genero)} · ${r.data || ''}</span>
+              <span class="hci-titulo">${titulo}</span>
+              <span class="hci-genero">${genero}${dataStr ? ' · ' + dataStr : ''}</span>
             </div>
           </div>
-          <span class="hci-estrelas">${renderEstrelas(r.estrelas, 5)}</span>
+          <span class="hci-estrelas">${typeof renderEstrelas === 'function' ? renderEstrelas(r.estrelas, 5) : '⭐'.repeat(Number(r.estrelas) || 1)}</span>
         `;
         cont.appendChild(item);
       });
@@ -60,10 +66,10 @@ function atualizarTelaProgresso() {
   const progTempo = document.getElementById('prog-tempo');
   const progEstrelas = document.getElementById('prog-estrelas');
   const progMinigames = document.getElementById('prog-minigames');
-  if (progHistorias) progHistorias.textContent = estado.historiasLidas.length;
-  if (progTempo) progTempo.textContent = estado.tempoTotal + ' min';
-  if (progEstrelas) progEstrelas.textContent = estado.totalEstrelas;
-  if (progMinigames) progMinigames.textContent = estado.minigamesJogados;
+  if (progHistorias) progHistorias.textContent = (estado.historiasLidas || []).length;
+  if (progTempo) progTempo.textContent = (estado.tempoTotal || 0) + ' min';
+  if (progEstrelas) progEstrelas.textContent = estado.totalEstrelas || 0;
+  if (progMinigames) progMinigames.textContent = estado.minigamesJogados || 0;
 
   renderizarAcessoRelatorioResponsavel({ acertosMG, errosMG, naoOuco });
 }
@@ -86,8 +92,8 @@ function renderizarAcessoRelatorioResponsavel(metricas) {
       if (!r || r.id == null) return;
       const h = (typeof HISTORIAS !== 'undefined' ? HISTORIAS : []).find(x => String(x.id) === String(r.id));
       const titulo = h ? h.titulo : (r.titulo || 'História Concluída');
-      const emoji = h ? h.emoji : '📖';
-      const genero = h ? (typeof labelGenero === 'function' ? labelGenero(h.genero) : h.genero) : 'Geral';
+      const emoji = h ? h.emoji : (r.emoji || '📖');
+      const genero = h ? (typeof labelGenero === 'function' ? labelGenero(h.genero) : h.genero) : (r.genero || 'Geral');
       const dataStr = r.data || (r.dataIso ? new Date(r.dataIso + 'T00:00:00').toLocaleDateString('pt-BR') : '');
       const estrelasHtml = typeof renderEstrelas === 'function' ? renderEstrelas(r.estrelas, 5) : '⭐'.repeat(Number(r.estrelas) || 1);
 
@@ -135,7 +141,8 @@ function agruparAtividadePorDia() {
   (estado.historiasLidas || []).forEach((r) => {
     const iso = obterDataIsoHistoria(r);
     if (!iso || !(Number(r.estrelas) > 0)) return;
-    mapa[iso] = (mapa[iso] || 0) + 1;
+    const qtdLida = Number(r.vezesLida) || 1;
+    mapa[iso] = (mapa[iso] || 0) + qtdLida;
   });
   if (Array.isArray(estado.atividadeDiaria)) {
     estado.atividadeDiaria.forEach((a) => {
@@ -224,14 +231,36 @@ function exibirModalDetalhesDia(iso, dia, mes, ano, qtd, estrelasStr) {
 
   let historiasHtml = '';
   if (historiasNoDia.length > 0) {
-    historiasHtml = '<ul class="cal-modal-historias-lista">';
+    // Agrupa histórias lidas no mesmo dia para exibir a contagem de releituras no calendário (ex: 2x lida)
+    const mapaDia = new Map();
     historiasNoDia.forEach(r => {
-      const h = (typeof HISTORIAS !== 'undefined' ? HISTORIAS : []).find(x => x.id === r.id);
+      if (!r || r.id == null) return;
+      const key = String(r.id);
+      const exist = mapaDia.get(key);
+      if (!exist) {
+        mapaDia.set(key, {
+          id: key,
+          titulo: r.titulo || '',
+          emoji: r.emoji || '📖',
+          estrelas: Number(r.estrelas) || 1,
+          qtd: 1
+        });
+      } else {
+        exist.qtd += 1;
+        exist.estrelas = Math.max(exist.estrelas, Number(r.estrelas) || 1);
+      }
+    });
+
+    historiasHtml = '<ul class="cal-modal-historias-lista">';
+    mapaDia.forEach(r => {
+      const h = (typeof HISTORIAS !== 'undefined' ? HISTORIAS : []).find(x => String(x.id) === String(r.id));
       const titulo = h ? h.titulo : (r.titulo || 'História Concluída');
-      const emoji = h ? h.emoji : '📖';
-      const estCount = Math.min(4, Math.max(1, Number(r.estrelas) || 1));
-      const est = '⭐'.repeat(estCount);
-      historiasHtml += `<li><span class="cal-modal-h-emoji">${emoji}</span> <div class="cal-modal-h-info"><strong>${titulo}</strong><span class="cal-modal-h-est">${est}</span></div></li>`;
+      const emoji = h ? h.emoji : (r.emoji || '📖');
+      const estCount = Math.min(5, Math.max(1, Number(r.estrelas) || 1));
+      const est = typeof renderEstrelas === 'function' ? renderEstrelas(estCount, 5) : '⭐'.repeat(estCount);
+      const vezesBadge = r.qtd > 1 ? `<span class="cal-modal-vezes" style="margin-left:6px;font-size:0.8rem;background:rgba(255,107,53,0.15);color:#FF6B35;padding:2px 8px;border-radius:12px;font-weight:700;">🔁 ${r.qtd}x lida</span>` : '';
+
+      historiasHtml += `<li><span class="cal-modal-h-emoji">${emoji}</span> <div class="cal-modal-h-info"><strong>${titulo}${vezesBadge}</strong><span class="cal-modal-h-est">${est}</span></div></li>`;
     });
     historiasHtml += '</ul>';
   } else if (qtd > 0) {
