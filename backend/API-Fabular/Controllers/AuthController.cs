@@ -39,6 +39,30 @@ public class AuthController : ControllerBase
         return Ok(result.Value);
     }
 
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<ParentProfileResponse>> GetProfile(int id)
+    {
+        var result = await _authService.GetProfileAsync(id);
+        if (!result.Success)
+        {
+            return StatusCode(result.StatusCode, new { message = result.Error });
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpPut("{id:int}")]
+    public async Task<ActionResult<ParentProfileResponse>> UpdateProfile(int id, [FromBody] UpdateParentRequest request)
+    {
+        var result = await _authService.UpdateProfileAsync(id, request);
+        if (!result.Success)
+        {
+            return StatusCode(result.StatusCode, new { message = result.Error });
+        }
+
+        return Ok(result.Value);
+    }
+
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ParentForgotPasswordRequest request)
     {

@@ -481,6 +481,13 @@
         mostrarCard('#responsavel-card');
       };
     }
+
+    const btnConfig = document.getElementById('btn-ir-configuracoes');
+    if (btnConfig) {
+      btnConfig.onclick = () => {
+        window.location.href = 'configuracoes.html';
+      };
+    }
   }
 
   function entrarComPerfil(perfilApi) {
