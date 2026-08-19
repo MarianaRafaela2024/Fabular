@@ -31,6 +31,19 @@ function obterHistoricoVidasPerdidas() {
 
   const chave = obterChaveCriancaAtual();
 
+  // Tenta resgatar histórico da chave persistente dedicada se a chave da criança não estiver presente no estado
+  if (!estado.vidasPerdidasPorCrianca[chave]) {
+    try {
+      const rawVidas = localStorage.getItem('mundoHistorias_vidas_criancas');
+      if (rawVidas) {
+        const parsed = JSON.parse(rawVidas);
+        if (parsed && typeof parsed === 'object' && Array.isArray(parsed[chave])) {
+          estado.vidasPerdidasPorCrianca[chave] = [...parsed[chave]];
+        }
+      }
+    } catch (_) { }
+  }
+
   // Migra histórico de vidas do formato legado se houver
   if (Array.isArray(estado.vidasPerdidas) && estado.vidasPerdidas.length > 0) {
     if (!estado.vidasPerdidasPorCrianca[chave]) {

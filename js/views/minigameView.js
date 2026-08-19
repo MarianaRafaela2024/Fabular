@@ -1105,7 +1105,7 @@ function renderMontaFrase(fase, corpo, spec) {
   const wrap = document.createElement('div');
   wrap.className = 'mf-wrap';
   wrap.innerHTML = `
-    <div class="mg-texto-contexto">${textoLimpo}</div>
+   
     <p class="mg-desc">Monte a frase clicando nas palavras. Clique em uma palavra já colocada para removê-la.</p>
     <div class="mf-espaco" id="mfEspaco"><span class="mf-placeholder">Clique nas palavras abaixo…</span></div>
     <div class="mf-pool" id="mfPool"></div>

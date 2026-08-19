@@ -505,8 +505,30 @@
       ? normalizarPerfilCrianca(perfilObj)
       : perfilObj;
 
-    // Salva APENAS o perfil selecionado no localStorage (sem dados de progresso)
-    salvarJSON(CHAVE_ESTADO, { perfil: perfilNorm });
+    // Preserva o histórico de vidas por criança no localStorage ao alternar de perfil
+    let estadoExistente = {};
+    try {
+      const raw = localStorage.getItem(CHAVE_ESTADO);
+      if (raw) estadoExistente = JSON.parse(raw);
+    } catch (_) { }
+
+    let vidasPerdidasPorCrianca = estadoExistente.vidasPerdidasPorCrianca || {};
+    try {
+      const rawVidas = localStorage.getItem('mundoHistorias_vidas_criancas');
+      if (rawVidas) {
+        const parsed = JSON.parse(rawVidas);
+        if (parsed && typeof parsed === 'object') {
+          vidasPerdidasPorCrianca = Object.assign({}, vidasPerdidasPorCrianca, parsed);
+        }
+      }
+    } catch (_) { }
+
+    const estadoFinal = Object.assign({}, estadoExistente, {
+      perfil: perfilNorm,
+      vidasPerdidasPorCrianca: vidasPerdidasPorCrianca
+    });
+
+    salvarJSON(CHAVE_ESTADO, estadoFinal);
     window.location.href = "index.html";
   }
 

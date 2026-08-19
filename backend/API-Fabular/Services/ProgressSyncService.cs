@@ -169,14 +169,26 @@ public class ProgressSyncService
             """,
             new { CriancaId = criancaId });
 
-        var sessoesLidasList = sessoesDb.Select(sessao => new HistoriaProgressoDto(
-            ConverterIdHistoriaParaString(sessao.IdHistoria),
-            Math.Clamp(sessao.Estrelas, 0, 5),
-            sessao.CriadoEm.ToString("dd/MM/yyyy"),
-            sessao.CriadoEm.ToString("yyyy-MM-dd")
-        )).Where(h => h.Estrelas > 0).ToList();
+        foreach (var sessao in sessoesDb)
+        {
+            var idStr = ConverterIdHistoriaParaString(sessao.IdHistoria);
+            var est = Math.Clamp(sessao.Estrelas, 0, 5);
+            if (est <= 0) continue;
 
-        var historiasLidas = sessoesLidasList.Count > 0 ? sessoesLidasList : historiasMap.Values.OrderBy(h => h.Id).ToList();
+            if (historiasMap.TryGetValue(idStr, out var exist))
+            {
+                if (est > exist.Estrelas)
+                {
+                    historiasMap[idStr] = new HistoriaProgressoDto(idStr, est, sessao.CriadoEm.ToString("dd/MM/yyyy"), sessao.CriadoEm.ToString("yyyy-MM-dd"));
+                }
+            }
+            else
+            {
+                historiasMap[idStr] = new HistoriaProgressoDto(idStr, est, sessao.CriadoEm.ToString("dd/MM/yyyy"), sessao.CriadoEm.ToString("yyyy-MM-dd"));
+            }
+        }
+
+        var historiasLidas = historiasMap.Values.OrderBy(h => h.Id).ToList();
         var totalEstrelas = historiasLidas.Sum(h => h.Estrelas);
 
         if (totalEstrelas == 0)
@@ -697,11 +709,11 @@ public class ProgressSyncService
                 var estrelas = 0;
                 if (item.TryGetProperty("estrelas", out var estrelasEl) && estrelasEl.TryGetInt32(out var e))
                 {
-                    estrelas = Math.Clamp(e, 0, 3);
+                    estrelas = Math.Clamp(e, 0, 5);
                 }
                 else if (item.TryGetProperty("Estrelas", out estrelasEl) && estrelasEl.TryGetInt32(out e))
                 {
-                    estrelas = Math.Clamp(e, 0, 3);
+                    estrelas = Math.Clamp(e, 0, 5);
                 }
 
                 var data = item.TryGetProperty("data", out var dataEl) ? dataEl.GetString()
