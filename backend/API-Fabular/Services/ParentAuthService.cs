@@ -133,6 +133,108 @@ public class ParentAuthService
         }
     }
 
+    public async Task<ApplicationResult<ParentProfileResponse>> GetProfileAsync(int responsavelId)
+    {
+        if (responsavelId <= 0)
+        {
+            return ApplicationResult<ParentProfileResponse>.BadRequest("Responsável inválido.");
+        }
+
+        await using var conn = _db.Create();
+        var row = await conn.QueryFirstOrDefaultAsync<(int Id, string Nome, string? Sobrenome, string? Telefone, string Email)>(
+            "SELECT Id, Nome, Sobrenome, Telefone, Email FROM Responsavel WHERE Id = @Id",
+            new { Id = responsavelId });
+
+        if (row.Id == 0)
+        {
+            return ApplicationResult<ParentProfileResponse>.NotFound("Responsável não encontrado.");
+        }
+
+        return ApplicationResult<ParentProfileResponse>.Ok(
+            new ParentProfileResponse(row.Id, row.Nome, row.Sobrenome, row.Telefone, row.Email));
+    }
+
+    public async Task<ApplicationResult<ParentProfileResponse>> UpdateProfileAsync(int responsavelId, UpdateParentRequest request)
+    {
+        if (responsavelId <= 0 || string.IsNullOrWhiteSpace(request.Nome))
+        {
+            return ApplicationResult<ParentProfileResponse>.BadRequest("Nome é obrigatório.");
+        }
+
+        await using var conn = _db.Create();
+        var row = await conn.QueryFirstOrDefaultAsync<(int Id, string SenhaHash, string Email)>(
+            "SELECT Id, SenhaHash, Email FROM Responsavel WHERE Id = @Id",
+            new { Id = responsavelId });
+
+        if (row.Id == 0)
+        {
+            return ApplicationResult<ParentProfileResponse>.NotFound("Responsável não encontrado.");
+        }
+
+        var novoEmail = string.IsNullOrWhiteSpace(request.Email)
+            ? row.Email
+            : request.Email.Trim().ToLowerInvariant();
+
+        if (!string.IsNullOrWhiteSpace(request.Email) && novoEmail != row.Email)
+        {
+            var emailEmUso = await conn.QueryFirstOrDefaultAsync<int?>(
+                "SELECT Id FROM Responsavel WHERE Email = @Email AND Id <> @Id",
+                new { Email = novoEmail, Id = responsavelId });
+            if (emailEmUso.HasValue)
+            {
+                return ApplicationResult<ParentProfileResponse>.Conflict("E-mail já cadastrado.");
+            }
+        }
+
+        string? novaSenhaHash = null;
+        if (!string.IsNullOrWhiteSpace(request.NovaSenha))
+        {
+            if (string.IsNullOrWhiteSpace(request.SenhaAtual))
+            {
+                return ApplicationResult<ParentProfileResponse>.BadRequest("Informe a senha atual para alterá-la.");
+            }
+
+            if (row.SenhaHash != Hash(request.SenhaAtual))
+            {
+                return ApplicationResult<ParentProfileResponse>.Unauthorized("Senha atual incorreta.");
+            }
+
+            novaSenhaHash = Hash(request.NovaSenha);
+        }
+
+        var telefone = string.IsNullOrWhiteSpace(request.Telefone)
+            ? null
+            : new string(request.Telefone.Where(char.IsDigit).ToArray());
+
+        if (telefone is not null && telefone.Length > 0 && (telefone.Length < 10 || telefone.Length > 11))
+        {
+            return ApplicationResult<ParentProfileResponse>.BadRequest("Informe um telefone válido com DDD.");
+        }
+
+        await conn.ExecuteAsync(
+            """
+            UPDATE Responsavel
+            SET Nome = @Nome,
+                Sobrenome = @Sobrenome,
+                Telefone = @Telefone,
+                Email = @Email,
+                SenhaHash = COALESCE(@SenhaHash, SenhaHash)
+            WHERE Id = @Id
+            """,
+            new
+            {
+                Id = responsavelId,
+                Nome = request.Nome.Trim(),
+                Sobrenome = request.Sobrenome?.Trim(),
+                Telefone = telefone,
+                Email = novoEmail,
+                SenhaHash = novaSenhaHash
+            });
+
+        return ApplicationResult<ParentProfileResponse>.Ok(
+            new ParentProfileResponse(responsavelId, request.Nome.Trim(), request.Sobrenome?.Trim(), telefone, novoEmail));
+    }
+
     public async Task<ApplicationResult<bool>> ResetPasswordAsync(ParentResetPasswordRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Email) ||

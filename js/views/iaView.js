@@ -37,11 +37,16 @@ async function gerarHistoriaIa() {
       tema: null,
       responsavelId: responsavelId || null
     };
-    await apiPost('/api/v1/stories/generate', body);
+    const gerada = await apiPost('/api/v1/stories/generate', body);
     ta.value = '';
     await carregarHistoriasDaApi();
     renderizarBiblioteca();
-    mostrarToast('História criada! Escolha na lista abaixo ✨');
+    if (gerada && gerada.id) {
+      await iniciarHistoria(`api-${gerada.id}`, { irLeitura: true });
+      mostrarToast('História criada! Boa leitura 📖');
+    } else {
+      mostrarToast('História criada! Escolha na lista abaixo ✨');
+    }
   } catch (e) {
     if (errEl) {
       errEl.textContent =
@@ -372,7 +377,7 @@ Narrativa mais elaborada
 
 MINIGAMES (OBRIGATÓRIO)
 
-Gerar EXATAMENTE 4 minigames
+Gerar EXATAMENTE 5 minigames
 Todos diferentes entre si
 Baseados na história
 Adequados à idade

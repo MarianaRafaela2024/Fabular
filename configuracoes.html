@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configurações - Fabular</title>
+  <link rel="icon" type="image/png" href="midia/iconeRaposa.png">
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="login-body">
+
+  <div class="login-bg">
+    <div class="estrelas-bg" aria-hidden="true">
+      <span class="estrela-flutuante" style="--d:0s;  --x:8%;  --y:12%">⭐</span>
+      <span class="estrela-flutuante" style="--d:1.2s;--x:82%; --y:10%">✨</span>
+      <span class="estrela-flutuante" style="--d:2s;  --x:55%; --y:75%">⭐</span>
+      <span class="estrela-flutuante" style="--d:.6s; --x:22%; --y:82%">✨</span>
+      <span class="estrela-flutuante" style="--d:1.7s;--x:72%; --y:58%">⭐</span>
+      <span class="estrela-flutuante" style="--d:3s;  --x:92%; --y:45%">✨</span>
+      <span class="estrela-flutuante" style="--d:.3s; --x:38%; --y:20%">🌟</span>
+      <span class="estrela-flutuante" style="--d:2.4s;--x:15%; --y:50%">✨</span>
+    </div>
+
+    <div class="login-wrapper modo-config">
+      <div class="login-card config-card-pagina" id="configuracoes-card" role="region" aria-label="Configurações do responsável">
+        <div class="config-topo-header">
+          <div>
+            <h2 class="login-card-titulo" style="margin: 0;">⚙️ Configurações</h2>
+            <p class="tela-sub" style="margin: 4px 0 0 0;">Gerencie seus dados, perfis das crianças e relatórios.</p>
+          </div>
+          <button class="btn-secundario btn-voltar-config-top" id="btn-voltar-perfis-config" type="button">← Voltar para troca de perfil</button>
+        </div>
+
+        <div class="config-abas" role="tablist" aria-label="Seções de configuração">
+          <button class="config-aba ativo" data-secao="relatorios" role="tab" aria-selected="true">📊 Relatórios</button>
+          <button class="config-aba" data-secao="responsavel" role="tab" aria-selected="false">👤 Responsável</button>
+          <button class="config-aba" data-secao="crianca" role="tab" aria-selected="false">👧 Criança</button>
+        </div>
+
+        <div class="config-secao ativa" id="config-secao-relatorios" role="tabpanel">
+          <div class="campo-grupo" style="max-width: 360px;">
+            <label class="campo-label" for="config-relatorio-crianca">Selecione a criança</label>
+            <select id="config-relatorio-crianca" class="campo-input"></select>
+          </div>
+          <div id="config-relatorios-conteudo" class="config-relatorios-conteudo">
+            <p class="tela-sub">Selecione uma criança para ver o relatório.</p>
+          </div>
+        </div>
+
+        <div class="config-secao oculto" id="config-secao-responsavel" role="tabpanel">
+          <div class="config-grid-2col">
+            <div class="campo-grupo">
+              <label class="campo-label" for="config-resp-nome">Nome</label>
+              <input type="text" id="config-resp-nome" class="campo-input" />
+            </div>
+            <div class="campo-grupo">
+              <label class="campo-label" for="config-resp-sobrenome">Sobrenome</label>
+              <input type="text" id="config-resp-sobrenome" class="campo-input" />
+            </div>
+            <div class="campo-grupo">
+              <label class="campo-label" for="config-resp-telefone">Telefone</label>
+              <input type="tel" id="config-resp-telefone" class="campo-input" maxlength="15" />
+            </div>
+            <div class="campo-grupo">
+              <label class="campo-label" for="config-resp-email">E-mail</label>
+              <input type="email" id="config-resp-email" class="campo-input" />
+            </div>
+            <div class="campo-grupo">
+              <label class="campo-label" for="config-resp-senha-atual">Senha atual (opcional)</label>
+              <input type="password" id="config-resp-senha-atual" class="campo-input" placeholder="Para alterar a senha" />
+            </div>
+            <div class="campo-grupo">
+              <label class="campo-label" for="config-resp-nova-senha">Nova senha</label>
+              <input type="password" id="config-resp-nova-senha" class="campo-input" placeholder="Deixe em branco para manter" />
+            </div>
+          </div>
+          <button class="btn-principal" id="btn-salvar-responsavel" type="button" style="margin-top: 12px; align-self: flex-start; max-width: 320px;">Salvar dados do responsável</button>
+        </div>
+
+        <div class="config-secao oculto" id="config-secao-crianca" role="tabpanel">
+          <div class="config-grid-2col">
+            <div class="campo-grupo">
+              <label class="campo-label" for="config-crianca-select">Selecione a criança</label>
+              <select id="config-crianca-select" class="campo-input"></select>
+            </div>
+            <div class="campo-grupo">
+              <label class="campo-label" for="config-crianca-nome">Nome ou apelido</label>
+              <input type="text" id="config-crianca-nome" class="campo-input" maxlength="20" />
+            </div>
+            <div class="campo-grupo">
+              <label class="campo-label" for="config-crianca-nascimento">Data de nascimento</label>
+              <input type="date" id="config-crianca-nascimento" class="campo-input" />
+            </div>
+            <div class="campo-grupo">
+              <label class="campo-label" for="config-crianca-horario">Horário preferido para brincar</label>
+              <input type="time" id="config-crianca-horario" class="campo-input" />
+            </div>
+          </div>
+          <div class="campo-grupo" style="margin-top: 10px;">
+            <label class="campo-label" id="config-label-genero">Gênero de história favorito</label>
+            <div class="chip-grupo" id="config-genero-grupo" role="radiogroup" aria-labelledby="config-label-genero">
+              <button class="chip ativo" data-genero="narrativo" type="button" aria-pressed="true">📖 Narrativo</button>
+              <button class="chip" data-genero="poetico" type="button" aria-pressed="false">🎵 Poético</button>
+              <button class="chip" data-genero="instrucional" type="button" aria-pressed="false">📋 Instrucional</button>
+              <button class="chip" data-genero="descritivo" type="button" aria-pressed="false">🔍 Descritivo</button>
+              <button class="chip" data-genero="informativo" type="button" aria-pressed="false">💡 Informativo</button>
+            </div>
+          </div>
+          <div class="campo-grupo" style="margin-top: 10px;">
+            <label class="campo-label" id="config-label-avatar">Avatar</label>
+            <div class="avatar-grid config-avatar-grid" id="config-avatar-grid" role="radiogroup" aria-labelledby="config-label-avatar">
+              <button class="avatar-btn ativo" data-av="midia/lion.png" type="button" aria-pressed="true" role="radio"><img src="midia/lion.png" alt="Leão"></button>
+              <button class="avatar-btn" data-av="midia/frog.png" type="button" aria-pressed="false" role="radio"><img src="midia/frog.png" alt="Sapo"></button>
+              <button class="avatar-btn" data-av="midia/butterfly.png" type="button" aria-pressed="false" role="radio"><img src="midia/butterfly.png" alt="Borboleta"></button>
+              <button class="avatar-btn" data-av="midia/sea-turtle.png" type="button" aria-pressed="false" role="radio"><img src="midia/sea-turtle.png" alt="Tartaruga"></button>
+              <button class="avatar-btn" data-av="midia/fox.png" type="button" aria-pressed="false" role="radio"><img src="midia/fox.png" alt="Raposa"></button>
+              <button class="avatar-btn" data-av="midia/penguin.png" type="button" aria-pressed="false" role="radio"><img src="midia/penguin.png" alt="Pinguim"></button>
+              <button class="avatar-btn" data-av="midia/dragon.png" type="button" aria-pressed="false" role="radio"><img src="midia/dragon.png" alt="Dragão"></button>
+              <button class="avatar-btn" data-av="midia/panda.png" type="button" aria-pressed="false" role="radio"><img src="midia/panda.png" alt="Panda"></button>
+            </div>
+          </div>
+          <button class="btn-principal" id="btn-salvar-crianca" type="button" style="margin-top: 12px; align-self: flex-start; max-width: 320px;">Salvar dados da criança</button>
+        </div>
+
+        <span class="campo-erro oculto" id="config-erro" role="alert"></span>
+        <span class="config-sucesso oculto" id="config-sucesso" role="status"></span>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/models/faixaEtaria.js"></script>
+  <script src="js/configuracoes.js"></script>
+</body>
+</html>

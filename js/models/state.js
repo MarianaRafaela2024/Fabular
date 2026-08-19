@@ -33,6 +33,7 @@ let estado = {
 };
 
 let syncTimer = null;
+const CHAVE_VIDAS_PERSISTENTES = 'mundoHistorias_vidas_criancas';
 
 function salvarEstado() {
   const dados = {
@@ -41,6 +42,9 @@ function salvarEstado() {
     vidasPerdidasPorCrianca: estado.vidasPerdidasPorCrianca || {}
   };
   localStorage.setItem('mundoHistorias_estado', JSON.stringify(dados));
+  try {
+    localStorage.setItem(CHAVE_VIDAS_PERSISTENTES, JSON.stringify(estado.vidasPerdidasPorCrianca || {}));
+  } catch (_) { }
   agendarSyncProgresso();
 }
 
@@ -58,11 +62,14 @@ function carregarEstado() {
   estado.relatorioEventos = [];
 
   const raw = localStorage.getItem('mundoHistorias_estado');
-  if (!raw) return;
-  try {
-    const dados = JSON.parse(raw);
-    if (!dados) return;
+  let dados = null;
+  if (raw) {
+    try {
+      dados = JSON.parse(raw);
+    } catch (e) { /* ignora */ }
+  }
 
+  if (dados) {
     if (Array.isArray(dados.vidasPerdidas)) {
       estado.vidasPerdidas = dados.vidasPerdidas;
     } else {
@@ -82,7 +89,21 @@ function carregarEstado() {
         salvarEstado();
       }
     }
-  } catch (e) { /* ignora */ }
+  } else {
+    estado.vidasPerdidas = [];
+    estado.vidasPerdidasPorCrianca = {};
+  }
+
+  // Carrega e mescla também de CHAVE_VIDAS_PERSISTENTES para resgatar históricos mantidos entre perfis e sessoes
+  try {
+    const rawVidas = localStorage.getItem(CHAVE_VIDAS_PERSISTENTES);
+    if (rawVidas) {
+      const vidasPersistidas = JSON.parse(rawVidas);
+      if (vidasPersistidas && typeof vidasPersistidas === 'object') {
+        estado.vidasPerdidasPorCrianca = Object.assign({}, vidasPersistidas, estado.vidasPerdidasPorCrianca);
+      }
+    }
+  } catch (_) { }
 }
 
 function garantirContadoresRelatorio() {

@@ -39,6 +39,19 @@ public class ChildrenController : ControllerBase
         return Ok(result.Value);
     }
 
+    [HttpPut("{id:int}")]
+    public async Task<ActionResult> Update(int id, [FromBody] UpdateChildRequest request)
+    {
+        var result = await _childrenLinkService.UpdateChildAsync(id, request);
+
+        if (!result.Success)
+        {
+            return StatusCode(result.StatusCode, new { message = result.Error });
+        }
+
+        return Ok(result.Value);
+    }
+
     [HttpPost("link-local")]
     public async Task<ActionResult<object>> LinkLocal([FromBody] LinkLocalChildrenRequest request)
     {

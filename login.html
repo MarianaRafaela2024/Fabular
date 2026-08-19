@@ -162,7 +162,12 @@
       </div>
 
       <div class="login-card oculto" id="perfis-card" role="region" aria-label="Seleção de perfil infantil">
-        <h2 class="login-card-titulo">👨‍👩‍👧 Seleção de Perfil</h2>
+        <div class="perfis-header-wrap">
+          <h2 class="login-card-titulo" style="margin: 0;">👨‍👩‍👧 Troca de perfil</h2>
+          <button class="btn-config-engrenagem" id="btn-ir-configuracoes" title="Configurações" aria-label="Configurações">
+            <img src="midia/gear.png" alt="Configurações" class="img-engrenagem" />
+          </button>
+        </div>
         <p class="tela-sub">Escolha uma criança para entrar no sistema.</p>
         <div id="perfis-lista" class="avatar-grid"></div>
         <button class="btn-secundario" id="btn-add-crianca">+ Adicionar criança</button>
@@ -172,26 +177,6 @@
     </div>
   </div>
 
-  <style>
-    .link-inline {
-      background: none;
-      border: none;
-      padding: 0;
-      font: inherit;
-      font-size: .85rem;
-      color: var(--laranja, #f97316);
-      cursor: pointer;
-      text-decoration: underline;
-      text-underline-offset: 2px;
-    }
-    .link-inline:hover { opacity: .75; }
-    .resp-link-texto {
-      margin: .5rem 0 0;
-      text-align: center;
-      font-size: .82rem;
-      color: #888;
-    }
-  </style>
   <script src="js/models/faixaEtaria.js"></script>
   <script src="js/login.js"></script>
 </body>
