@@ -160,47 +160,23 @@ public class ProgressSyncService
                 : relatorioDb.Value.UpdatedAt;
         }
 
-        var sessoes = await conn.QueryAsync<(int IdHistoria, int Estrelas, DateTime CriadoEm)>(
+        var sessoesDb = await conn.QueryAsync<(int Id, int IdHistoria, int Estrelas, DateTime CriadoEm)>(
             """
-            SELECT Id_Historia, MAX(Estrelas) AS Estrelas, MAX(CriadoEm) AS CriadoEm
+            SELECT Id, Id_Historia, Estrelas, CriadoEm
             FROM Sessao_Leitura
             WHERE Id_Crianca = @CriancaId AND Concluida = 1
-            GROUP BY Id_Historia
+            ORDER BY CriadoEm DESC, Id DESC
             """,
             new { CriancaId = criancaId });
 
-        foreach (var sessao in sessoes)
-        {
-            var id = ConverterIdHistoriaParaString(sessao.IdHistoria);
-            var estrelas = Math.Clamp(sessao.Estrelas, 0, 5);
-            if (estrelas <= 0)
-            {
-                continue;
-            }
+        var sessoesLidasList = sessoesDb.Select(sessao => new HistoriaProgressoDto(
+            ConverterIdHistoriaParaString(sessao.IdHistoria),
+            Math.Clamp(sessao.Estrelas, 0, 5),
+            sessao.CriadoEm.ToString("dd/MM/yyyy"),
+            sessao.CriadoEm.ToString("yyyy-MM-dd")
+        )).Where(h => h.Estrelas > 0).ToList();
 
-            if (historiasMap.TryGetValue(id, out var existente))
-            {
-                if (estrelas > existente.Estrelas)
-                {
-                    historiasMap[id] = existente with
-                    {
-                        Estrelas = estrelas,
-                        Data = sessao.CriadoEm.ToString("dd/MM/yyyy"),
-                        DataIso = sessao.CriadoEm.ToString("yyyy-MM-dd")
-                    };
-                }
-            }
-            else
-            {
-                historiasMap[id] = new HistoriaProgressoDto(
-                    id,
-                    estrelas,
-                    sessao.CriadoEm.ToString("dd/MM/yyyy"),
-                    sessao.CriadoEm.ToString("yyyy-MM-dd"));
-            }
-        }
-
-        var historiasLidas = historiasMap.Values.OrderBy(h => h.Id).ToList();
+        var historiasLidas = sessoesLidasList.Count > 0 ? sessoesLidasList : historiasMap.Values.OrderBy(h => h.Id).ToList();
         var totalEstrelas = historiasLidas.Sum(h => h.Estrelas);
 
         if (totalEstrelas == 0)
@@ -604,46 +580,31 @@ public class ProgressSyncService
 
     private async Task PersistirEstrelasPorHistoriaAsync(System.Data.Common.DbConnection conn, int criancaId, object progressoHistorias)
     {
-        foreach (var historia in ExtrairHistoriasLidas(progressoHistorias))
+        var historias = ExtrairHistoriasLidas(progressoHistorias);
+        if (historias.Count == 0) return;
+
+        var sessoesExistentesCount = await conn.ExecuteScalarAsync<int>(
+            "SELECT COUNT(1) FROM Sessao_Leitura WHERE Id_Crianca = @CriancaId AND Concluida = 1",
+            new { CriancaId = criancaId });
+
+        if (historias.Count > sessoesExistentesCount)
         {
-            if (!TryParseApiHistoriaId(historia.Id, out var historiaId) || historia.Estrelas <= 0)
+            var novasLeituras = historias.Skip(sessoesExistentesCount).ToList();
+            foreach (var historia in novasLeituras)
             {
-                continue;
-            }
+                if (!TryParseApiHistoriaId(historia.Id, out var historiaId) || historia.Estrelas <= 0)
+                {
+                    continue;
+                }
 
-            var existeHistoria = await conn.ExecuteScalarAsync<int?>(
-                "SELECT TOP 1 1 FROM Historia WHERE Id = @HistoriaId",
-                new { HistoriaId = historiaId });
-            if (existeHistoria is null)
-            {
-                continue;
-            }
+                var existeHistoria = await conn.ExecuteScalarAsync<int?>(
+                    "SELECT TOP 1 1 FROM Historia WHERE Id = @HistoriaId",
+                    new { HistoriaId = historiaId });
+                if (existeHistoria is null)
+                {
+                    continue;
+                }
 
-            var sessaoId = await conn.ExecuteScalarAsync<int?>(
-                """
-                SELECT TOP 1 Id
-                FROM Sessao_Leitura
-                WHERE Id_Crianca = @CriancaId AND Id_Historia = @HistoriaId AND Concluida = 1
-                ORDER BY Estrelas DESC, CriadoEm DESC
-                """,
-                new { CriancaId = criancaId, HistoriaId = historiaId });
-
-            if (sessaoId.HasValue)
-            {
-                await conn.ExecuteAsync(
-                    """
-                    UPDATE Sessao_Leitura
-                    SET Estrelas = @Estrelas
-                    WHERE Id = @Id AND Estrelas < @Estrelas
-                    """,
-                    new
-                    {
-                        Id = sessaoId.Value,
-                        Estrelas = historia.Estrelas
-                    });
-            }
-            else
-            {
                 await conn.ExecuteAsync(
                     """
                     INSERT INTO Sessao_Leitura (Id_Crianca, Id_Historia, Estrelas, Concluida)
@@ -655,6 +616,43 @@ public class ProgressSyncService
                         HistoriaId = historiaId,
                         Estrelas = historia.Estrelas
                     });
+            }
+        }
+        else
+        {
+            foreach (var historia in historias)
+            {
+                if (!TryParseApiHistoriaId(historia.Id, out var historiaId) || historia.Estrelas <= 0)
+                {
+                    continue;
+                }
+
+                var existeHistoria = await conn.ExecuteScalarAsync<int?>(
+                    "SELECT TOP 1 1 FROM Historia WHERE Id = @HistoriaId",
+                    new { HistoriaId = historiaId });
+                if (existeHistoria is null)
+                {
+                    continue;
+                }
+
+                var jaExiste = await conn.ExecuteScalarAsync<int?>(
+                    "SELECT TOP 1 Id FROM Sessao_Leitura WHERE Id_Crianca = @CriancaId AND Id_Historia = @HistoriaId AND Concluida = 1",
+                    new { CriancaId = criancaId, HistoriaId = historiaId });
+
+                if (jaExiste is null)
+                {
+                    await conn.ExecuteAsync(
+                        """
+                        INSERT INTO Sessao_Leitura (Id_Crianca, Id_Historia, Estrelas, Concluida)
+                        VALUES (@CriancaId, @HistoriaId, @Estrelas, 1)
+                        """,
+                        new
+                        {
+                            CriancaId = criancaId,
+                            HistoriaId = historiaId,
+                            Estrelas = historia.Estrelas
+                        });
+                }
             }
         }
     }

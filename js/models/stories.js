@@ -85,7 +85,7 @@ const HISTORIAS = [
         texto: 'Quando saiu, o corredor estava vazio e as luzes da escola já tinham sido apagadas. Pedro ficou parado diante da porta marrom, agora fechada de novo. Entendeu, naquele momento, o que a raposa quis dizer. Ser <strong class="palavra-chave">guardião</strong> não era uma tarefa de vigia — não era trancar a biblioteca, catalogar os livros, protegê-los do pó. Era outra coisa, mais difícil e mais simples ao mesmo tempo: era carregar as histórias dentro de si. Lembrar delas. Deixar que mudassem alguma coisa. Porque uma história só existe de verdade quando alguém a leva para fora da página.',
       }
     ],
-    palavrasChave: ['txt_completo', 'biblioteca', 'guardião', 'reconhecimento', 'civilização', 'histórias']
+    palavrasChave: ['raposa', 'biblioteca', 'guardião', 'lembrar', 'civilização', 'histórias']
   },
 
   // --- POÉTICO ---
@@ -281,7 +281,7 @@ function salvarHistoriaNoCache(historiaCompleta) {
     if (idx >= 0) cache[idx] = historiaCompleta;
     else cache.unshift(historiaCompleta);
     localStorage.setItem(CHAVE_HISTORIAS_CACHE, JSON.stringify(cache.slice(0, 50)));
-  } catch (_) {}
+  } catch (_) { }
 }
 
 function carregarCacheHistorias() {
@@ -372,7 +372,7 @@ async function carregarHistoriasDaApi() {
     if (faixa) query.set('faixaEtaria', String(faixa));
     if (vinculo?.criancaId) query.set('criancaId', String(vinculo.criancaId));
     else if (responsavelId) query.set('responsavelId', String(responsavelId));
-    
+
     const list = await apiGet(`/api/v1/stories?${query.toString()}`);
     if (!Array.isArray(list) || list.length === 0) return;
     const mapped = list.map(mapStorySummaryToLegacy);
@@ -569,7 +569,7 @@ function extrairPalavrasLista(valor) {
     try {
       const parsed = JSON.parse(texto);
       if (Array.isArray(parsed)) return extrairPalavrasLista(parsed);
-    } catch (_) {}
+    } catch (_) { }
   }
   return texto.split(/\s+/).filter(Boolean);
 }
@@ -979,6 +979,7 @@ const EMOJI_POR_PALAVRA = {
   girafa: '🦒', hipopotamo: '🦛', rinoceronte: '🦏', camelo: '🐫',
   mosca: '🪰', formiga: '🐜', aranha: '🕷️', joaninha: '🐞',
   cogumelo: '🍄', cacto: '🌵', palmeira: '🌴', pinheiro: '🌲',
+  guardiao: '🛡️', biblioteca: '📚', historias: '📖', lembrar: '💭', civilizacao: '🏛️',
   tesouro: '💎', mapa: '🗺️', chave: '🔑', porta: '🚪',
   janela: '🪟', cama: '🛏️', travesseiro: '🛏️', cobertor: '🛏️',
   chapeu: '🎩', sapato: '👟', roupa: '👕', vestido: '👗',

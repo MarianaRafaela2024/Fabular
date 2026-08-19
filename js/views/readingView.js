@@ -142,34 +142,28 @@ function registrarEstrelasHistoria(estrelasNovas) {
   const id = estado.historiaAtual && estado.historiaAtual.id;
   if (!id) return;
   const novas = Math.max(0, Math.min(5, Number(estrelasNovas) || 0));
-  const { data, dataIso } = obterDataConclusaoAtual();
-  const idx = estado.historiasLidas.findIndex(r => r.id === id);
+  if (novas <= 0) return;
 
-  if (idx >= 0) {
-    const antigas = Number(estado.historiasLidas[idx].estrelas) || 0;
-    if (novas > antigas) {
-      estado.totalEstrelas += novas - antigas;
-      estado.historiasLidas[idx].estrelas = novas;
-    }
-    estado.historiasLidas[idx].data = data;
-    estado.historiasLidas[idx].dataIso = dataIso;
-    salvarEstado();
-    if (typeof enviarSyncProgresso === 'function') enviarSyncProgresso().catch(() => {});
-    atualizarHeader();
-    renderizarBiblioteca();
-  } else if (novas > 0) {
-    estado.historiasLidas.push({
-      id,
-      estrelas: novas,
-      data,
-      dataIso
-    });
+  const { data, dataIso } = obterDataConclusaoAtual();
+
+  // Adiciona um novo registro de leitura toda vez que a história for concluída
+  estado.historiasLidas.push({
+    id: String(id),
+    estrelas: novas,
+    data,
+    dataIso
+  });
+
+  if (typeof recalcularTotalEstrelas === 'function') {
+    recalcularTotalEstrelas();
+  } else {
     estado.totalEstrelas += novas;
-    salvarEstado();
-    if (typeof enviarSyncProgresso === 'function') enviarSyncProgresso().catch(() => {});
-    atualizarHeader();
-    renderizarBiblioteca();
   }
+
+  salvarEstado();
+  if (typeof enviarSyncProgresso === 'function') enviarSyncProgresso().catch(() => {});
+  atualizarHeader();
+  renderizarBiblioteca();
 }
 
 function atualizarEstrelasAposMinigame() {

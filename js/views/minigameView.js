@@ -241,13 +241,6 @@ function finalizarMinigames() {
   const estrelas = calcularEstrelasPorAcertos(acertosTotal, totalJogos);
 
   registrarEstrelasHistoria(estrelas);
-  const id = estado.historiaAtual.id;
-  const idx = estado.historiasLidas.findIndex(r => r.id === id);
-  if (idx >= 0) {
-    const { data, dataIso } = obterDataConclusaoAtual();
-    estado.historiasLidas[idx].data = data;
-    estado.historiasLidas[idx].dataIso = dataIso;
-  }
 
   estado.nivel = calcularNivelPorXp(estado.totalEstrelas);
 
@@ -367,8 +360,9 @@ function montarDadosCompletarMG(fase, h, spec) {
       .replace(/<[^>]+>/g, '')
       .replace(/\s+/g, ' ')
       .trim();
-    const fraseTxt = textoLimpo.split(/[.!?]/).map((s) => s.trim()).find((s) => s.length > 12) || textoLimpo;
+    const frases = textoLimpo.split(/[.!?]/).map((s) => s.trim()).filter(Boolean);
     const re = new RegExp(`\\b${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+    const fraseTxt = frases.find((s) => re.test(s)) || frases.find((s) => s.length > 12) || textoLimpo;
     if (re.test(fraseTxt)) frase = fraseTxt.replace(re, '___');
     else frase = (fraseTxt.length > 80 ? fraseTxt.slice(0, 80) + '…' : fraseTxt) + ' ___';
   }
@@ -1200,7 +1194,7 @@ function renderVerdadeiroFalso(fase, h, corpo, spec) {
     const pares = [
       { afirmacao: textoFase.length > 10 ? textoFase + '.' : `A história fala sobre "${kw}".`, correta: true },
       { afirmacao: `A história se passa em outro planeta.`, correta: false },
-      { afirmacao: `${kw} é mencionado na história.`, correta: true },
+      { afirmacao: `A palavra ou elemento "${kw}" faz parte da história.`, correta: true },
       { afirmacao: `A história não tem personagens.`, correta: false }
     ];
     item = pares[Math.floor(Math.random() * pares.length)];
@@ -1539,6 +1533,7 @@ function renderLigarPontos(fase, h, corpo, spec) {
     leao: 'Rei da selva com juba',
     marina: 'Menina que desenhava nuvens no seu caderno',
     pedro: 'Menino curioso que descobriu a biblioteca secreta',
+    biblioteca: 'Lugar repleto de livros, histórias e conhecimento',
     vovo: 'Mãe de um dos nossos pais, muito carinhosa',
     vovoa: 'Vovó carinhosa do jardim',
     amazonica: 'Maior floresta tropical do planeta',
@@ -1904,6 +1899,7 @@ function extrairPalavraERimaDoTexto(h) {
     { sufixo: 'ela', rimas: ['janela', 'estrela', 'vela', 'amarela'], erradas: ['lua', 'noite', 'porta', 'vidro'] },
     { sufixo: 'inho', rimas: ['carinho', 'passarinho', 'caminho', 'ninho'], erradas: ['asa', 'árvore', 'céu', 'vento'] },
     { sufixo: 'oso', rimas: ['bondoso', 'gostoso', 'famoso', 'grandioso'], erradas: ['forte', 'leão', 'pedra', 'sol'] },
+    { sufixo: 'osa', rimas: ['bondosa', 'gostosa', 'famosa', 'curiosa'], erradas: ['livro', 'pedra', 'vento', 'luz'] },
     { sufixo: 'ar', rimas: ['cantar', 'voar', 'olhar', 'brincar'], erradas: ['água', 'peixe', 'nuvem', 'terra'] },
     { sufixo: 'or', rimas: ['amor', 'calor', 'pintor', 'flor'], erradas: ['jardim', 'céu', 'festa', 'casa'] }
   ];
