@@ -124,14 +124,24 @@ function registrarEstrelasHistoria(estrelasNovas) {
   if (novas <= 0) return;
 
   const { data, dataIso } = obterDataConclusaoAtual();
+  const idStr = String(id);
+  if (!Array.isArray(estado.historiasLidas)) {
+    estado.historiasLidas = [];
+  }
 
-  // Adiciona um novo registro de leitura toda vez que a história for concluída
-  estado.historiasLidas.push({
-    id: String(id),
-    estrelas: novas,
-    data,
-    dataIso
-  });
+  const idx = estado.historiasLidas.findIndex(r => r && String(r.id) === idStr);
+  if (idx >= 0) {
+    estado.historiasLidas[idx].estrelas = Math.max(Number(estado.historiasLidas[idx].estrelas) || 0, novas);
+    estado.historiasLidas[idx].data = data || estado.historiasLidas[idx].data;
+    estado.historiasLidas[idx].dataIso = dataIso || estado.historiasLidas[idx].dataIso;
+  } else {
+    estado.historiasLidas.push({
+      id: idStr,
+      estrelas: novas,
+      data,
+      dataIso
+    });
+  }
 
   if (typeof recalcularTotalEstrelas === 'function') {
     recalcularTotalEstrelas();

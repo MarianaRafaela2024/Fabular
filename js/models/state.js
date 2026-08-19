@@ -185,14 +185,41 @@ function mesclarProgressoServidor(servidor) {
   if (!servidor) return;
   const remoto = Array.isArray(servidor.historiasLidas) ? servidor.historiasLidas : [];
 
-  if (remoto.length > 0) {
-    estado.historiasLidas = remoto.map((r) => ({
-      id: String(r.id),
+  const mapa = new Map();
+  (estado.historiasLidas || []).forEach((r) => {
+    if (!r || r.id == null) return;
+    const key = String(r.id);
+    mapa.set(key, {
+      id: key,
       estrelas: Number(r.estrelas) || 0,
       data: r.data || '',
-      dataIso: r.dataIso || obterDataIsoHistoria(r) || ''
-    }));
-  }
+      dataIso: r.dataIso || (typeof obterDataIsoHistoria === 'function' ? obterDataIsoHistoria(r) : '') || ''
+    });
+  });
+
+  remoto.forEach((r) => {
+    if (!r || r.id == null) return;
+    const key = String(r.id);
+    const estRemoto = Number(r.estrelas) || 0;
+    const exist = mapa.get(key);
+    if (!exist) {
+      mapa.set(key, {
+        id: key,
+        estrelas: estRemoto,
+        data: r.data || '',
+        dataIso: r.dataIso || (typeof obterDataIsoHistoria === 'function' ? obterDataIsoHistoria(r) : '') || ''
+      });
+    } else {
+      mapa.set(key, {
+        id: key,
+        estrelas: Math.max(exist.estrelas, estRemoto),
+        data: r.data || exist.data || '',
+        dataIso: r.dataIso || exist.dataIso || (typeof obterDataIsoHistoria === 'function' ? obterDataIsoHistoria(r) : '') || ''
+      });
+    }
+  });
+
+  estado.historiasLidas = Array.from(mapa.values());
 
   recalcularTotalEstrelas();
 
