@@ -3091,62 +3091,8 @@ body.login-body {
   line-height: 1.3;
 }
 
-/* MODO ALTO CONTRASTE (SUPORTE) */
-body.alto-contraste .calendario-atividade {
-  background: #111111;
-  border-color: #FFFF00;
-}
 
-body.alto-contraste .calendario-topo-bar {
-  background: #222222;
-  border-color: #FFFF00;
-}
 
-body.alto-contraste .cal-streak-valor,
-body.alto-contraste .cal-streak-label,
-body.alto-contraste .calendario-titulo,
-body.alto-contraste .cal-raposa-titulo,
-body.alto-contraste .cal-raposa-texto {
-  color: #FFFF00;
-}
-
-body.alto-contraste .calendario-nav-btn {
-  background: #222222;
-  color: #FFFF00;
-  border-color: #FFFF00;
-}
-
-body.alto-contraste .calendario-dia-semana {
-  background: #222222;
-  color: #FFFF00;
-}
-
-body.alto-contraste .cal-dia {
-  background: #222222;
-  border-color: #444444;
-  color: #FFFFFF;
-}
-
-body.alto-contraste .cal-dia-hoje {
-  border-color: #00FFEE;
-}
-
-body.alto-contraste .calendario-raposa-frase {
-  background: #1A1A1A;
-  border-color: #FFFF00;
-}
-
-body.alto-contraste .cal-modal-card {
-  background: #111111;
-  border-color: #FFFF00;
-  color: #FFFF00;
-}
-
-body.alto-contraste .cal-modal-data,
-body.alto-contraste .cal-modal-subtitulo,
-body.alto-contraste .cal-modal-h-info strong {
-  color: #FFFF00;
-}
 
 .historia-concluida-item {
   background: var(--bg-card);
@@ -3492,7 +3438,7 @@ body.alto-contraste .cal-modal-h-info strong {
 
 /* ── 4. VERDADEIRO OU FALSO ── */
 .tf-afirmacao {
-  background: rgba(240, 244, 255, .7);
+  background: rgba(173, 16, 55, 0.7);
   border-left: 4px solid var(--cor-primaria);
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   padding: 16px 18px;
@@ -3649,28 +3595,28 @@ body.alto-contraste .cal-modal-h-info strong {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: linear-gradient(135deg, rgba(255, 240, 235, .8), rgba(255, 228, 217, .8));
-  border: 1.5px solid rgba(255, 107, 53, .25);
+  background: linear-gradient(135deg, rgba(255, 240, 235, 0.95), rgba(254, 226, 226, 0.95));
+  border: 2px solid #FF6B35;
   border-radius: var(--radius);
   padding: 16px 20px;
   margin-bottom: 16px;
-  box-shadow: 0 2px 12px rgba(255, 107, 53, .1);
+  box-shadow: 0 4px 14px rgba(255, 107, 53, 0.15);
 }
 
 .rima-label {
-  font-size: .8rem;
+  font-size: .85rem;
   font-weight: 800;
-  color: var(--texto-sub);
+  color: #7C2D12;
   text-transform: uppercase;
-  letter-spacing: .06em;
+  letter-spacing: .08em;
   white-space: nowrap;
 }
 
 .rima-palavra-alvo {
   font-family: 'Baloo 2', cursive;
-  font-size: 1.55rem;
+  font-size: 1.65rem;
   font-weight: 800;
-  color: var(--cor-primaria);
+  color: #C2410C;
   letter-spacing: .02em;
 }
 
@@ -4118,7 +4064,7 @@ body.alto-contraste .cal-modal-h-info strong {
 }
 
 /* ==============================================
-   RESPONSIVO APP + MODO NOTURNO
+   RESPONSIVO APP + MODO NOTURNO (SISTEMA COMPLETO)
    ============================================== */
 body.alto-contraste {
   --bg: #0D1117;
@@ -4132,20 +4078,400 @@ body.alto-contraste {
   --grad-card: linear-gradient(145deg, #161B22, #1C2430);
   --grad-btn: linear-gradient(135deg, #FF6B35, #FF8E53);
   --grad-btn-sec: linear-gradient(135deg, #34D1C6, #269B92);
-  --glass-bg: rgba(22, 27, 34, 0.88);
-  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-bg: rgba(22, 27, 34, 0.92);
+  --glass-border: rgba(255, 255, 255, 0.12);
   --shadow: 0 6px 26px rgba(0, 0, 0, 0.36);
+  --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.5);
+  background-color: #0D1117 !important;
+  color: #E6EDF3 !important;
 }
 
-body.alto-contraste .app-header,
-body.alto-contraste .sidebar,
+/* Fundo da tela de Login em Dark Mode */
+body.alto-contraste.login-body,
+body.alto-contraste .login-bg {
+  background: radial-gradient(circle at top left, #1a2332, #0d1117 70%) !important;
+}
+
+/* Header & Barra Superior */
+body.alto-contraste .app-header {
+  background: #161B22 !important;
+  border-bottom: 1px solid #30363D !important;
+}
+
+body.alto-contraste .header-nome {
+  color: #F0F6FC !important;
+}
+
+body.alto-contraste .header-nivel {
+  color: #9BA7B4 !important;
+}
+
+/* Botões do Header */
+body.alto-contraste .btn-icon {
+  background: #21262D !important;
+  border: 1px solid #30363D !important;
+  color: #C9D1D9 !important;
+}
+
+body.alto-contraste .btn-icon:hover {
+  background: #30363D !important;
+  color: #FFFFFF !important;
+}
+
+body.alto-contraste .btn-icon.ativo {
+  background: #FF6B35 !important;
+  border-color: #FF6B35 !important;
+  color: #FFFFFF !important;
+}
+
+body.alto-contraste .badge-vidas-header {
+  background: #2D1517 !important;
+  border: 1px solid #7F1D1D !important;
+  color: #FCA5A5 !important;
+}
+
+body.alto-contraste .badge-vidas-header.vidas-zeradas {
+  background: #2D2613 !important;
+  border: 1px solid #78350F !important;
+  color: #FDE047 !important;
+}
+
+/* Sidebar & Navegação */
+body.alto-contraste .sidebar {
+  background: #161B22 !important;
+  border-right: 1px solid #30363D !important;
+}
+
+body.alto-contraste .nav-item {
+  color: #9BA7B4 !important;
+}
+
+body.alto-contraste .nav-item:hover {
+  background: #21262D !important;
+  color: #F0F6FC !important;
+}
+
+body.alto-contraste .nav-item.ativo {
+  background: rgba(255, 107, 53, 0.15) !important;
+  color: #FF6B35 !important;
+  border-color: rgba(255, 107, 53, 0.3) !important;
+}
+
+/* Títulos Globais e Subtítulos */
+body.alto-contraste .tela-header h2,
+body.alto-contraste .progresso-secao h3,
+body.alto-contraste .login-card-titulo,
+body.alto-contraste .resp-titulo {
+  color: #F0F6FC !important;
+}
+
+body.alto-contraste .tela-sub,
+body.alto-contraste .campo-label,
+body.alto-contraste .vazio-msg {
+  color: #9BA7B4 !important;
+}
+
+/* ─────────────────────────────────────────────
+   ÁREA DE PROGRESSO & SEÇÃO DA RAPOSA (DARK MODE)
+   ───────────────────────────────────────────── */
+
+/* Card Principal da Evolução da Raposa */
+body.alto-contraste .raposa-evolucao-card {
+  background: linear-gradient(145deg, #1f1b16, #2b2219) !important;
+  border: 2px solid rgba(245, 158, 11, 0.4) !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Imagem e Container da Raposa */
+body.alto-contraste .raposa-imagem-wrapper {
+  background: #241e17 !important;
+  border: 3px solid rgba(245, 158, 11, 0.5) !important;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4) !important;
+}
+
+body.alto-contraste .raposa-img {
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.3)) !important;
+}
+
+/* Badge do Estágio da Raposa */
+body.alto-contraste .raposa-fase-badge {
+  color: #FEF08A !important;
+  background: #3C2912 !important;
+  border: 1px solid #78350F !important;
+}
+
+/* Textos da Raposa */
+body.alto-contraste .raposa-fase-nome {
+  color: #F0F6FC !important;
+}
+
+body.alto-contraste .raposa-mensagem {
+  color: #D1D5DB !important;
+}
+
+/* Barra de Progresso da Raposa */
+body.alto-contraste .raposa-estrelas-atual {
+  color: #FBBF24 !important;
+}
+
+body.alto-contraste .raposa-proximo-texto {
+  color: #9CA3AF !important;
+}
+
+body.alto-contraste .raposa-bar-track {
+  background: #2D3748 !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6) !important;
+}
+
+body.alto-contraste .raposa-bar-fill {
+  background: linear-gradient(90deg, #F59E0B, #EAB308, #10B981) !important;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.5) !important;
+}
+
+/* Passos dos Estágios da Raposa */
+body.alto-contraste .raposa-estagio-step {
+  color: #9CA3AF !important;
+  opacity: 0.6 !important;
+}
+
+body.alto-contraste .raposa-estagio-step.ativo {
+  color: #FBBF24 !important;
+  opacity: 1 !important;
+}
+
+body.alto-contraste .raposa-estagio-linha {
+  background: #374151 !important;
+}
+
+/* ─────────────────────────────────────────────
+   CALENDÁRIO DE LEITURA & SEQUÊNCIA
+   ───────────────────────────────────────────── */
+body.alto-contraste .calendario-atividade {
+  background: #161B22 !important;
+  border: 1.5px solid #30363D !important;
+  box-shadow: 0 6px 26px rgba(0, 0, 0, 0.36) !important;
+}
+
+body.alto-contraste .calendario-topo-bar {
+  background: #1C232D !important;
+  border: 1px solid #30363D !important;
+}
+
+body.alto-contraste .cal-streak-valor {
+  color: #FF9D00 !important;
+}
+
+body.alto-contraste .cal-streak-label {
+  color: #9BA7B4 !important;
+}
+
+body.alto-contraste .calendario-titulo {
+  color: #F0F6FC !important;
+}
+
+body.alto-contraste .cal-raposa-titulo {
+  color: #FF9D00 !important;
+}
+
+body.alto-contraste .cal-raposa-texto {
+  color: #E6EDF3 !important;
+}
+
+body.alto-contraste .calendario-nav-btn {
+  background: #21262D !important;
+  color: #C9D1D9 !important;
+  border: 1px solid #30363D !important;
+}
+
+body.alto-contraste .calendario-nav-btn:hover {
+  background: #30363D !important;
+  color: #FFFFFF !important;
+}
+
+body.alto-contraste .calendario-dia-semana {
+  background: transparent !important;
+  color: #8B949E !important;
+}
+
+body.alto-contraste .cal-dia {
+  background: #21262D !important;
+  border: 1px solid #30363D !important;
+  color: #C9D1D9 !important;
+}
+
+body.alto-contraste .cal-dia:hover {
+  border-color: #58A6FF !important;
+  background: #282E38 !important;
+}
+
+body.alto-contraste .cal-dia-hoje {
+  border-color: #38BDF8 !important;
+}
+
+body.alto-contraste .cal-dia-hoje-badge {
+  background: #0284C7 !important;
+  color: #FFFFFF !important;
+}
+
+body.alto-contraste .cal-dia-num {
+  color: #C9D1D9 !important;
+}
+
+body.alto-contraste .cal-dia-futuro {
+  opacity: 0.35 !important;
+}
+
+/* Níveis de atividade do calendário no escuro */
+body.alto-contraste .cal-dia-nivel-1 {
+  background: #0E4429 !important;
+  border-color: #0E4429 !important;
+  color: #7EE787 !important;
+}
+
+body.alto-contraste .cal-dia-nivel-2 {
+  background: #006D32 !important;
+  border-color: #006D32 !important;
+  color: #FFFFFF !important;
+}
+
+body.alto-contraste .cal-dia-nivel-3 {
+  background: #26A641 !important;
+  border-color: #26A641 !important;
+  color: #FFFFFF !important;
+}
+
+body.alto-contraste .cal-dia-nivel-4 {
+  background: #39D353 !important;
+  border-color: #39D353 !important;
+  color: #0D1117 !important;
+}
+
+body.alto-contraste .calendario-legenda,
+body.alto-contraste .calendario-resumo {
+  color: #8B949E !important;
+}
+
+body.alto-contraste .cal-legenda-amostra {
+  border-color: #30363D !important;
+}
+
+body.alto-contraste .calendario-raposa-frase {
+  background: #1C232D !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+  color: #E6EDF3 !important;
+}
+
+/* Modal Detalhes do Dia */
+body.alto-contraste .cal-modal-overlay {
+  background: rgba(0, 0, 0, 0.75) !important;
+}
+
+body.alto-contraste .cal-modal-card {
+  background: #161B22 !important;
+  border: 1.5px solid #30363D !important;
+  color: #E6EDF3 !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6) !important;
+}
+
+body.alto-contraste .cal-modal-data {
+  color: #F0F6FC !important;
+}
+
+body.alto-contraste .cal-modal-subtitulo {
+  color: #C9D1D9 !important;
+}
+
+body.alto-contraste .cal-modal-h-info strong {
+  color: #F0F6FC !important;
+}
+
+body.alto-contraste .cal-modal-h-info span {
+  color: #8B949E !important;
+}
+
+body.alto-contraste .cal-modal-historias-lista li {
+  background: #21262D !important;
+  border: 1px solid #30363D !important;
+}
+
+body.alto-contraste .cal-modal-fechar {
+  color: #8B949E !important;
+}
+
+body.alto-contraste .cal-modal-fechar:hover {
+  color: #F0F6FC !important;
+}
+
+/* ─────────────────────────────────────────────
+   HISTÓRIAS CONCLUÍDAS E ESTATÍSTICAS
+   ───────────────────────────────────────────── */
+body.alto-contraste .historia-concluida-item,
+body.alto-contraste .stat-card-prog {
+  background: #161B22 !important;
+  border: 1.5px solid #30363D !important;
+  color: #E6EDF3 !important;
+}
+
+body.alto-contraste .historia-concluida-item:hover,
+body.alto-contraste .stat-card-prog:hover {
+  background: #1C2128 !important;
+  border-color: #58A6FF !important;
+}
+
+body.alto-contraste .hci-titulo,
+body.alto-contraste .scp-valor {
+  color: #F0F6FC !important;
+}
+
+body.alto-contraste .hci-genero,
+body.alto-contraste .scp-label {
+  color: #8B949E !important;
+}
+
+body.alto-contraste #prog-extra-relatorio {
+  background: #161B22 !important;
+  border: 1.5px solid #30363D !important;
+}
+
+/* ─────────────────────────────────────────────
+   BIBLIOTECA, LEITURA, BOT IA E CARDS
+   ───────────────────────────────────────────── */
 body.alto-contraste .filtros-bar,
 body.alto-contraste .bot-ia-card,
-body.alto-contraste .ia-gerar-wrap {
-  background: #11161D !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
+body.alto-contraste .ia-gerar-wrap,
+body.alto-contraste .historia-card,
+body.alto-contraste .leitura-card,
+body.alto-contraste .leitura-completa-wrap,
+body.alto-contraste .minigame-card,
+body.alto-contraste .resultado-card,
+body.alto-contraste .login-card,
+body.alto-contraste .resp-card {
+  background: #161B22 !important;
+  border-color: #30363D !important;
+  color: #E6EDF3 !important;
 }
 
+body.alto-contraste .historia-card:hover {
+  border-color: #58A6FF !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4) !important;
+}
+
+body.alto-contraste .historia-titulo,
+body.alto-contraste .bot-ia-titulo,
+body.alto-contraste .ia-gerar-titulo,
+body.alto-contraste .leitura-titulo {
+  color: #F0F6FC !important;
+}
+
+body.alto-contraste .historia-desc,
+body.alto-contraste .historia-meta {
+  color: #9BA7B4 !important;
+}
+
+/* ─────────────────────────────────────────────
+   INPUTS & TEXTAREAS COM ALTO CONTRASTE E LEGIBILIDADE
+   ───────────────────────────────────────────── */
+body.alto-contraste .pesquisa-input,
 body.alto-contraste .campo-input,
 body.alto-contraste .interacao-input,
 body.alto-contraste .verso-input,
@@ -4153,22 +4479,316 @@ body.alto-contraste .bot-ia-textarea,
 body.alto-contraste .bot-ia-select,
 body.alto-contraste .ia-gerar-textarea {
   background: #0D1117 !important;
-  color: var(--texto) !important;
-  border-color: #30363D !important;
+  color: #F0F6FC !important;
+  font-weight: 700 !important;
+  font-size: 1.02rem !important;
+  border: 2px solid #484F58 !important;
 }
 
+body.alto-contraste .pesquisa-input::placeholder,
+body.alto-contraste .campo-input::placeholder,
+body.alto-contraste .interacao-input::placeholder,
+body.alto-contraste .verso-input::placeholder,
+body.alto-contraste .bot-ia-textarea::placeholder,
+body.alto-contraste .ia-gerar-textarea::placeholder {
+  color: #9CA3AF !important;
+  opacity: 1 !important;
+  font-weight: 600 !important;
+}
+
+body.alto-contraste .pesquisa-input:focus,
+body.alto-contraste .campo-input:focus,
+body.alto-contraste .interacao-input:focus,
+body.alto-contraste .verso-input:focus,
+body.alto-contraste .bot-ia-textarea:focus,
+body.alto-contraste .bot-ia-select:focus,
+body.alto-contraste .ia-gerar-textarea:focus {
+  border-color: #58A6FF !important;
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.3) !important;
+  outline: none !important;
+}
+
+body.alto-contraste .chip {
+  background: #21262D !important;
+  border: 1.5px solid #484F58 !important;
+  color: #E6EDF3 !important;
+  font-weight: 700 !important;
+}
+
+body.alto-contraste .chip:hover {
+  background: #30363D !important;
+  color: #FFFFFF !important;
+  border-color: #58A6FF !important;
+}
+
+body.alto-contraste .chip.ativo {
+  background: #FF6B35 !important;
+  border-color: #FF6B35 !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+}
+
+/* ─────────────────────────────────────────────
+   DESTAQUES DE MINIGAME NO MODO ESCURO
+   ───────────────────────────────────────────── */
+body.alto-contraste .rima-destaque {
+  background: linear-gradient(135deg, #2b1812, #3d1f16) !important;
+  border: 2px solid #FF6B35 !important;
+  box-shadow: 0 4px 16px rgba(255, 107, 53, 0.25) !important;
+}
+
+body.alto-contraste .rima-label {
+  color: #FFD8CC !important;
+  font-weight: 800 !important;
+  font-size: 0.85rem !important;
+  letter-spacing: 0.08em !important;
+}
+
+body.alto-contraste .rima-palavra-alvo {
+  color: #FF8E53 !important;
+  font-weight: 800 !important;
+  font-size: 1.65rem !important;
+  text-shadow: 0 0 12px rgba(255, 142, 83, 0.4) !important;
+}
+
+body.alto-contraste .verso-trecho {
+  background: linear-gradient(135deg, #26163b, #321852) !important;
+  border: 2px solid #A855F7 !important;
+  color: #E9D5FF !important;
+  font-weight: 700 !important;
+}
+
+body.alto-contraste .qd-trecho {
+  background: #172554 !important;
+  border-left: 4px solid #60A5FA !important;
+  color: #DBEAFE !important;
+  font-weight: 700 !important;
+}
+
+body.alto-contraste .tf-afirmacao {
+  background: #1f2937 !important;
+  border-left: 4px solid #FF6B35 !important;
+  color: #F9FAFB !important;
+  font-weight: 700 !important;
+}
+
+body.alto-contraste .mg-texto-contexto {
+  background: #1e1b2e !important;
+  border-left: 4px solid #A855F7 !important;
+  color: #F3E8FF !important;
+  font-weight: 700 !important;
+}
+
+/* ─────────────────────────────────────────────
+   BOTÕES DE MINIGAME COM CORES VIVAS & VIBRANTES
+   ───────────────────────────────────────────── */
+
+/* Botões de Rima */
+body.alto-contraste .rima-opc {
+  background: linear-gradient(145deg, #23161a, #2f1d22) !important;
+  border: 2px solid #FF7B47 !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  font-size: 1.08rem !important;
+}
+
+body.alto-contraste .rima-opc:hover:not(:disabled) {
+  background: linear-gradient(135deg, #FF6B35, #FF8E53) !important;
+  border-color: #FFA07A !important;
+  color: #FFFFFF !important;
+  transform: translateY(-3px) scale(1.02) !important;
+  box-shadow: 0 8px 25px rgba(255, 107, 53, 0.45) !important;
+}
+
+/* Botões de Quem Disse Isso */
+body.alto-contraste .qd-btn {
+  background: linear-gradient(145deg, #152238, #1c2d4a) !important;
+  border: 2px solid #4895EF !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  font-size: 1.08rem !important;
+}
+
+body.alto-contraste .qd-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3B82F6, #2563EB) !important;
+  border-color: #93C5FD !important;
+  color: #FFFFFF !important;
+  transform: translateY(-3px) scale(1.02) !important;
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.45) !important;
+}
+
+/* Botões de Som e Palavra */
+body.alto-contraste .sp-btn {
+  background: linear-gradient(145deg, #221833, #2e1e47) !important;
+  border: 2px solid #B76EEF !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  font-size: 1.08rem !important;
+}
+
+body.alto-contraste .sp-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #8B5CF6, #7C3AED) !important;
+  border-color: #C084FC !important;
+  color: #FFFFFF !important;
+  transform: translateY(-3px) scale(1.02) !important;
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.45) !important;
+}
+
+/* Botões de Escolha Múltipla / Verdadeiro e Falso */
 body.alto-contraste .opcao-btn,
-body.alto-contraste .mc-btn,
-body.alto-contraste .sp-btn,
-body.alto-contraste .rima-btn,
-body.alto-contraste .qd-btn,
-body.alto-contraste .rima-opc,
-body.alto-contraste .color-item,
-body.alto-contraste .cp-cel,
-body.alto-contraste .btn-desistir-mg,
-body.alto-contraste .historia-concluida-item {
-  background: #1B2430;
-  border-color: #2F3A48;
+body.alto-contraste .mc-btn {
+  background: linear-gradient(145deg, #132822, #1b382e) !important;
+  border: 2px solid #2DD4BF !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  font-size: 1.08rem !important;
+}
+
+body.alto-contraste .opcao-btn:hover:not(:disabled),
+body.alto-contraste .mc-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #10B981, #059669) !important;
+  border-color: #6EE7B7 !important;
+  color: #FFFFFF !important;
+  transform: translateY(-3px) scale(1.02) !important;
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.45) !important;
+}
+
+/* Botão Ouvir Palavra Principal */
+body.alto-contraste .btn-ouvir-palavra {
+  background: linear-gradient(135deg, #8B5CF6, #6D28D9) !important;
+  color: #FFFFFF !important;
+  border: 2px solid #A78BFA !important;
+  font-weight: 800 !important;
+  box-shadow: 0 6px 22px rgba(139, 92, 246, 0.5) !important;
+}
+
+body.alto-contraste .btn-ouvir-palavra:hover {
+  transform: translateY(-3px) scale(1.04) !important;
+  box-shadow: 0 10px 28px rgba(139, 92, 246, 0.6) !important;
+}
+
+/* Monta Frase Chips & Slots */
+body.alto-contraste .mf-espaco {
+  background: #1e172a !important;
+  border: 2px dashed #c084fc !important;
+  color: #e9d5ff !important;
+}
+
+body.alto-contraste .mf-placeholder {
+  color: #a78bfa !important;
+  font-weight: 700 !important;
+}
+
+body.alto-contraste .mf-chip {
+  background: #2a1b40 !important;
+  border: 2px solid #c084fc !important;
+  color: #f3e8ff !important;
+  font-weight: 800 !important;
+}
+
+body.alto-contraste .mf-chip:hover:not(.mf-usada) {
+  background: #3b245c !important;
+  border-color: #ffffff !important;
+  color: #ffffff !important;
+  transform: translateY(-2px) !important;
+}
+
+body.alto-contraste .mf-colocada {
+  background: #ff6b35 !important;
+  border: 2px solid #ff8e53 !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+}
+
+/* Ligar os Pontos */
+body.alto-contraste .lp-btn {
+  background: #1c2430 !important;
+  border: 2px solid #38bdf8 !important;
+  color: #f0f6fc !important;
+  font-weight: 800 !important;
+}
+
+body.alto-contraste .lp-btn:hover:not(.lp-ligado) {
+  background: #253447 !important;
+  border-color: #7dd3fc !important;
+  color: #ffffff !important;
+}
+
+/* Ordenar Passos */
+body.alto-contraste .op-item {
+  background: #1c2430 !important;
+  border: 2px solid #484f58 !important;
+  color: #f0f6fc !important;
+  font-weight: 700 !important;
+}
+
+body.alto-contraste .op-item:hover {
+  border-color: #58a6ff !important;
+  background: #253447 !important;
+}
+
+body.alto-contraste .op-num {
+  color: #ff8e53 !important;
+}
+
+/* Botões de Ação de Minigames (Confirmar / Desistir) */
+body.alto-contraste .btn-confirmar {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4) !important;
+}
+
+body.alto-contraste .btn-desistir-mg {
+  background: #21262d !important;
+  border: 2px solid #484f58 !important;
+  color: #e6edf3 !important;
+  font-weight: 700 !important;
+}
+
+body.alto-contraste .btn-desistir-mg:hover:not(:disabled) {
+  background: #30363d !important;
+  color: #ffffff !important;
+  border-color: #8b949e !important;
+}
+
+body.alto-contraste .mem-card {
+  background: #21262d !important;
+  border-color: #30363d !important;
+}
+
+body.alto-contraste .mem-card .mem-frente {
+  background: #1c232d !important;
+  color: #ff9d00 !important;
+}
+
+body.alto-contraste .mem-card .mem-verso {
+  background: #2d3748 !important;
+  color: #ffffff !important;
+}
+
+body.alto-contraste .toast {
+  background: #1f2937 !important;
+  color: #f9fafb !important;
+  border: 1px solid #374151 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+}
+
+body.alto-contraste .link-inline {
+  color: #ff8e53 !important;
+}
+
+@media (max-width: 980px) {
+  body.alto-contraste .sidebar {
+    background: rgba(22, 27, 34, 0.96) !important;
+    border-top-color: #30363d !important;
+  }
+
+  body.alto-contraste .header-dir {
+    background: rgba(22, 27, 34, 0.96) !important;
+    border-color: #30363d !important;
+  }
 }
 
 @media (max-width: 980px) {
@@ -4707,8 +5327,15 @@ body.alto-contraste .modal-sair-fechar {
 }
 
 @keyframes coracaoPulso {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.15); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.15);
+  }
 }
 
 /* Animação quando perde vida */
@@ -4717,10 +5344,29 @@ body.alto-contraste .modal-sair-fechar {
 }
 
 @keyframes badgePerdeuVida {
-  10%, 90% { transform: translate3d(-1px, 0, 0) scale(1.1); background: #FFE3E3; }
-  20%, 80% { transform: translate3d(2px, 0, 0) scale(1.1); }
-  30%, 50%, 70% { transform: translate3d(-3px, 0, 0) scale(1.15); background: #FFC9C9; }
-  40%, 60% { transform: translate3d(3px, 0, 0) scale(1.15); }
+
+  10%,
+  90% {
+    transform: translate3d(-1px, 0, 0) scale(1.1);
+    background: #FFE3E3;
+  }
+
+  20%,
+  80% {
+    transform: translate3d(2px, 0, 0) scale(1.1);
+  }
+
+  30%,
+  50%,
+  70% {
+    transform: translate3d(-3px, 0, 0) scale(1.15);
+    background: #FFC9C9;
+  }
+
+  40%,
+  60% {
+    transform: translate3d(3px, 0, 0) scale(1.15);
+  }
 }
 
 /* Toast Notificação de Perda de Vida */
@@ -4757,9 +5403,17 @@ body.alto-contraste .modal-sair-fechar {
 }
 
 @keyframes coracaoBate {
-  0% { transform: scale(0.5); }
-  50% { transform: scale(1.3); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(0.5);
+  }
+
+  50% {
+    transform: scale(1.3);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 .toast-perda-texto {
@@ -4828,8 +5482,15 @@ body.alto-contraste .modal-sair-fechar {
 }
 
 @keyframes emojiTriste {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-6px) rotate(-5deg); }
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-6px) rotate(-5deg);
+  }
 }
 
 .modal-vidas-header h2 {
