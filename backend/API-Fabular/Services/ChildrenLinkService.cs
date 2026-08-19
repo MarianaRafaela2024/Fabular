@@ -117,6 +117,76 @@ public class ChildrenLinkService
 
         return ApplicationResult<int>.Ok(childId);
     }
+    public async Task<ApplicationResult<ChildResponse>> UpdateChildAsync(int childId, UpdateChildRequest request)
+    {
+        if (childId <= 0 || request.ResponsavelId <= 0 || string.IsNullOrWhiteSpace(request.Nome))
+        {
+            return ApplicationResult<ChildResponse>.BadRequest("Dados inválidos para atualização.");
+        }
+
+        if (!request.DataNascimento.HasValue)
+        {
+            return ApplicationResult<ChildResponse>.BadRequest("Data de nascimento é obrigatória.");
+        }
+
+        await using var conn = _db.Create();
+        await conn.OpenAsync();
+        await GarantirColunasCriancaAsync(conn);
+
+        var vinculo = await conn.QueryFirstOrDefaultAsync<int?>(
+            """
+            SELECT rc.Id
+            FROM Responsavel_Crianca rc
+            WHERE rc.Id_Responsavel = @ResponsavelId AND rc.Id_Crianca = @ChildId
+            """,
+            new { request.ResponsavelId, ChildId = childId });
+
+        if (!vinculo.HasValue)
+        {
+            return ApplicationResult<ChildResponse>.NotFound("Criança não vinculada a este responsável.");
+        }
+
+        var faixaEtaria = FaixaEtariaHelper.Calcular(request.DataNascimento);
+        var dataNascParam = request.DataNascimento.Value.ToDateTime(TimeOnly.MinValue);
+
+        await conn.ExecuteAsync(
+            """
+            UPDATE Crianca
+            SET Nome = @Nome,
+                FaixaEtaria = @FaixaEtaria,
+                DataNascimento = @DataNascimento,
+                Avatar = @Avatar,
+                GeneroFavorito = @GeneroFavorito,
+                HorarioBrincar = @HorarioBrincar
+            WHERE Id = @Id
+            """,
+            new
+            {
+                Id = childId,
+                Nome = request.Nome.Trim(),
+                FaixaEtaria = faixaEtaria,
+                DataNascimento = dataNascParam,
+                request.Avatar,
+                request.GeneroFavorito,
+                request.HorarioBrincar
+            });
+
+        var updated = await conn.QueryFirstOrDefaultAsync<ChildResponse>(
+            """
+            SELECT Id, Nome, FaixaEtaria, DataNascimento, Avatar, GeneroFavorito, HorarioBrincar
+            FROM Crianca
+            WHERE Id = @Id
+            """,
+            new { Id = childId });
+
+        if (updated is null)
+        {
+            return ApplicationResult<ChildResponse>.NotFound("Criança não encontrada.");
+        }
+
+        return ApplicationResult<ChildResponse>.Ok(updated);
+    }
+
     public async Task<ApplicationResult<object>> LinkLocalAsync(LinkLocalChildrenRequest request)
     {
         if (request.ResponsavelId <= 0 || request.ChildrenLocal is null || request.ChildrenLocal.Count == 0)

@@ -130,6 +130,16 @@ async function inicializar() {
   const telaInicial = obterTelaInicialDaPagina();
   irParaTela(telaInicial);
 
+  if (telaInicial === 'leitura') {
+    const idDesejado = sessionStorage.getItem('historiaIdDesejada');
+    if (idDesejado) {
+      sessionStorage.removeItem('historiaIdDesejada');
+      await iniciarHistoria(idDesejado, { irLeitura: true });
+    } else if (estado.historiaAtual) {
+      mostrarLeituraCompleta();
+    }
+  }
+
   inicializarFiltros();
 
   const btnGerar = document.getElementById('btn-gerar-historia');
