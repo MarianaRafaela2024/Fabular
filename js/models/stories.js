@@ -499,30 +499,29 @@ const MINIGAMES_BANCO = {
 };
 
 const MSGS_ACERTO = [
-  'Incrível! Você é demais! 🌟',
-  'Perfeito! Que resposta esperta! 🎉',
-  'Muito bem! Continue assim! 🚀',
-  'Uhuuul! Você acertou! ⭐',
-  'Fantástico! Você é um leitor(a) nato(a)! 📚'
+  'Incrível! Você é demais!',
+  'Perfeito! Que resposta esperta!',
+  'Muito bem! Continue assim!',
+  'Uhuuul! Você acertou!',
+  'Fantástico! Você é um leitor(a) nato(a)!'
 ];
 const MSGS_ERRO = [
-  'Quase lá! Você está aprendendo muito! 💪',
-  'Não tem problema! Continue tentando! 🌈',
-  'Cada erro nos ensina algo novo! Vamos em frente! 🌟'
+  'Quase lá! Você está aprendendo muito!',
+  'Não tem problema! Continue tentando!',
+  'Cada erro nos ensina algo novo! Vamos em frente!'
 ];
 const MSGS_RESULTADO = {
-  5: ['Perfeito! 5 estrelas — você é um(a) lenda da leitura! 🏆🌟', 'INCRÍVEL! Pontuação máxima! Você arrasou em tudo! 🎉🌟'],
-  4: ['Quase perfeito! 4 estrelas — muito bem! 🌟', 'Excelente! Você só errou um — parabéns! 💪🎉'],
-  3: ['Muito bem! 3 estrelas conquistadas! 🎉', 'Ótimo trabalho! Continue assim e chegue às 5 estrelas! 💪'],
-  2: ['Bom esforço! Continue praticando! 🌈', 'Você está melhorando! Tente de novo para mais estrelas! ⭐'],
-  1: ['Você concluiu! Releia a história e tente de novo! 💪', 'Parabéns por terminar! Pratique mais para subir! 🌈'],
-  0: ['Não desista! Releia a história e tente novamente! 📖', 'Vamos tentar de novo? Você consegue! 💪']
+  5: ['Perfeito! 5 estrelas — você é um(a) lenda da leitura!', 'INCRÍVEL! Pontuação máxima! Você arrasou em tudo!'],
+  4: ['Quase perfeito! 4 estrelas — muito bem!', 'Excelente! Você só errou um — parabéns!'],
+  3: ['Muito bem! 3 estrelas conquistadas!', 'Ótimo trabalho! Continue assim e chegue às 5 estrelas!'],
+  2: ['Bom esforço! Continue praticando!', 'Você está melhorando! Tente de novo para mais estrelas!'],
+  1: ['Você concluiu! Releia a história e tente de novo!', 'Parabéns por terminar! Pratique mais para subir!'],
+  0: ['Não desista! Releia a história e tente novamente!', 'Vamos tentar de novo? Você consegue!']
 };
 
 function normalizarTipoMinigame(tipoRaw) {
   const tipo = String(tipoRaw || '').trim().toLowerCase();
   const aliases = {
-    memoria: 'jogo_memoria',
     jogo_da_memoria: 'jogo_memoria',
     verdadeirofalso: 'verdadeiro_falso',
     vf: 'verdadeiro_falso',
@@ -543,7 +542,7 @@ function chaveUnicaMinigame(tipo) {
   const norm = normalizarTipoMinigame(tipo);
   if (norm === 'palavras_perdidas' || norm === 'completar') return 'completar';
   if (norm === 'monta_frase') return 'monta_frase';
-  if (norm === 'memoria' || norm === 'jogo_memoria') return 'jogo_memoria';
+  if (norm === 'jogo_memoria') return 'jogo_memoria';
   return norm;
 }
 

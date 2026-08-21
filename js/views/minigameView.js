@@ -52,7 +52,6 @@ function iniciarSequenciaMinigames() {
 function nomeMinigame(tipo) {
   const nomes = {
     memoria: '🃏 Jogo da Memória',//
-    //jogo_memoria:    '🃏 Jogo da Memória',
     som_palavra: '🔊 Som e Palavra',//
     monta_frase: '🧩 Monta-Frase',
     verdadeiro_falso: '✅ Verdadeiro ou Falso?',
