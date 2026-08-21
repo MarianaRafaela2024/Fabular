@@ -143,7 +143,6 @@ function registrarEstrelasHistoria(estrelasNovas) {
   const id = historia && historia.id;
   if (!id) return;
   const novas = Math.max(0, Math.min(5, Number(estrelasNovas) || 0));
-  if (novas <= 0) return;
 
   const { data, dataIso } = obterDataConclusaoAtual();
   const idStr = String(id);

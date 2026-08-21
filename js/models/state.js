@@ -250,29 +250,61 @@ function mesclarProgressoServidor(servidor) {
   listaCombinada.forEach((r) => {
     if (!r || (r.id == null && r.Id == null)) return;
     const idStr = String(r.id || r.Id);
+    const idNorm = typeof normalizarIdHistoria === 'function' ? normalizarIdHistoria(idStr) : idStr.replace('api-', '');
     const dataStr = r.dataIso || r.DataIso || r.data || r.Data || '';
     const est = Number(r.estrelas || r.Estrelas) || 0;
     const ts = r.timestamp || r.Timestamp || '';
-    // Chave única para evitar duplicações idênticas exatas por sincronização
-    const chave = ts ? `${idStr}_${ts}` : `${idStr}_${dataStr}_${est}`;
 
-    if (!chavesVistas.has(chave)) {
+    let titulo = r.titulo || r.Titulo || '';
+    let emoji = r.emoji || r.Emoji || '';
+    let genero = r.genero || r.Genero || '';
+
+    if (!titulo && typeof HISTORIAS !== 'undefined') {
+      const hFound = HISTORIAS.find(x => {
+        const xNorm = typeof normalizarIdHistoria === 'function' ? normalizarIdHistoria(x.id) : String(x.id).replace('api-', '');
+        return xNorm === idNorm || String(x.id) === idStr;
+      });
+      if (hFound) {
+        titulo = hFound.titulo || '';
+        emoji = emoji || hFound.emoji || '📖';
+        genero = genero || hFound.genero || 'narrativo';
+      }
+    }
+
+    const canonicalId = `api-${idNorm}`;
+    const chave = ts ? `${idNorm}_${ts}` : `${idNorm}_${dataStr || 'data'}`;
+
+    const existenteIdx = unicos.findIndex(u => {
+      const uNorm = typeof normalizarIdHistoria === 'function' ? normalizarIdHistoria(u.id) : String(u.id).replace('api-', '');
+      return uNorm === idNorm && (ts ? u.timestamp === ts : true);
+    });
+
+    if (existenteIdx < 0 && !chavesVistas.has(chave)) {
       chavesVistas.add(chave);
       unicos.push({
-        id: idStr,
-        titulo: r.titulo || r.Titulo || '',
-        emoji: r.emoji || r.Emoji || '📖',
-        genero: r.genero || r.Genero || 'narrativo',
+        id: canonicalId,
+        titulo: titulo,
+        emoji: emoji || '📖',
+        genero: genero || 'narrativo',
         estrelas: est,
         data: r.data || r.Data || '',
         dataIso: r.dataIso || r.DataIso || (typeof obterDataIsoHistoria === 'function' ? obterDataIsoHistoria(r) : '') || '',
         timestamp: ts || Date.now()
       });
+    } else if (existenteIdx >= 0) {
+      const u = unicos[existenteIdx];
+      u.estrelas = Math.max(u.estrelas, est);
+      if (!u.titulo && titulo) u.titulo = titulo;
+      if ((!u.emoji || u.emoji === '📖') && emoji) u.emoji = emoji;
+      if (!u.genero && genero) u.genero = genero;
+      if (!u.data && (r.data || r.Data)) u.data = r.data || r.Data;
+      if (!u.dataIso && (r.dataIso || r.DataIso)) u.dataIso = r.dataIso || r.DataIso;
     }
   });
 
   estado.historiasLidas = unicos;
   recalcularTotalEstrelas();
+  salvarEstado();
 
   const atividadeRemota = Array.isArray(servidor.atividadeDiaria)
     ? servidor.atividadeDiaria

@@ -11,7 +11,7 @@ function renderizarBiblioteca() {
   const faixaPerfil = parseInt(estado?.perfil?.faixa, 10) || 1;
 
   let lista = HISTORIAS.filter(h => {
-    const okGenero = estado.filtroGenero === 'todos' || h.genero === estado.filtroGenero;
+    const okGenero = estado.filtroGenero === 'todos' || String(h.genero).toLowerCase() === String(estado.filtroGenero).toLowerCase();
     const okFaixaFiltro = estado.filtroFaixa === 'todos' || parseInt(h.faixa, 10) === parseInt(estado.filtroFaixa, 10);
     return okGenero && okFaixaFiltro;
   });
@@ -22,7 +22,7 @@ function renderizarBiblioteca() {
   }
 
   lista.forEach((h, i) => {
-    const concluida = estado.historiasLidas.find(r => r.id === h.id);
+    const concluida = (estado.historiasLidas || []).find(r => r.id === h.id || (typeof normalizarIdHistoria === 'function' && normalizarIdHistoria(r.id) === normalizarIdHistoria(h.id)));
     const estrelas = concluida ? concluida.estrelas : 0;
     const card = document.createElement('div');
     card.className = 'historia-card';
@@ -38,7 +38,7 @@ function renderizarBiblioteca() {
         <span class="hc-tag genero">${labelGenero(h.genero)}</span>
         <span class="hc-tag faixa">${labelFaixa(h.faixa)}</span>
         <span class="hc-tag duracao">⏱ ${h.duracao}</span>
-        ${String(h.id).startsWith('api-') ? '<span class="hc-tag ia-badge">🤖 IA</span>' : ''}
+        ${(h.origem === 'ia' || h.criancaId) ? '<span class="hc-tag ia-badge">🤖 IA</span>' : ''}
         ${String(h.id).startsWith('local-') ? '<span class="hc-tag ia-badge ia-badge-local" title="Salva localmente — vincule o perfil ao responsável para sincronizar">🤖 IA · local</span>' : ''}
         ${concluida ? `<span class="hc-tag concluida">✅ Concluída</span>` : ''}
       </div>

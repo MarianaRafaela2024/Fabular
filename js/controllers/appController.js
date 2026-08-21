@@ -119,8 +119,13 @@ async function inicializar() {
     return;
   }
 
-  await carregarProgressoDoServidor();
-  await carregarHistoriasDaApi();
+  try {
+    await carregarProgressoDoServidor();
+  } catch (_) { }
+
+  try {
+    await carregarHistoriasDaApi();
+  } catch (_) { }
   aplicarFaixaDoPerfilNosFiltros();
 
   atualizarHeader();

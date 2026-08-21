@@ -101,17 +101,20 @@ public class StoriesService
 
         // Quando criancaId é fornecido: retorna apenas histórias geradas para aquela criança.
         // Quando responsavelId é fornecido sem criancaId: retorna histórias de todas as crianças do responsável.
-        // Histórias de origem 'manual' (hardcoded no banco) são sempre excluídas da listagem dinâmica
-        // para que apenas histórias geradas pela IA vinculadas a uma criança apareçam.
+        // Retorna histórias base de origem 'manual' (do banco de dados MySQL)
+        // juntamente com as histórias geradas pela IA vinculadas à criança/responsável.
         var sql = """
-                  SELECT h.Id, h.Titulo, h.Genero, h.FaixaEtaria, h.Duracao, h.Emoji, h.Cena,
-                         g.Id_Crianca AS CriancaId
+                  SELECT DISTINCT h.Id, h.Titulo, h.Genero,
+                         CAST(h.FaixaEtaria AS INT) AS FaixaEtaria,
+                         h.Duracao, h.Emoji, h.Cena,
+                         CAST(g.Id_Crianca AS INT) AS CriancaId
                   FROM Historia h
-                  INNER JOIN IA_Geracao g ON g.Id_Historia = h.Id
+                  LEFT JOIN IA_Geracao g ON g.Id_Historia = h.Id
                   WHERE (@Faixa IS NULL OR h.FaixaEtaria = @Faixa)
                     AND (@Genero IS NULL OR h.Genero = @Genero)
                     AND (
-                      (@CriancaId IS NOT NULL AND g.Id_Crianca = @CriancaId)
+                      h.Origem = 'manual'
+                      OR (@CriancaId IS NOT NULL AND g.Id_Crianca = @CriancaId)
                       OR (
                         @CriancaId IS NULL
                         AND @ResponsavelId IS NOT NULL
@@ -153,10 +156,17 @@ public class StoriesService
 
         if (!string.IsNullOrWhiteSpace(row.PayloadJson))
         {
-            var fromPayload = JsonSerializer.Deserialize<StoryDetailDto>(row.PayloadJson);
-            if (fromPayload is not null)
+            try
             {
-                return ApplicationResult<StoryDetailDto>.Ok(fromPayload with { Id = row.Id });
+                var fromPayload = JsonSerializer.Deserialize<StoryDetailDto>(row.PayloadJson);
+                if (fromPayload is not null && !string.IsNullOrWhiteSpace(fromPayload.Texto))
+                {
+                    return ApplicationResult<StoryDetailDto>.Ok(fromPayload with { Id = row.Id });
+                }
+            }
+            catch
+            {
+                // Fallback para os campos individuais caso PayloadJson use esquema diferente
             }
         }
 

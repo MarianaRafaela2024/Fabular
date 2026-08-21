@@ -160,12 +160,13 @@ public class ProgressSyncService
                 : relatorioDb.Value.UpdatedAt;
         }
 
-        var sessoesDb = await conn.QueryAsync<(int Id, int IdHistoria, int Estrelas, DateTime CriadoEm)>(
+        var sessoesDb = await conn.QueryAsync<(int Id, int IdHistoria, int Estrelas, DateTime CriadoEm, string Titulo, string Emoji, string Genero)>(
             """
-            SELECT Id, Id_Historia, Estrelas, CriadoEm
-            FROM Sessao_Leitura
-            WHERE Id_Crianca = @CriancaId AND Concluida = 1
-            ORDER BY CriadoEm DESC, Id DESC
+            SELECT S.Id, S.Id_Historia, S.Estrelas, S.CriadoEm, H.Titulo, H.Emoji, H.Genero
+            FROM Sessao_Leitura S
+            LEFT JOIN Historia H ON S.Id_Historia = H.Id
+            WHERE S.Id_Crianca = @CriancaId AND S.Concluida = 1
+            ORDER BY S.CriadoEm DESC, S.Id DESC
             """,
             new { CriancaId = criancaId });
 
@@ -173,18 +174,17 @@ public class ProgressSyncService
         {
             var idStr = ConverterIdHistoriaParaString(sessao.IdHistoria);
             var est = Math.Clamp(sessao.Estrelas, 0, 5);
-            if (est <= 0) continue;
 
             if (historiasMap.TryGetValue(idStr, out var exist))
             {
-                if (est > exist.Estrelas)
+                if (est >= exist.Estrelas)
                 {
-                    historiasMap[idStr] = new HistoriaProgressoDto(idStr, est, sessao.CriadoEm.ToString("dd/MM/yyyy"), sessao.CriadoEm.ToString("yyyy-MM-dd"));
+                    historiasMap[idStr] = new HistoriaProgressoDto(idStr, est, sessao.CriadoEm.ToString("dd/MM/yyyy"), sessao.CriadoEm.ToString("yyyy-MM-dd"), exist.Titulo ?? sessao.Titulo, exist.Emoji ?? sessao.Emoji, exist.Genero ?? sessao.Genero);
                 }
             }
             else
             {
-                historiasMap[idStr] = new HistoriaProgressoDto(idStr, est, sessao.CriadoEm.ToString("dd/MM/yyyy"), sessao.CriadoEm.ToString("yyyy-MM-dd"));
+                historiasMap[idStr] = new HistoriaProgressoDto(idStr, est, sessao.CriadoEm.ToString("dd/MM/yyyy"), sessao.CriadoEm.ToString("yyyy-MM-dd"), sessao.Titulo, sessao.Emoji, sessao.Genero);
             }
         }
 
@@ -241,14 +241,14 @@ public class ProgressSyncService
                 tempoTotal = Math.Max(tempoTotal, ExtrairInt(progressoEl, "tempoTotal"));
                 foreach (var item in ExtrairHistoriasLidas(progressoEl))
                 {
-                    if (string.IsNullOrWhiteSpace(item.Id) || item.Estrelas <= 0)
+                    if (string.IsNullOrWhiteSpace(item.Id))
                     {
                         continue;
                     }
 
                     if (historiasMap.TryGetValue(item.Id, out var existente))
                     {
-                        if (item.Estrelas > existente.Estrelas)
+                        if (item.Estrelas >= existente.Estrelas)
                         {
                             historiasMap[item.Id] = item;
                         }
@@ -424,11 +424,6 @@ public class ProgressSyncService
 
         foreach (var historia in historias)
         {
-            if (historia.Estrelas <= 0)
-            {
-                continue;
-            }
-
             var dataIso = NormalizarDataIso(historia.DataIso, historia.Data) ?? DateTime.Today.ToString("yyyy-MM-dd");
 
             if (TryParseApiHistoriaId(historia.Id, out var historiaId))
@@ -595,28 +590,29 @@ public class ProgressSyncService
         var historias = ExtrairHistoriasLidas(progressoHistorias);
         if (historias.Count == 0) return;
 
-        var sessoesExistentesCount = await conn.ExecuteScalarAsync<int>(
-            "SELECT COUNT(1) FROM Sessao_Leitura WHERE Id_Crianca = @CriancaId AND Concluida = 1",
-            new { CriancaId = criancaId });
-
-        if (historias.Count > sessoesExistentesCount)
+        foreach (var historia in historias)
         {
-            var novasLeituras = historias.Skip(sessoesExistentesCount).ToList();
-            foreach (var historia in novasLeituras)
+            if (!TryParseApiHistoriaId(historia.Id, out var historiaId))
             {
-                if (!TryParseApiHistoriaId(historia.Id, out var historiaId) || historia.Estrelas <= 0)
-                {
-                    continue;
-                }
+                continue;
+            }
 
-                var existeHistoria = await conn.ExecuteScalarAsync<int?>(
-                    "SELECT TOP 1 1 FROM Historia WHERE Id = @HistoriaId",
-                    new { HistoriaId = historiaId });
-                if (existeHistoria is null)
-                {
-                    continue;
-                }
+            var existeHistoria = await conn.ExecuteScalarAsync<int?>(
+                "SELECT TOP 1 1 FROM Historia WHERE Id = @HistoriaId",
+                new { HistoriaId = historiaId });
+            if (existeHistoria is null)
+            {
+                continue;
+            }
 
+            var est = Math.Clamp(historia.Estrelas, 0, 5);
+
+            var jaExiste = await conn.ExecuteScalarAsync<int?>(
+                "SELECT TOP 1 Id FROM Sessao_Leitura WHERE Id_Crianca = @CriancaId AND Id_Historia = @HistoriaId AND Concluida = 1",
+                new { CriancaId = criancaId, HistoriaId = historiaId });
+
+            if (jaExiste is null)
+            {
                 await conn.ExecuteAsync(
                     """
                     INSERT INTO Sessao_Leitura (Id_Crianca, Id_Historia, Estrelas, Concluida)
@@ -626,45 +622,22 @@ public class ProgressSyncService
                     {
                         CriancaId = criancaId,
                         HistoriaId = historiaId,
-                        Estrelas = historia.Estrelas
+                        Estrelas = est
                     });
             }
-        }
-        else
-        {
-            foreach (var historia in historias)
+            else
             {
-                if (!TryParseApiHistoriaId(historia.Id, out var historiaId) || historia.Estrelas <= 0)
-                {
-                    continue;
-                }
-
-                var existeHistoria = await conn.ExecuteScalarAsync<int?>(
-                    "SELECT TOP 1 1 FROM Historia WHERE Id = @HistoriaId",
-                    new { HistoriaId = historiaId });
-                if (existeHistoria is null)
-                {
-                    continue;
-                }
-
-                var jaExiste = await conn.ExecuteScalarAsync<int?>(
-                    "SELECT TOP 1 Id FROM Sessao_Leitura WHERE Id_Crianca = @CriancaId AND Id_Historia = @HistoriaId AND Concluida = 1",
-                    new { CriancaId = criancaId, HistoriaId = historiaId });
-
-                if (jaExiste is null)
-                {
-                    await conn.ExecuteAsync(
-                        """
-                        INSERT INTO Sessao_Leitura (Id_Crianca, Id_Historia, Estrelas, Concluida)
-                        VALUES (@CriancaId, @HistoriaId, @Estrelas, 1)
-                        """,
-                        new
-                        {
-                            CriancaId = criancaId,
-                            HistoriaId = historiaId,
-                            Estrelas = historia.Estrelas
-                        });
-                }
+                await conn.ExecuteAsync(
+                    """
+                    UPDATE Sessao_Leitura
+                    SET Estrelas = CASE WHEN @Estrelas > Estrelas THEN @Estrelas ELSE Estrelas END
+                    WHERE Id = @Id
+                    """,
+                    new
+                    {
+                        Id = jaExiste.Value,
+                        Estrelas = est
+                    });
             }
         }
     }
@@ -780,10 +753,6 @@ public class ProgressSyncService
 
     private static string ConverterIdHistoriaParaString(int historiaId)
     {
-        if (InverseStaticStoryIdMap.TryGetValue(historiaId, out var staticId))
-        {
-            return staticId;
-        }
         return $"api-{historiaId}";
     }
 

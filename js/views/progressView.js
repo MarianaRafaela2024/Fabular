@@ -36,10 +36,14 @@ function atualizarTelaProgresso() {
     } else {
       estado.historiasLidas.forEach(r => {
         if (!r || r.id == null) return;
-        const h = (typeof HISTORIAS !== 'undefined' ? HISTORIAS : []).find(x => String(x.id) === String(r.id));
-        const titulo = h ? h.titulo : (r.titulo || 'História Concluída');
-        const emoji = h ? h.emoji : (r.emoji || '📖');
-        const generoRaw = h ? h.genero : (r.genero || 'narrativo');
+        const idNorm = typeof normalizarIdHistoria === 'function' ? normalizarIdHistoria(r.id) : String(r.id).replace('api-', '');
+        const h = (typeof HISTORIAS !== 'undefined' ? HISTORIAS : []).find(x => {
+          const xNorm = typeof normalizarIdHistoria === 'function' ? normalizarIdHistoria(x.id) : String(x.id).replace('api-', '');
+          return xNorm === idNorm || String(x.id) === String(r.id);
+        });
+        const titulo = (r.titulo && r.titulo.trim()) ? r.titulo : (h ? h.titulo : 'História Concluída');
+        const emoji = (r.emoji && r.emoji !== '📖') ? r.emoji : (h ? h.emoji : (r.emoji || '📖'));
+        const generoRaw = (r.genero && r.genero !== 'narrativo') ? r.genero : (h ? h.genero : (r.genero || 'narrativo'));
         const genero = typeof labelGenero === 'function' ? labelGenero(generoRaw) : generoRaw;
         const dataStr = r.data || (r.dataIso ? new Date(r.dataIso + 'T00:00:00').toLocaleDateString('pt-BR') : '');
 
@@ -90,10 +94,14 @@ function renderizarAcessoRelatorioResponsavel(metricas) {
     historiasHtml = '<div class="historias-concluidas">';
     estado.historiasLidas.forEach(r => {
       if (!r || r.id == null) return;
-      const h = (typeof HISTORIAS !== 'undefined' ? HISTORIAS : []).find(x => String(x.id) === String(r.id));
-      const titulo = h ? h.titulo : (r.titulo || 'História Concluída');
-      const emoji = h ? h.emoji : (r.emoji || '📖');
-      const genero = h ? (typeof labelGenero === 'function' ? labelGenero(h.genero) : h.genero) : (r.genero || 'Geral');
+      const idNorm = typeof normalizarIdHistoria === 'function' ? normalizarIdHistoria(r.id) : String(r.id).replace('api-', '');
+      const h = (typeof HISTORIAS !== 'undefined' ? HISTORIAS : []).find(x => {
+        const xNorm = typeof normalizarIdHistoria === 'function' ? normalizarIdHistoria(x.id) : String(x.id).replace('api-', '');
+        return xNorm === idNorm || String(x.id) === String(r.id);
+      });
+      const titulo = (r.titulo && r.titulo.trim()) ? r.titulo : (h ? h.titulo : 'História Concluída');
+      const emoji = (r.emoji && r.emoji !== '📖') ? r.emoji : (h ? h.emoji : (r.emoji || '📖'));
+      const genero = (r.genero && r.genero !== 'Geral') ? (typeof labelGenero === 'function' ? labelGenero(r.genero) : r.genero) : (h ? (typeof labelGenero === 'function' ? labelGenero(h.genero) : h.genero) : 'Geral');
       const dataStr = r.data || (r.dataIso ? new Date(r.dataIso + 'T00:00:00').toLocaleDateString('pt-BR') : '');
       const estrelasHtml = typeof renderEstrelas === 'function' ? renderEstrelas(r.estrelas, 5) : '⭐'.repeat(Number(r.estrelas) || 1);
 
@@ -253,9 +261,13 @@ function exibirModalDetalhesDia(iso, dia, mes, ano, qtd, estrelasStr) {
 
     historiasHtml = '<ul class="cal-modal-historias-lista">';
     mapaDia.forEach(r => {
-      const h = (typeof HISTORIAS !== 'undefined' ? HISTORIAS : []).find(x => String(x.id) === String(r.id));
-      const titulo = h ? h.titulo : (r.titulo || 'História Concluída');
-      const emoji = h ? h.emoji : (r.emoji || '📖');
+      const idNorm = typeof normalizarIdHistoria === 'function' ? normalizarIdHistoria(r.id) : String(r.id).replace('api-', '');
+      const h = (typeof HISTORIAS !== 'undefined' ? HISTORIAS : []).find(x => {
+        const xNorm = typeof normalizarIdHistoria === 'function' ? normalizarIdHistoria(x.id) : String(x.id).replace('api-', '');
+        return xNorm === idNorm || String(x.id) === String(r.id);
+      });
+      const titulo = (r.titulo && r.titulo.trim()) ? r.titulo : (h ? h.titulo : 'História Concluída');
+      const emoji = (r.emoji && r.emoji !== '📖') ? r.emoji : (h ? h.emoji : (r.emoji || '📖'));
       const estCount = Math.min(5, Math.max(1, Number(r.estrelas) || 1));
       const est = typeof renderEstrelas === 'function' ? renderEstrelas(estCount, 5) : '⭐'.repeat(estCount);
       const vezesBadge = r.qtd > 1 ? `<span class="cal-modal-vezes" style="margin-left:6px;font-size:0.8rem;background:rgba(255,107,53,0.15);color:#FF6B35;padding:2px 8px;border-radius:12px;font-weight:700;">🔁 ${r.qtd}x lida</span>` : '';

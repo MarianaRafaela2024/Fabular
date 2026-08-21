@@ -4,281 +4,25 @@
 
 'use strict';
 
-const HISTORIAS = [
-  // --- NARRATIVO ---
-  {
-    id: 'n1', genero: 'narrativo', faixa: 1,
-    titulo: 'O Leão que Tinha Medo do Escuro',
-    emoji: '🦁', cena: '🌙🦁🌳',
-    duracao: '5 min',
-    textoCompleto: 'Era uma vez um <strong class="palavra-chave">leão</strong> chamado <strong class="palavra-chave">Léo</strong>. Ele morava numa <strong class="palavra-chave">floresta</strong> verde e bonita. Léo era grande e forte. Todo mundo achava que ele não tinha medo de nada. Mas Léo tinha um segredo… De <strong class="palavra-chave">dia</strong>, Léo brincava com os amigos. Ele corria, pulava e rugia bem alto. Mas quando o <strong class="palavra-chave">sol</strong> ia embora, Léo ficava quietinho. A noite chegava. O escuro chegava. E Léo corria se esconder atrás de uma pedra grande. Os amigos perguntavam: "Léo, onde você está?" A <strong class="palavra-chave">zebra</strong>, o <strong class="palavra-chave">elefante</strong> e o <strong class="palavra-chave">macaco</strong> procuravam por ele. Léo não respondia. Ele fechava os olhos e esperava o dia voltar. Uma noite, a <strong class="palavra-chave">lua</strong> apareceu bem grande no céu. Ela disse com voz mansa: "Léo, não tenha medo! Eu fico aqui com você toda noite." Léo olhou para o céu. Viu a lua brilhando. Viu as estrelas piscando. E sorriu. Dali em diante, Léo não tinha mais medo. Toda noite ele olhava para a lua e se sentia <strong class="palavra-chave">corajoso</strong>. Ele chamava os amigos para brincar à luz das estrelas. A noite virou a hora favorita de Léo!',
-    fases: [
-      {
-        texto: 'Era uma vez um <strong class="palavra-chave">leão</strong> chamado <strong class="palavra-chave">Léo</strong>. Ele morava numa <strong class="palavra-chave">floresta</strong> verde e bonita. Léo era grande e forte. Todo mundo achava que ele não tinha medo de nada. Mas Léo tinha um segredo…',
-      },
-      {
-        texto: 'De <strong class="palavra-chave">dia</strong>, Léo brincava com os amigos. Ele corria, pulava e rugia bem alto. Mas quando o <strong class="palavra-chave">sol</strong> ia embora, Léo ficava quietinho. A noite chegava. O escuro chegava. E Léo corria se esconder atrás de uma pedra grande.',
-      },
-      {
-        texto: 'Os amigos perguntavam: "Léo, onde você está?" A <strong class="palavra-chave">zebra</strong>, o <strong class="palavra-chave">elefante</strong> e o <strong class="palavra-chave">macaco</strong> procuravam por ele. Léo não respondia. Ele fechava os olhos e esperava o dia voltar.',
-      },
-      {
-        texto: 'Uma noite, a <strong class="palavra-chave">lua</strong> apareceu bem grande no céu. Ela disse com voz mansa: "Léo, não tenha medo! Eu fico aqui com você toda noite." Léo olhou para o céu. Viu a lua brilhando. Viu as estrelas piscando. E sorriu.',
-      },
-      {
-        texto: 'Dali em diante, Léo não tinha mais medo. Toda noite ele olhava para a lua e se sentia <strong class="palavra-chave">corajoso</strong>. Ele chamava os amigos para brincar à luz das estrelas. A noite virou a hora favorita de Léo!',
-      }
-    ],
-    palavrasChave: ['leão', 'floresta', 'noite', 'lua', 'corajoso']
-  },
-  {
-    id: 'n2', genero: 'narrativo', faixa: 2,
-    titulo: 'A Menina que Colecionava Nuvens',
-    emoji: '☁️', cena: '☁️👧🌈',
-    duracao: '8 min',
-    textoCompleto: 'Marina tinha um hobby que ninguém mais tinha: ela <strong class="palavra-chave">colecionava nuvens</strong>. Não as nuvens de verdade, claro — essas não dá para guardar numa caixa. Marina colecionava os <strong class="palavra-chave">desenhos</strong> dela. Toda manhã, antes do café, ela corria para a janela do seu quarto e ficava olhando o céu por alguns minutos. Se a nuvem tinha um formato interessante, ela pegava o caderno azul e desenhava com cuidado. Já eram mais de cem desenhos. Cada um tinha um nome diferente, escolhido por ela. Havia a nuvem "Baleia Voadora", a "Bota do Gigante" e até uma chamada "Avó Dormindo". Os colegas da escola achavam graça. "Nuvens? Mas elas somem!", diziam. Marina só dava de ombros. Ela sabia que justamente por isso eram especiais: cada nuvem existia <strong class="palavra-chave">uma única vez</strong>. Nenhuma voltava igual. Numa terça-feira de outubro, uma nuvem diferente de todas apareceu no céu. Era enorme, escura nas bordas, mas com o centro branco e brilhante. E o formato… era de um <strong class="palavra-chave">dragão</strong>. Tinha pescoço longo, asas abertas e até o que parecia ser fogo saindo da boca. Marina ficou paralisada. Era a nuvem mais incrível que ela já tinha visto. Ela correu para pegar o caderno — mas quando voltou, a nuvem já estava mudando. O pescoço virou uma colina. As asas viraram ondas. Marina sentiu um aperto no peito. Então lembrou: o celular! Ela fotografou o que restava da nuvem-dragão. Não era perfeito, mas dava para ver um pouco das asas ainda abertas. Um mês depois, Marina olhou pela janela e não acreditou: o <strong class="palavra-chave">dragão</strong> tinha voltado! Igual. Com pescoço longo, asas e tudo. Ela correu com o caderno e dessa vez desenhou tudo, com calma. E no mês seguinte, voltou de novo. E no outro também. Marina descobriu que aquela nuvem aparecia sempre que o vento vinha do sul. Ela deu um nome para ela: <strong class="palavra-chave">Fogo</strong>. E toda vez que Fogo aparecia, Marina sabia: ia ser um dia especial!',
-    fases: [
-      {
-        texto: 'Marina tinha um hobby que ninguém mais tinha: ela <strong class="palavra-chave">colecionava nuvens</strong>. Não as nuvens de verdade, claro — essas não dá para guardar numa caixa. Marina colecionava os <strong class="palavra-chave">desenhos</strong> dela. Toda manhã, antes do café, ela corria para a janela do seu quarto e ficava olhando o céu por alguns minutos. Se a nuvem tinha um formato interessante, ela pegava o caderno azul e desenhava com cuidado. Já eram mais de cem desenhos. Cada um tinha um nome diferente, escolhido por ela.',
-      },
-      {
-        texto: 'Havia a nuvem "Baleia Voadora", a "Bota do Gigante" e até uma chamada "Avó Dormindo". Os colegas da escola achavam graça. "Nuvens? Mas elas somem!", diziam. Marina só dava de ombros. Ela sabia que justamente por isso eram especiais: cada nuvem existia <strong class="palavra-chave">uma única vez</strong>. Nenhuma voltava igual.',
-      },
-      {
-        texto: 'Numa terça-feira de outubro, uma nuvem diferente de todas apareceu no céu. Era enorme, escura nas bordas, mas com o centro branco e brilhante. E o formato… era de um <strong class="palavra-chave">dragão</strong>. Tinha pescoço longo, asas abertas e até o que parecia ser fogo saindo da boca. Marina ficou paralisada. Era a nuvem mais incrível que ela já tinha visto.',
-      },
-      {
-        texto: 'Ela correu para pegar o caderno — mas quando voltou, a nuvem já estava mudando. O pescoço virou uma colina. As asas viraram ondas. Marina sentiu um aperto no peito. Então lembrou: o celular! Ela fotografou o que restava da nuvem-dragão. Não era perfeito, mas dava para ver um pouco das asas ainda abertas.',
-      },
-      {
-        texto: 'Um mês depois, Marina olhou pela janela e não acreditou: o <strong class="palavra-chave">dragão</strong> tinha voltado! Igual. Com pescoço longo, asas e tudo. Ela correu com o caderno e dessa vez desenhou tudo, com calma. E no mês seguinte, voltou de novo. E no outro também. Marina descobriu que aquela nuvem aparecia sempre que o vento vinha do sul. Ela deu um nome para ela: <strong class="palavra-chave">Fogo</strong>. E toda vez que Fogo aparecia, Marina sabia: ia ser um dia especial.',
-      }
-    ],
-    palavrasChave: ['colecionava', 'nuvens', 'desenhos', 'dragão', 'Fogo']
-  },
-  {
-    id: 'n3', genero: 'narrativo', faixa: 3,
-    titulo: 'O Guardião da Biblioteca Secreta',
-    emoji: '📚', cena: '📚🔑🏛️',
-    duracao: '12 min',
-    textoCompleto: 'Pedro tinha o hábito de não prestar atenção nas coisas. Não por descuido, exatamente — era mais uma questão de <strong class="palavra-chave">escolha</strong>. O mundo tinha partes interessantes e partes que não valiam o espaço, e Pedro achava que sabia muito bem distinguir uma coisa da outra. A porta marrom no fundo do corredor da escola, por exemplo, claramente pertencia à segunda categoria. Era velha, sem plaquinha, sem maçaneta especial. Provavelmente um depósito de vassouras. Ele tinha passado por ela centenas de vezes sem pestanejar.<br><br>Até aquela quinta-feira. Pedro voltava da aula de ciências com a cabeça ainda cheia de perguntas que o professor não soubera responder — ou não quisera. Ao passar pelo corredor, percebeu algo diferente: a porta estava <strong class="palavra-chave">entreaberta</strong>. Uma fresta fina. E por ela vazava uma luz que não era de lâmpada. Era dourada demais. Quente demais. Pedro parou. Olhou para os dois lados do corredor. Não havia ninguém. Ele empurrou a porta devagar.<br><br>O que havia do outro lado não cabia na lógica de um depósito de vassouras. Era uma <strong class="palavra-chave">biblioteca enorme</strong> — alta demais para caber num prédio térreo, larga demais para estar dentro da escola. As prateleiras iam do chão ao teto e se curvavam levemente, como se o cômodo fosse redondo. E os livros brilhavam. Não todos — mas muitos tinham um leve pulsar de luz na lombada, como se respirassem. Pedro sentiu que deveria ter medo. Mas o que sentiu foi outra coisa: <strong class="palavra-chave">reconhecimento</strong>. Como se aquele lugar já o esperasse há tempo.<br><br>"Você demorou." A voz veio de algum lugar entre as prateleiras. Pedro deu um passo atrás — mas não saiu. Uma <strong class="palavra-chave">raposa</strong> surgiu caminhando devagar, óculos de aros dourados equilibrados na ponta do focinho, um livro aberto na pata esquerda. Ela se sentou numa cadeira de veludo vermelho como se aquilo fosse a coisa mais natural do mundo. "Cada guardião demora um tempo diferente para encontrar a biblioteca", ela disse. "Alguns levam dias. Outros, anos. Você levou três." Pedro abriu a boca. "Três o quê?" "Anos de escola", respondeu a raposa, virando uma página.<br><br>A raposa explicou com a paciência de quem já explicou a mesma coisa muitas vezes — e ainda assim não achava a explicação cansativa. Cada livro naquela biblioteca guardava uma <strong class="palavra-chave">história verdadeira</strong>: não necessariamente um fato histórico, mas algo que havia sido sentido de verdade por alguém, em algum lugar, em algum tempo. "Histórias verdadeiras precisam ser lidas", ela disse. "Quando ninguém lê, elas enfraquecem. A lombada perde o brilho. E quando o brilho some de vez…" Ela fechou o livro com cuidado. "A história desaparece. Como se nunca tivesse acontecido."<br><br>Pedro passou aquela tarde inteira na biblioteca. Leu sobre uma <strong class="palavra-chave">civilização</strong> que construía cidades nas copas das árvores e desapareceu antes de ser descoberta. Leu o diário de uma menina que vivia numa estação espacial e sentia saudade da chuva. Leu a história de um urso que tinha aprendido a escrever sozinho e deixado cartas escondidas em ocos de árvores pela floresta. Cada livro tinha um brilho diferente. Alguns pulsavam devagar, como coração em repouso. Outros tremiam um pouco, como se tivessem pressa de ser lidos.<br><br>Quando saiu, o corredor estava vazio e as luzes da escola já tinham sido apagadas. Pedro ficou parado diante da porta marrom, agora fechada de novo. Entendeu, naquele momento, o que a raposa quis dizer. Ser <strong class="palavra-chave">guardião</strong> não era uma tarefa de vigia — não era trancar a biblioteca, catalogar os livros, protegê-los do pó. Era outra coisa, mais difícil e mais simples ao mesmo tempo: era carregar as histórias dentro de si. Lembrar delas. Deixar que mudassem alguma coisa. Porque uma história só existe de verdade quando alguém a leva para fora da página.',
-    fases: [
-      {
-        texto: 'Pedro tinha o hábito de não prestar atenção nas coisas. Não por descuido, exatamente — era mais uma questão de <strong class="palavra-chave">escolha</strong>. O mundo tinha partes interessantes e partes que não valiam o espaço, e Pedro achava que sabia muito bem distinguir uma coisa da outra. A porta marrom no fundo do corredor da escola, por exemplo, claramente pertencia à segunda categoria. Era velha, sem plaquinha, sem maçaneta especial. Provavelmente um depósito de vassouras. Ele tinha passado por ela centenas de vezes sem pestanejar.',
-      },
-      {
-        texto: 'Até aquela quinta-feira. Pedro voltava da aula de ciências com a cabeça ainda cheia de perguntas que o professor não soubera responder — ou não quisera. Ao passar pelo corredor, percebeu algo diferente: a porta estava <strong class="palavra-chave">entreaberta</strong>. Uma fresta fina. E por ela vazava uma luz que não era de lâmpada. Era dourada demais. Quente demais. Pedro parou. Olhou para os dois lados do corredor. Não havia ninguém. Ele empurrou a porta devagar.',
-      },
-      {
-        texto: 'O que havia do outro lado não cabia na lógica de um depósito de vassouras. Era uma <strong class="palavra-chave">biblioteca enorme</strong> — alta demais para caber num prédio térreo, larga demais para estar dentro da escola. As prateleiras iam do chão ao teto e se curvavam levemente, como se o cômodo fosse redondo. E os livros brilhavam. Não todos — mas muitos tinham um leve pulsar de luz na lombada, como se respirassem. Pedro sentiu que deveria ter medo. Mas o que sentiu foi outra coisa: <strong class="palavra-chave">reconhecimento</strong>. Como se aquele lugar já o esperasse há tempo.',
-      },
-      {
-        texto: '"Você demorou." A voz veio de algum lugar entre as prateleiras. Pedro deu um passo atrás — mas não saiu. Uma <strong class="palavra-chave">raposa</strong> surgiu caminhando devagar, óculos de aros dourados equilibrados na ponta do focinho, um livro aberto na pata esquerda. Ela se sentou numa cadeira de veludo vermelho como se aquilo fosse a coisa mais natural do mundo. "Cada guardião demora um tempo diferente para encontrar a biblioteca", ela disse. "Alguns levam dias. Outros, anos. Você levou três." Pedro abriu a boca. "Três o quê?" "Anos de escola", respondeu a raposa, virando uma página.',
-      },
-      {
-        texto: 'A raposa explicou com a paciência de quem já explicou a mesma coisa muitas vezes — e ainda assim não achava a explicação cansativa. Cada livro naquela biblioteca guardava uma <strong class="palavra-chave">história verdadeira</strong>: não necessariamente um fato histórico, mas algo que havia sido sentido de verdade por alguém, em algum lugar, em algum tempo. "Histórias verdadeiras precisam ser lidas", ela disse. "Quando ninguém lê, elas enfraquecem. A lombada perde o brilho. E quando o brilho some de vez…" Ela fechou o livro com cuidado. "A história desaparece. Como se nunca tivesse acontecido."',
-      },
-      {
-        texto: 'Pedro passou aquela tarde inteira na biblioteca. Leu sobre uma <strong class="palavra-chave">civilização</strong> que construía cidades nas copas das árvores e desapareceu antes de ser descoberta. Leu o diário de uma menina que vivia numa estação espacial e sentia saudade da chuva. Leu a história de um urso que tinha aprendido a escrever sozinho e deixado cartas escondidas em ocos de árvores pela floresta. Cada livro tinha um brilho diferente. Alguns pulsavam devagar, como coração em repouso. Outros tremiam um pouco, como se tivessem pressa de ser lidos.',
-      },
-      {
-        texto: 'Quando saiu, o corredor estava vazio e as luzes da escola já tinham sido apagadas. Pedro ficou parado diante da porta marrom, agora fechada de novo. Entendeu, naquele momento, o que a raposa quis dizer. Ser <strong class="palavra-chave">guardião</strong> não era uma tarefa de vigia — não era trancar a biblioteca, catalogar os livros, protegê-los do pó. Era outra coisa, mais difícil e mais simples ao mesmo tempo: era carregar as histórias dentro de si. Lembrar delas. Deixar que mudassem alguma coisa. Porque uma história só existe de verdade quando alguém a leva para fora da página.',
-      }
-    ],
-    palavrasChave: ['raposa', 'biblioteca', 'guardião', 'lembrar', 'civilização', 'histórias']
-  },
+const HISTORIAS = [];
 
-  // --- POÉTICO ---
-  {
-    id: 'p1', genero: 'poetico', faixa: 1,
-    titulo: 'A Chuva Cantando',
-    emoji: '🌧️', cena: '🌧️🌈☂️',
-    duracao: '4 min',
-    textoCompleto: '<em>"Pingo, pingo, pinguinho,<br>a chuva veio sim!<br>Molhou o passarinho,<br>molhou o meu jardim."</em> <em>"Pingo, pingo, pinguinho,<br>que gostoso é assim!<br>A chuva faz barulho:<br>tim-tim, tim-tim, tim-tim!"</em> <em>"E eu de guarda-chuva,<br>saí para brincar!<br>Com poça lá na rua,<br>que gostoso pular!"</em> <em>"Pingo, pingo, pinguinho,<br>não para, não, não!<br>A chuva é minha amiga,<br>vem, chuva, venha cá!"</em>',
-    fases: [
-      {
-        texto: '<em>"Pingo, pingo, pinguinho,<br>a chuva veio sim!<br>Molhou o passarinho,<br>molhou o meu jardim."</em>',
-      },
-      {
-        texto: '<em>"Pingo, pingo, pinguinho,<br>que gostoso é assim!<br>A chuva faz barulho:<br>tim-tim, tim-tim, tim-tim!"</em>',
-      },
-      {
-        texto: '<em>"E eu de guarda-chuva,<br>saí para brincar!<br>Com poça lá na rua,<br>que gostoso pular!"</em>',
-      },
-      {
-        texto: '<em>"Pingo, pingo, pinguinho,<br>não para, não, não!<br>A chuva é minha amiga,<br>vem, chuva, venha cá!"</em>',
-      }
-    ],
-    palavrasChave: ['pingo', 'chuva', 'passarinho', 'jardim', 'poça']
-  },
-  {
-    id: 'p2', genero: 'poetico', faixa: 2,
-    titulo: 'Palavras que Voam',
-    emoji: '🦋', cena: '🦋🌸📜',
-    duracao: '6 min',
-    textoCompleto: '<em>"Palavras são pássaros<br> que moram no papel,<br> guardam segredos doces<br> mais doces que o mel."<br></em> <em>"Quando você as lê,<br> elas ganham asas,<br> atravessam a noite<br> e chegam nas casas."<br></em> <em>"Há palavras mansas<br> que chegam de mansinho,<br> como luz de vela<br> no fim do caminho."<br></em> <em>"Há palavras bravas<br> que saltam do chão,<br> e batem no peito<br> feito coração."<br></em> <em>"Guarda bem as tuas,<br>escolhe com cuidado —<br>uma palavra dita<br> não volta ao seu lado."<br></em>',
-    fases: [
-      {
-        texto: '<em>"Palavras são pássaros<br> que moram no papel,<br> guardam segredos doces<br> mais doces que o mel."<br></em>',
-      },
-      {
-        texto: '<em> "Quando você as lê,<br> elas ganham asas,<br> atravessam a noite<br> e chegam nas casas."<br></em>',
-      },
-      {
-        texto: '<em>"Há palavras mansas<br> que chegam de mansinho,<br> como luz de vela<br> no fim do caminho."<br></em>',
-      },
-      {
-        texto: '<em>"Há palavras bravas<br> que saltam do chão,<br> e batem no peito<br> feito coração."<br></em>',
-      },
-      {
-        texto: '<em>"Guarda bem as tuas,<br>escolhe com cuidado —<br>uma palavra dita<br> não volta ao seu lado."<br></em>',
-      }
-    ],
-    palavrasChave: ['palavras', 'pássaros', 'papel', 'asas', 'segredos']
-  },
+const MAPA_IDS_LEGADOS = {
+  n1: '1', n2: '2', n3: '3',
+  p1: '4', p2: '5',
+  i1: '6', i2: '7',
+  d1: '8', d2: '9',
+  inf1: '10', inf2: '11'
+};
 
-  // --- INSTRUCIONAL ---
-  {
-    id: 'i1', genero: 'instrucional', faixa: 1,
-    titulo: 'Como Fazer uma Casinha para Pássaros',
-    emoji: '🏡', cena: '🐦🏠🔨',
-    duracao: '6 min',
-    textoCompleto: 'Você vai precisar de: uma caixa de <strong class="palavra-chave">sapato</strong>, tinta colorida, palitos de madeira e cola. Essa casinha vai ser um lar aconchegante para os pássaros do jardim! Passo 1: Pinte a caixa com cores vivas. Passo 2: Cole os <strong class="palavra-chave">palitos</strong> na entrada para fazer o poleiro. Passo 3: Faça um buraco na frente com o tamanho certo para o pássaro entrar!',
-    fases: [
-      {
-        texto: 'Você vai precisar de: uma caixa de <strong class="palavra-chave">sapato</strong>, tinta colorida, palitos de madeira e cola. Essa casinha vai ser um lar aconchegante para os pássaros do jardim!',
-      },
-      {
-        texto: 'Passo 1: Pinte a caixa com cores vivas. Passo 2: Cole os <strong class="palavra-chave">palitos</strong> na entrada para fazer o poleiro. Passo 3: Faça um buraco na frente com o tamanho certo para o pássaro entrar!',
-      }
-    ],
-    palavrasChave: ['sapato', 'palitos', 'pinte', 'buraco', 'poleiro']
-  },
-  {
-    id: 'i2', genero: 'instrucional', faixa: 3,
-    titulo: 'Receita: Cápsula do Tempo',
-    emoji: '🟢', cena: '🧪🟢✋',
-    duracao: '20 min',
-    textoCompleto: 'Existem objetos que não guardam apenas coisas, mas guardam pedacinhos de quem nós fomos. A <strong class="palavra-chave">cápsula do tempo</strong> é um desses objetos: um recipiente fechado com cuidado, escondido ou enterrado, criado para ser aberto somente muito tempo depois — por uma pessoa que, tecnicamente, ainda nem existe direito, porque quem vai abri-la no futuro já não será exatamente igual a quem a fechou hoje. Construir uma cápsula do tempo é como escrever uma carta para um amigo distante, só que esse amigo é você mesmo, daqui a alguns anos.<br><br>Bia tinha dez anos quando decidiu fazer a sua primeira cápsula do tempo, num sábado de sol em que nada de especial parecia estar acontecendo — o que, segundo ela, era o momento perfeito para começar algo novo. Chamou o irmão mais novo, Théo, de sete anos, e os dois se sentaram na varanda com uma caixa de metal vazia entre eles. "Vamos guardar quem a gente é agora", disse Bia, "para lembrar disso quando formos bem mais velhos." Théo achou estranho no começo — como alguém podia esquecer de si mesmo? Mas, aos poucos, foi entendendo que algumas coisas mudam tão devagar que só percebemos a diferença olhando para trás.<br><br><strong class="palavra-chave">Materiais necessários</strong>: um recipiente resistente e à prova d\'água — pode ser uma caixa metálica, um pote de vidro bem fechado ou um tubo de PVC vedado nas pontas —, papel e caneta para cartas e listas, fotografias impressas, alguns objetos pequenos com valor de lembrança, fita adesiva forte ou lacre, e uma etiqueta onde vai constar a data de hoje e a data escolhida para reabrir. Antes de reunir qualquer item, porém, é preciso reunir algo mais difícil de encontrar: a coragem de olhar para si mesmo com sinceridade.<br><br><strong class="palavra-chave">Primeira etapa — a escrita</strong>: comece escrevendo uma carta para a pessoa que você será quando a cápsula for reaberta. Não escreva só sobre fatos — qual escola você frequenta, qual time você torce, qual música você mais gosta —, mas escreva também sobre o que é mais difícil de explicar: o que você tem medo de perder, o que espera se tornar, e o que gostaria que seu eu do futuro nunca esquecesse de hoje. Théo, que ainda escrevia devagar, ditou sua carta para Bia registrar: "Quero lembrar que hoje eu tive medo de nadar na parte funda da piscina, mas entrei mesmo assim." Bia riu, mas escreveu tudo, palavra por palavra, sem mudar nada.<br><br><strong class="palavra-chave">Segunda etapa — a seleção</strong>: escolha entre três e cinco objetos que representem este período da sua vida. Evite escolher só o que é bonito; escolha também o que carrega um sentimento misturado — um ingresso de um passeio em que você se divertiu, mas também sentiu saudade de casa; um desenho malfeito, porém feito com muito cuidado; um bilhete de um amigo que talvez já não more mais perto. São justamente esses objetos, cheios de detalhes pequenos, que melhor contam a verdade sobre quem fomos. Bia escolheu uma pena de passarinho que achou no quintal. Théo escolheu um dente de leite que tinha acabado de cair — "assim eu vou saber que já fui pequeno assim", explicou, sério.<br><br><strong class="palavra-chave">Terceira etapa — o fechamento</strong>: organize todos os itens dentro do recipiente, olhando cada um pela última vez antes de guardá-los, como quem se despede, por um tempo, de uma versão de si mesmo. Feche o recipiente com cuidado, garantindo que não vai entrar água, umidade ou insetos. Escreva na etiqueta a data de hoje e a data futura escolhida para a reabertura — pode ser daqui a um ano, cinco anos, ou até numa data especial, como uma formatura ou um aniversário marcante. Bia e Théo escolheram o dia em que ele completaria quinze anos.<br><br><strong class="palavra-chave">Quarta etapa — o esconderijo</strong>: escolha um lugar seguro, que provavelmente não vai mudar muito com o tempo. Os dois decidiram enterrar a caixa junto a uma muda de árvore que o avô havia plantado no fundo do quintal, marcando o lugar com uma pedra pintada de amarelo. "Assim, quando a árvore crescer, ela vai estar cuidando da nossa cápsula também", disse Bia. Existe algo bonito nesse ato de esconder: é reconhecer que certas partes de nós precisam de tempo e de silêncio para serem compreendidas — assim como uma semente precisa ficar escondida na terra, no escuro, antes de virar árvore.<br><br>Cinco anos depois, num dia de sol muito parecido com aquele sábado, Théo — agora com doze anos, quase treze — voltou ao quintal com uma pá na mão. A árvore do avô já dava sombra. Ao lado dela, ele desenterrou a caixa enferrujada nas bordas, mas ainda fechada com firmeza. Dentro, encontrou o dente de leite, a pena de passarinho amassada e a carta com sua própria letra torta de sete anos, contando sobre o medo da piscina. Ele riu sozinho, sentado na grama, e sentiu uma coisa estranha e boa ao mesmo tempo: como se tivesse encontrado um amigo antigo que ele havia esquecido de que existia — e que, de alguma forma, continuava sendo, no fundo, ele mesmo.',
-    fases: [
-      {
-        texto: 'Existem objetos que não guardam apenas coisas, mas guardam pedacinhos de quem nós fomos. A <strong class="palavra-chave">cápsula do tempo</strong> é um desses objetos: um recipiente fechado com cuidado, escondido ou enterrado, criado para ser aberto somente muito tempo depois — por uma pessoa que, tecnicamente, ainda nem existe direito, porque quem vai abri-la no futuro já não será exatamente igual a quem a fechou hoje. Construir uma cápsula do tempo é como escrever uma carta para um amigo distante, só que esse amigo é você mesmo, daqui a alguns anos.',
-      },
-      {
-        texto: 'Bia tinha dez anos quando decidiu fazer a sua primeira cápsula do tempo, num sábado de sol em que nada de especial parecia estar acontecendo — o que, segundo ela, era o momento perfeito para começar algo novo. Chamou o irmão mais novo, Théo, de sete anos, e os dois se sentaram na varanda com uma caixa de metal vazia entre eles. "Vamos guardar quem a gente é agora", disse Bia, "para lembrar disso quando formos bem mais velhos." Théo achou estranho no começo — como alguém podia esquecer de si mesmo? Mas, aos poucos, foi entendendo que algumas coisas mudam tão devagar que só percebemos a diferença olhando para trás.',
-      },
-      {
-        texto: '<strong class="palavra-chave">Materiais necessários</strong>: um recipiente resistente e à prova d\'água — pode ser uma caixa metálica, um pote de vidro bem fechado ou um tubo de PVC vedado nas pontas —, papel e caneta para cartas e listas, fotografias impressas, alguns objetos pequenos com valor de lembrança, fita adesiva forte ou lacre, e uma etiqueta onde vai constar a data de hoje e a data escolhida para reabrir. Antes de reunir qualquer item, porém, é preciso reunir algo mais difícil de encontrar: a coragem de olhar para si mesmo com sinceridade.',
-      },
-      {
-        texto: '<strong class="palavra-chave">Primeira etapa — a escrita</strong>: comece escrevendo uma carta para a pessoa que você será quando a cápsula for reaberta. Não escreva só sobre fatos — qual escola você frequenta, qual time você torce, qual música você mais gosta —, mas escreva também sobre o que é mais difícil de explicar: o que você tem medo de perder, o que espera se tornar, e o que gostaria que seu eu do futuro nunca esquecesse de hoje. Théo, que ainda escrevia devagar, ditou sua carta para Bia registrar: "Quero lembrar que hoje eu tive medo de nadar na parte funda da piscina, mas entrei mesmo assim." Bia riu, mas escreveu tudo, palavra por palavra, sem mudar nada.',
-      },
-      {
-        texto: '<strong class="palavra-chave">Segunda etapa — a seleção</strong>: escolha entre três e cinco objetos que representem este período da sua vida. Evite escolher só o que é bonito; escolha também o que carrega um sentimento misturado — um ingresso de um passeio em que você se divertiu, mas também sentiu saudade de casa; um desenho malfeito, porém feito com muito cuidado; um bilhete de um amigo que talvez já não more mais perto. São justamente esses objetos, cheios de detalhes pequenos, que melhor contam a verdade sobre quem fomos. Bia escolheu uma pena de passarinho que achou no quintal. Théo escolheu um dente de leite que tinha acabado de cair — "assim eu vou saber que já fui pequeno assim", explicou, sério.',
-      },
-      {
-        texto: '<strong class="palavra-chave">Terceira etapa — o fechamento</strong>: organize todos os itens dentro do recipiente, olhando cada um pela última vez antes de guardá-los, como quem se despede, por um tempo, de uma versão de si mesmo. Feche o recipiente com cuidado, garantindo que não vai entrar água, umidade ou insetos. Escreva na etiqueta a data de hoje e a data futura escolhida para a reabertura — pode ser daqui a um ano, cinco anos, ou até numa data especial, como uma formatura ou um aniversário marcante. Bia e Théo escolheram o dia em que ele completaria quinze anos.',
-      },
-      {
-        texto: '<strong class="palavra-chave">Quarta etapa — o esconderijo</strong>: escolha um lugar seguro, que provavelmente não vai mudar muito com o tempo. Os dois decidiram enterrar a caixa junto a uma muda de árvore que o avô havia plantado no fundo do quintal, marcando o lugar com uma pedra pintada de amarelo. "Assim, quando a árvore crescer, ela vai estar cuidando da nossa cápsula também", disse Bia. Existe algo bonito nesse ato de esconder: é reconhecer que certas partes de nós precisam de tempo e de silêncio para serem compreendidas — assim como uma semente precisa ficar escondida na terra, no escuro, antes de virar árvore.',
-      },
-      {
-        texto: 'Cinco anos depois, num dia de sol muito parecido com aquele sábado, Théo — agora com doze anos, quase treze — voltou ao quintal com uma pá na mão. A árvore do avô já dava sombra. Ao lado dela, ele desenterrou a caixa enferrujada nas bordas, mas ainda fechada com firmeza. Dentro, encontrou o dente de leite, a pena de passarinho amassada e a carta com sua própria letra torta de sete anos, contando sobre o medo da piscina. Ele riu sozinho, sentado na grama, e sentiu uma coisa estranha e boa ao mesmo tempo: como se tivesse encontrado um amigo antigo que ele havia esquecido de que existia — e que, de alguma forma, continuava sendo, no fundo, ele mesmo.',
-      }
-    ],
-    palavrasChave: ['cápsula do tempo', 'lembrança', 'pertencimento', 'simbólico', 'identidade']
-  },
-
-  // --- DESCRITIVO ---
-  {
-    id: 'd1', genero: 'descritivo', faixa: 2,
-    titulo: 'O Fundo do Mar Encantado',
-    emoji: '🌊', cena: '🐠🌊🐙',
-    duracao: '7 min',
-    textoCompleto: 'O fundo do mar é um mundo à parte — um lugar que poucos olhos já viram de verdade, mas que existe cheio de vida bem abaixo das ondas. A primeira coisa que chama atenção é a <strong class="palavra-chave">luz</strong>: ela chega filtrada pela água, formando raios dourados e tremidos que iluminam tudo como lanternas gigantes balançando no teto. Logo se vê o conjunto de <strong class="palavra-chave">cores vibrantes</strong> que cobre o fundo. Corais <strong class="palavra-chave">laranja e rosa</strong> crescem em formas curiosas — alguns parecem árvores, outros parecem leques abertos, outros ainda parecem cérebros de pedra. Juntos, formam verdadeiras florestas subaquáticas, com suas próprias ruas, esquinas e esconderijos. Entre os corais, peixes de todas as formas dançam sem parar. Alguns são listrados de preto e branco, outros têm manchas amarelas e azuis que parecem pintadas à mão. As algas verdes e compridas balançam suavemente na corrente, como se ouvissem uma música que só elas conhecem. Tudo ali se move — nada fica completamente parado. No chão do oceano, o ritmo é outro. Estrelas-do-mar de cor <strong class="palavra-chave">avermelhada</strong> caminham devagar sobre a areia branca, como se tivessem todo o tempo do mundo. Polvos curiosos esticam seus <strong class="palavra-chave">tentáculos</strong> para explorar conchas, pedras e frestas escuras. De vez em quando, uma nuvem de areia sobe do fundo — sinal de que algum ser passou por ali e preferiu não ser visto. O fundo do mar não tem som da forma que conhecemos — mas não é silêncioso. Há o rangido suave dos corais, o farfalhar das algas, o movimento constante da água. É um <strong class="palavra-chave">silêncio cheio</strong>, como o de uma biblioteca grande onde todos estão muito ocupados. Quem mergulha fundo o suficiente entende: o mar não está vazio. Ele só guarda seus segredos com muito cuidado.',
-    fases: [
-      {
-        texto: 'O fundo do mar é um mundo à parte — um lugar que poucos olhos já viram de verdade, mas que existe cheio de vida bem abaixo das ondas. A primeira coisa que chama atenção é a <strong class="palavra-chave">luz</strong>: ela chega filtrada pela água, formando raios dourados e tremidos que iluminam tudo como lanternas gigantes balançando no teto.',
-      },
-      {
-        texto: 'Logo se vê o conjunto de <strong class="palavra-chave">cores vibrantes</strong> que cobre o fundo. Corais <strong class="palavra-chave">laranja e rosa</strong> crescem em formas curiosas — alguns parecem árvores, outros parecem leques abertos, outros ainda parecem cérebros de pedra. Juntos, formam verdadeiras florestas subaquáticas, com suas próprias ruas, esquinas e esconderijos.',
-      },
-      {
-        texto: 'Entre os corais, peixes de todas as formas dançam sem parar. Alguns são listrados de preto e branco, outros têm manchas amarelas e azuis que parecem pintadas à mão. As algas verdes e compridas balançam suavemente na corrente, como se ouvissem uma música que só elas conhecem. Tudo ali se move — nada fica completamente parado.',
-      },
-      {
-        texto: 'No chão do oceano, o ritmo é outro. Estrelas-do-mar de cor <strong class="palavra-chave">avermelhada</strong> caminham devagar sobre a areia branca, como se tivessem todo o tempo do mundo. Polvos curiosos esticam seus <strong class="palavra-chave">tentáculos</strong> para explorar conchas, pedras e frestas escuras. De vez em quando, uma nuvem de areia sobe do fundo — sinal de que algum ser passou por ali e preferiu não ser visto.',
-      },
-      {
-        texto: 'O fundo do mar não tem som da forma que conhecemos — mas não é silêncioso. Há o rangido suave dos corais, o farfalhar das algas, o movimento constante da água. É um <strong class="palavra-chave">silêncio cheio</strong>, como o de uma biblioteca grande onde todos estão muito ocupados. Quem mergulha fundo o suficiente entende: o mar não está vazio. Ele só guarda seus segredos com muito cuidado.',
-      }
-    ],
-    palavrasChave: ['cores', 'corais', 'vibrantes', 'avermelhada', 'tentáculos']
-  },
-  {
-    id: 'd2', genero: 'descritivo', faixa: 1,
-    titulo: 'O Jardim da Vovó',
-    emoji: '🌻', cena: '🌻🌹🦋',
-    duracao: '5 min',
-    textoCompleto: 'O jardim da <strong class="palavra-chave">vovó</strong> é cheio de flores! Tem rosas <strong class="palavra-chave">vermelhas</strong>, margaridas brancas e girassóis altos e amarelos. As cores são lindas! O cheiro é muito <strong class="palavra-chave">gostoso</strong>. As <strong class="palavra-chave">borboletas</strong> adoram esse jardim. Elas pousam nas flores e ficam quietinhas. Os passarinhos também vêm por aqui. Eles cantam alto e alegram o jardim todo. No meio do jardim tem um <strong class="palavra-chave">banco de madeira</strong>. Ele é velho e tem tinta descascada. A vovó senta ali toda tarde. Ela toma chá e fica olhando as flores. É o lugar mais <strong class="palavra-chave">tranquilo</strong> do mundo!',
-    fases: [
-      {
-        texto: 'O jardim da <strong class="palavra-chave">vovó</strong> é cheio de flores! Tem rosas <strong class="palavra-chave">vermelhas</strong>, margaridas brancas e girassóis altos e amarelos. As cores são lindas! O cheiro é muito <strong class="palavra-chave">gostoso</strong>.',
-      },
-      {
-        texto: 'As <strong class="palavra-chave">borboletas</strong> adoram esse jardim. Elas pousam nas flores e ficam quietinhas. Os passarinhos também vêm por aqui. Eles cantam alto e alegram o jardim todo.',
-      },
-      {
-        texto: 'No meio do jardim tem um <strong class="palavra-chave">banco de madeira</strong>. Ele é velho e tem tinta descascada. A vovó senta ali toda tarde. Ela toma chá e fica olhando as flores. É o lugar mais <strong class="palavra-chave">tranquilo</strong> do mundo!',
-      }
-    ],
-    palavrasChave: ['vovó', 'vermelhas', 'gostoso', 'banco', 'tranquilo']
-  },
-
-  // --- INFORMATIVO ---
-  {
-    id: 'inf1', genero: 'informativo', faixa: 2,
-    titulo: 'Por Que o Céu é Azul?',
-    emoji: '🔵', cena: '☀️🔵🌍',
-    duracao: '10 min',
-    textoCompleto: 'A luz do <strong class="palavra-chave">Sol</strong> parece branca, mas na verdade é formada por todas as cores do arco-íris, misturadas em um só brilho. Se pudéssemos separar essa luz, veríamos vermelho, laranja, amarelo, verde, azul, anil e violeta, todos grudadinhos uns nos outros. Quando essa luz branca sai do Sol, ela viaja por milhões de quilômetros até chegar perto da Terra. Nesse caminho, ela atravessa a <strong class="palavra-chave">atmosfera</strong>, uma camada de ar que envolve todo o planeta como um cobertor invisível. Dentro dessa camada existem bilhões de partículas de ar, tão pequenas que nenhum olho humano consegue enxergá-las sozinhas. Essas partículas estão sempre em movimento, e quando a luz do Sol passa perto delas, algo interessante acontece: cada cor da luz reage de um jeito diferente. As <strong class="palavra-chave">ondas de luz</strong> podem ser curtas ou longas, e isso muda como elas se comportam. A luz vermelha e a luz amarela têm ondas mais longas, então atravessam o ar quase sem serem incomodadas pelas partículas. Já a cor <strong class="palavra-chave">azul</strong> tem uma onda bem curtinha e saltitante, o que faz com que ela seja espalhada para todos os lados quando encontra as partículas de ar. Esse fenômeno é chamado de espalhamento de luz. Como a luz azul se espalha muito mais do que as outras cores, ela acaba preenchendo todo o céu, em todas as direções. Por isso, não importa se olhamos para cima, para os lados ou para longe no horizonte: durante o dia, o céu sempre aparece pintado de azul. Ao entardecer, esse efeito muda um pouco. Quando o Sol está baixo, próximo do horizonte, sua luz precisa atravessar uma camada de atmosfera ainda maior para chegar até nós. Nesse percurso mais longo, quase toda a luz azul já foi espalhada para outros lugares do céu, e as cores que sobram para os nossos olhos são o laranja e o vermelho, criando aqueles pores do sol tão bonitos. À noite, a Terra gira e o Sol fica escondido do outro lado do planeta. Sem a luz solar atravessando a atmosfera, não há mais luz para ser espalhada pelas partículas de ar. O céu perde sua cor azul e fica escuro, permitindo que enxerguemos as estrelas, a Lua e até outros planetas brilhando ao longe. Esse ciclo se repete todos os dias: o céu azul pela manhã, as cores quentes do entardecer e a escuridão da noite, tudo por causa da forma como a luz do Sol interage com as partículas da nossa atmosfera.',
-    fases: [
-      {
-        texto: 'A luz do <strong class="palavra-chave">Sol</strong> parece branca, mas na verdade é formada por todas as cores do arco-íris, misturadas em um só brilho. Se pudéssemos separar essa luz, veríamos vermelho, laranja, amarelo, verde, azul, anil e violeta, todos grudadinhos uns nos outros. Quando essa luz branca sai do Sol, ela viaja por milhões de quilômetros até chegar perto da Terra. Nesse caminho, ela atravessa a <strong class="palavra-chave">atmosfera</strong>, uma camada de ar que envolve todo o planeta como um cobertor invisível. Dentro dessa camada existem bilhões de partículas de ar, tão pequenas que nenhum olho humano consegue enxergá-las sozinhas.',
-      },
-      {
-        texto: 'Essas partículas estão sempre em movimento, e quando a luz do Sol passa perto delas, algo interessante acontece: cada cor da luz reage de um jeito diferente. As <strong class="palavra-chave">ondas de luz</strong> podem ser curtas ou longas, e isso muda como elas se comportam. A luz vermelha e a luz amarela têm ondas mais longas, então atravessam o ar quase sem serem incomodadas pelas partículas. Já a cor <strong class="palavra-chave">azul</strong> tem uma onda bem curtinha e saltitante, o que faz com que ela seja espalhada para todos os lados quando encontra as partículas de ar. Esse fenômeno é chamado de espalhamento de luz. Como a luz azul se espalha muito mais do que as outras cores, ela acaba preenchendo todo o céu, em todas as direções. Por isso, não importa se olhamos para cima, para os lados ou para longe no horizonte: durante o dia, o céu sempre aparece pintado de azul.',
-      },
-      {
-        texto: 'Ao entardecer, esse efeito muda um pouco. Quando o Sol está baixo, próximo do horizonte, sua luz precisa atravessar uma camada de atmosfera ainda maior para chegar até nós. Nesse percurso mais longo, quase toda a luz azul já foi espalhada para outros lugares do céu, e as cores que sobram para os nossos olhos são o laranja e o vermelho, criando aqueles pores do sol tão bonitos. À noite, a Terra gira e o Sol fica escondido do outro lado do planeta. Sem a luz solar atravessando a atmosfera, não há mais luz para ser espalhada pelas partículas de ar. O céu perde sua cor azul e fica escuro, permitindo que enxerguemos as estrelas, a Lua e até outros planetas brilhando ao longe. Esse ciclo se repete todos os dias: o céu azul pela manhã, as cores quentes do entardecer e a escuridão da noite, tudo por causa da forma como a luz do Sol interage com as partículas da nossa atmosfera.',
-      }
-    ],
-    palavrasChave: ['Sol', 'atmosfera', 'luz', 'azul', 'estrelas']
-  },
-  {
-    id: 'inf2', genero: 'informativo', faixa: 3,
-    titulo: 'Amazônia: O Pulmão do Mundo',
-    emoji: '🌿', cena: '🌳🦜🌊',
-    duracao: '18 min',
-    textoCompleto: 'Existem lugares no mundo que nao podem ser medidos apenas em números, ainda que os números, no caso da <strong class="palavra-chave">Floresta Amazônica</strong>, já sejam de tirar o fôlego:5,5 milhões de quilômetros quadrados espalhados por nove países, um território tão vasto que caberia dentro dele quase toda a Europa Ocidental. Mas reduzir a Amazônia a uma soma de hectares é como descrever o oceano apenas pela sua profundidade — verdadeiro, porém insuficiente. A floresta é, antes de tudo, um <strong class="palavra-chave">organismo vivo e interdependente</strong>, uma teia silenciosa em que cada fio sustenta os demais.  Estima-se que ali habite mais de 10% de todas as espécies conhecidas do planeta, um <strong class="palavra-chave">arquivo genético</strong> insubstituível que a ciência ainda mal começou a decifrar. Cada árvore derrubada é, portanto, uma página arrancada de uma biblioteca que a humanidade nunca terminou de ler.<br><br>Chamamos a Amazônia de "pulmão do mundo", mas essa metáfora — tão repetida que quase perdeu a força — esconde um mecanismo de rara elegância.  Por meio da <strong class="palavra-chave">fotossíntese</strong>, bilhões de folhas absorvem <strong class="palavra-chave">dióxido de carbono</strong> e devolvem à atmosfera o <strong class="palavra-chave">oxigênio</strong> que sustenta a vida muito além de suas fronteiras. É um pacto invisível entre a floresta e o restante do planeta: ela respira por todos nós, e por isso o que acontece em seu interior jamais permanece confinado ali.  As chuvas que caem no Sudeste brasileiro, os chamados "rios voadores" de umidade que cruzam o continente, nascem, em boa parte, do hálito da própria mata. Destruir a Amazônia não é apenas perder uma paisagem: é romper um <strong class="palavra-chave">equilíbrio</strong> que sustenta economias, lavouras e cidades a milhares de quilômetros de distância. <br><br>Mas a floresta não é apenas biologia — é também memória e pertencimento. Comunidades indígenas e ribeirinhas habitam esse território há milênios, e para elas a mata não é recurso a ser explorado, mas casa, ancestralidade, identidade. Quando o <strong class="palavra-chave">desmatamento</strong> avança, o que se perde não são só árvores: são modos de vida inteiros, línguas, saberes transmitidos de geração em geração. Há, nesse sentido, uma questão de <strong class="palavra-chave">justiça</strong> por trás de cada estatística ambiental' +
-      '— a pergunta sobre quem paga o preço de um progresso que beneficia poucos e ameaça muitos. A perda da floresta é, também, a perda de um lugar no mundo para quem sempre viveu em harmonia com ela.<br><br>Preservar a Amazônia, portanto, não é gesto de caridade distante, mas ato de <strong class="palavra-chave">responsabilidade compartilhada</strong>. Cada escolha de consumo, cada apoio a projetos de reflorestamento, cada exigência por políticas mais rígidas contra o desmatamento ilegal é um fio a mais tecido de volta nessa teia. A floresta resiste, mas sua resiliência tem limites — e talvez o verdadeiro teste de nossa geração seja decidir se seremos lembrados como quem salvou esse pulmão, ou como quem o deixou, aos poucos, sufocar.',
-    frases: [
-      {
-        texto: 'Existem lugares no mundo que não podem ser medidos apenas em números, ainda que os números, no caso da <strong class="palavra-chave">Floresta Amazônica</strong>, já sejam de tirar o fôlego: 5,5 milhões de quilômetros quadrados espalhados por nove países, um território tão vasto que caberia dentro dele quase toda a Europa Ocidental. Mas reduzir a Amazônia a uma soma de hectares é como descrever o oceano apenas pela sua profundidade — verdadeiro, porém insuficiente. A floresta é, antes de tudo, um <strong class="palavra-chave">organismo vivo e interdependente</strong>, uma teia silenciosa em que cada fio sustenta os demais. Estima-se que ali habite mais de 10% de todas as espécies conhecidas do planeta, um <strong class="palavra-chave">arquivo genético</strong> insubstituível que a ciência ainda mal começou a decifrar. Cada árvore derrubada é, portanto, uma página arrancada de uma biblioteca que a humanidade nunca terminou de ler.',
-      },
-      {
-        texto: 'Chamamos a Amazônia de "pulmão do mundo", mas essa metáfora — tão repetida que quase perdeu a força — esconde um mecanismo de rara elegância. Por meio da <strong class="palavra-chave">fotossíntese</strong>, bilhões de folhas absorvem <strong class="palavra-chave">dióxido de carbono</strong> e devolvem à atmosfera o <strong class="palavra-chave">oxigênio</strong> que sustenta a vida muito além de suas fronteiras. É um pacto invisível entre a floresta e o restante do planeta: ela respira por todos nós, e por isso o que acontece em seu interior jamais permanece confinado ali. As chuvas que caem no Sudeste brasileiro, os chamados "rios voadores" de umidade que cruzam o continente, nascem, em boa parte, do hálito da própria mata. Destruir a Amazônia não é apenas perder uma paisagem: é romper um <strong class="palavra-chave">equilíbrio</strong> que sustenta economias, lavouras e cidades a milhares de quilômetros de distância.',
-      },
-      {
-        texto: 'Mas a floresta não é apenas biologia — é também memória e pertencimento. Comunidades indígenas e ribeirinhas habitam esse território há milênios, e para elas a mata não é recurso a ser explorado, mas casa, ancestralidade, identidade. Quando o <strong class="palavra-chave">desmatamento</strong> avança, o que se perde não são só árvores: são modos de vida inteiros, línguas, saberes transmitidos de geração em geração. Há, nesse sentido, uma questão de <strong class="palavra-chave">justiça</strong> por trás de cada estatística ambiental — a pergunta sobre quem paga o preço de um progresso que beneficia poucos e ameaça muitos. A perda da floresta é, também, a perda de um lugar no mundo para quem sempre viveu em harmonia com ela.',
-      },
-      {
-        texto: 'Preservar a Amazônia, portanto, não é gesto de caridade distante, mas ato de <strong class="palavra-chave">responsabilidade compartilhada</strong>. Cada escolha de consumo, cada apoio a projetos de reflorestamento, cada exigência por políticas mais rígidas contra o desmatamento ilegal é um fio a mais tecido de volta nessa teia. A floresta resiste, mas sua resiliência tem limites — e talvez o verdadeiro teste de nossa geração seja decidir se seremos lembrados como quem salvou esse pulmão, ou como quem o deixou, aos poucos, sufocar.',
-      }
-    ],
-    palavrasChave: ['organismo', 'fotossíntese', 'equilíbrio', 'desmatamento', 'responsabilidade']
+function normalizarIdHistoria(id) {
+  if (id == null) return '';
+  const str = String(id).trim();
+  const semApi = str.replace(/^api-/, '');
+  if (MAPA_IDS_LEGADOS[semApi]) {
+    return MAPA_IDS_LEGADOS[semApi];
   }
-];
+  return semApi;
+}
 
 const API_BASE = (window.API_BASE_URL || 'http://localhost:5275').replace(/\/$/, '');
 const CHAVE_HISTORIAS_CACHE = 'mundoHistorias_historias_ia_cache';
@@ -334,12 +78,14 @@ async function apiPost(path, body) {
 function mapStorySummaryToLegacy(story) {
   return {
     id: `api-${story.id}`,
-    genero: story.genero || 'narrativo',
+    genero: String(story.genero || 'narrativo').toLowerCase(),
     faixa: story.faixaEtaria || 1,
     titulo: story.titulo || 'História',
     emoji: story.emoji || '📖',
     cena: story.cena || '🌟',
     duracao: story.duracao || '5 min',
+    origem: story.origem || (story.criancaId ? 'ia' : 'manual'),
+    criancaId: story.criancaId || null,
     fases: [],
     palavrasChave: []
   };
@@ -368,29 +114,26 @@ function preservarDetalheHistoriaNaBiblioteca(id, detalhe) {
 }
 
 function historiaApiTemTextoCompleto(h) {
-  const texto = h?.fases?.[0]?.texto || '';
+  const texto = h?.fases?.[0]?.texto || h?.textoCompleto || h?.texto || '';
   return texto.length > 0 && !texto.includes('História carregada da API');
 }
 
 async function carregarHistoriasDaApi() {
   mesclarHistoriasCache();
   try {
-    const faixa = estado?.perfil?.faixa;
     const vinculo = obterVinculoCrianca();
     const responsavelId = obterResponsavelId();
     const query = new URLSearchParams();
-    if (faixa) query.set('faixaEtaria', String(faixa));
     if (vinculo?.criancaId) query.set('criancaId', String(vinculo.criancaId));
     else if (responsavelId) query.set('responsavelId', String(responsavelId));
 
     const list = await apiGet(`/api/v1/stories?${query.toString()}`);
     if (!Array.isArray(list) || list.length === 0) return;
     const mapped = list.map(mapStorySummaryToLegacy);
-    const manuais = HISTORIAS.filter((h) => !String(h.id).startsWith('api-'));
     const detalhadasApi = HISTORIAS.filter((h) => String(h.id).startsWith('api-') && historiaApiTemTextoCompleto(h));
     const idsDetalhadas = new Set(detalhadasApi.map((h) => h.id));
     const resumosNovos = mapped.filter((h) => !idsDetalhadas.has(h.id));
-    HISTORIAS.splice(0, HISTORIAS.length, ...manuais, ...detalhadasApi, ...resumosNovos);
+    HISTORIAS.splice(0, HISTORIAS.length, ...detalhadasApi, ...resumosNovos);
     mapped.forEach(h => {
       const noCache = carregarCacheHistorias().find(c => c.id === h.id);
       if (noCache) salvarHistoriaNoCache({ ...noCache, ...h });
@@ -410,15 +153,18 @@ async function carregarDetalheHistoriaDaApi(id) {
   const minigamesPreset = Array.isArray(mgRaw)
     ? mgRaw.map(normalizarMinigamePreset).filter(Boolean)
     : [];
+  const texto = data.texto || data.Texto || '';
   return {
     id: `api-${data.id}`,
-    genero: data.genero,
+    genero: String(data.genero || 'narrativo').toLowerCase(),
     faixa: data.faixaEtaria,
     titulo: data.titulo,
     emoji: data.emoji || '📖',
     cena: data.cena || '🌟',
     duracao: data.duracao || '5 min',
-    fases: data.texto ? [{ texto: data.texto, cena: data.cena || '🌟' }] : [],
+    textoCompleto: texto,
+    texto: texto,
+    fases: texto ? [{ texto, cena: data.cena || '🌟' }] : [],
     palavrasChave: Array.isArray(data.palavrasChave) ? data.palavrasChave : [],
     minigamesPreset
   };
