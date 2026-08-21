@@ -77,16 +77,22 @@ body {
   flex-shrink: 0;
 }
 
-.fox-icon {
-  font-size: 1.8rem;
+.qmsomos-logo-icon {
+  width: 80px;
+  height: 80px;
+  display: block;
+  margin-top: 20px;
+ 
 }
+
 
 .logo-text {
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 2.5rem;
   font-weight: 800;
-  color: var(--orange);
+  color: #ffffff;
   letter-spacing: 2px;
+  margin-top: 30px;
 }
 
 .nav-links {
