@@ -82,7 +82,15 @@ public record SyncProgressRequest(
     DateTime UpdatedAt
 );
 
-public record HistoriaProgressoDto(string Id, int Estrelas, string? Data, string? DataIso = null);
+public record HistoriaProgressoDto(
+    string Id,
+    int Estrelas,
+    string? Data,
+    string? DataIso = null,
+    string? Titulo = null,
+    string? Emoji = null,
+    string? Genero = null
+);
 
 public record AtividadeDiariaDto(string Data, int Quantidade);
 
