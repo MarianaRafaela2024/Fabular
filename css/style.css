@@ -403,10 +403,20 @@ body.login-body {
 }
 
 .avatar-btn img,
-.avatar-img {
+.avatar-img,
+.avatar-img-render {
   width: 48px;
   height: 48px;
   object-fit: contain;
+  border-radius: 50%;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.avatar-emoji-render {
+  font-size: 2rem;
+  line-height: 1;
+  display: inline-block;
 }
 
 /* Chips */
@@ -674,6 +684,20 @@ body.login-body {
   flex-shrink: 0;
   filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .15));
   transition: transform var(--trans-spring);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+}
+
+.header-avatar img,
+.header-avatar-img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 50%;
+  display: block;
 }
 
 .header-avatar:hover {

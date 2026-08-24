@@ -5,7 +5,7 @@
 'use strict';
 
 let estado = {
-  perfil: { nome: '', avatar: '🦁', faixa: 1, genero: 'narrativo' },
+  perfil: { nome: '', avatar: 'midia/lion.png', faixa: 1, genero: 'narrativo' },
   nivel: 'iniciante', // iniciante | intermediario | avancado
   totalEstrelas: 0,
   historiasLidas: [],  // [{id, estrelas, data}]

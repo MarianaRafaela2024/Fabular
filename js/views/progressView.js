@@ -14,7 +14,13 @@ function atualizarTelaProgresso() {
   const ppTotal = document.getElementById('pp-total');
   const progressoSub = document.getElementById('progresso-sub');
 
-  if (ppAvatar) ppAvatar.textContent = p.avatar;
+  if (ppAvatar) {
+    if (typeof renderizarElementoAvatar === 'function') {
+      renderizarElementoAvatar(ppAvatar, p.avatar || 'midia/lion.png', 'pp-avatar-img');
+    } else {
+      ppAvatar.textContent = p.avatar;
+    }
+  }
   if (ppNome) ppNome.textContent = p.nome;
   if (ppNivelBadge) ppNivelBadge.textContent = labelNivel(estado.nivel);
   if (ppTotal) ppTotal.textContent = estado.totalEstrelas + ' ⭐';

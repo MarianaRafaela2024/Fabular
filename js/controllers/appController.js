@@ -57,7 +57,13 @@ function atualizarHeader() {
   const headerNivel = document.getElementById('header-nivel');
   const totalEstrelas = document.getElementById('total-estrelas');
 
-  if (avatarDisp) avatarDisp.textContent = estado.perfil.avatar;
+  if (avatarDisp) {
+    if (typeof renderizarElementoAvatar === 'function') {
+      renderizarElementoAvatar(avatarDisp, estado.perfil.avatar || 'midia/lion.png', 'header-avatar-img');
+    } else {
+      avatarDisp.textContent = estado.perfil.avatar || '🦁';
+    }
+  }
   if (headerNome) headerNome.textContent = estado.perfil.nome;
   if (headerNivel) headerNivel.textContent = labelNivel(estado.nivel);
   if (totalEstrelas) totalEstrelas.textContent = estado.totalEstrelas;
