@@ -19,6 +19,13 @@
   localStorage.removeItem('mundoHistorias_criancas_pendentes');
   localStorage.removeItem('mundoHistorias_vinculos_crianca');
 
+  // Ao estar na tela de login/seleção de perfil, o tamanho da fonte deve ser o padrão
+  try {
+    localStorage.removeItem('mundoHistorias_tamanhoFonte');
+    document.documentElement.style.fontSize = '';
+    document.documentElement.style.removeProperty('--fonte-base');
+  } catch (_) {}
+
   function carregarJSON(chave, fallback) {
     try {
       const raw = localStorage.getItem(chave);
@@ -478,6 +485,11 @@
       btnLogout.onclick = () => {
         localStorage.removeItem(CHAVE_SESSAO);
         localStorage.removeItem(CHAVE_ESTADO);
+        try {
+          localStorage.removeItem('mundoHistorias_tamanhoFonte');
+          document.documentElement.style.fontSize = '';
+          document.documentElement.style.removeProperty('--fonte-base');
+        } catch (_) {}
         mostrarCard('#responsavel-card');
       };
     }

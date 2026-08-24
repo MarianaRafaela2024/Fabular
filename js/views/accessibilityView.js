@@ -7,18 +7,61 @@
 let tamanhoFonte = 16;
 let altoContraste = false;
 const CHAVE_MODO_NOTURNO = 'mundoHistorias_modoNoturno';
+const CHAVE_TAMANHO_FONTE = 'mundoHistorias_tamanhoFonte';
 
 let ttsAtivo = false;
 let ttsUtterance = null;
 
-function ajustarFonte(delta) {
-  tamanhoFonte = Math.min(26, Math.max(12, tamanhoFonte + delta));
+function carregarTamanhoFonte() {
+  try {
+    const f = localStorage.getItem(CHAVE_TAMANHO_FONTE);
+    if (f) {
+      tamanhoFonte = parseInt(f, 10) || 16;
+    } else {
+      tamanhoFonte = 16;
+    }
+  } catch (_) {
+    tamanhoFonte = 16;
+  }
+  aplicarTamanhoFonte();
+}
+
+function aplicarTamanhoFonte() {
   document.documentElement.style.fontSize = tamanhoFonte + 'px';
   document.documentElement.style.setProperty('--fonte-base', tamanhoFonte + 'px');
 }
 
+function ajustarFonte(delta) {
+  tamanhoFonte = Math.min(26, Math.max(12, tamanhoFonte + delta));
+  aplicarTamanhoFonte();
+  try {
+    localStorage.setItem(CHAVE_TAMANHO_FONTE, String(tamanhoFonte));
+  } catch (_) {}
+}
+
+function resetarTamanhoFonte() {
+  tamanhoFonte = 16;
+  aplicarTamanhoFonte();
+  try {
+    localStorage.removeItem(CHAVE_TAMANHO_FONTE);
+  } catch (_) {}
+}
+
 function aplicarModoNoturno() {
-  document.body.classList.toggle('alto-contraste', altoContraste);
+  document.documentElement.classList.toggle('alto-contraste', altoContraste);
+  if (altoContraste) {
+    document.documentElement.style.backgroundColor = '#0D1117';
+  } else {
+    document.documentElement.style.backgroundColor = '';
+  }
+  if (document.body) {
+    document.body.classList.toggle('alto-contraste', altoContraste);
+    if (altoContraste) {
+      document.body.style.backgroundColor = '#0D1117';
+    } else {
+      document.body.style.backgroundColor = '';
+    }
+  }
   const btn = document.getElementById('btn-contraste');
   if (btn) btn.classList.toggle('ativo', altoContraste);
 }
@@ -39,6 +82,48 @@ function toggleContraste() {
     localStorage.setItem(CHAVE_MODO_NOTURNO, altoContraste ? '1' : '0');
   } catch (_) { /* ignora */ }
   mostrarToast(altoContraste ? 'Modo noturno ativado 🌙' : 'Modo claro ativado ☀️');
+}
+
+function escurecerParaTransicao() {
+  try {
+    if (localStorage.getItem(CHAVE_MODO_NOTURNO) === '1') {
+      document.documentElement.classList.add('alto-contraste');
+      document.documentElement.style.backgroundColor = '#0D1117';
+      if (document.body) {
+        document.body.classList.add('alto-contraste');
+        document.body.style.backgroundColor = '#0D1117';
+      }
+      let overlay = document.getElementById('page-transition-overlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'page-transition-overlay';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background-color:#0D1117;z-index:999999;pointer-events:none;';
+        (document.body || document.documentElement).appendChild(overlay);
+      } else {
+        overlay.style.display = 'block';
+      }
+    }
+  } catch (_) {}
+}
+
+window.addEventListener('beforeunload', escurecerParaTransicao);
+window.addEventListener('pagehide', escurecerParaTransicao);
+
+document.addEventListener('click', (e) => {
+  const a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+  if (a && a.href && !a.href.startsWith('javascript:') && !a.href.startsWith('#')) {
+    escurecerParaTransicao();
+  }
+}, true);
+
+// Inicializa configurações de acessibilidade imediatamente ao carregar o script
+carregarModoNoturno();
+carregarTamanhoFonte();
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    aplicarModoNoturno();
+    aplicarTamanhoFonte();
+  });
 }
 
 function ouvirTexto(texto) {

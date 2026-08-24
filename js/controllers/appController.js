@@ -20,6 +20,7 @@ function irParaTela(nomeTela) {
     const pagina = PAGINAS_POR_TELA[nomeTela];
     if (pagina) {
       sessionStorage.setItem('telaDesejada', nomeTela);
+      if (typeof escurecerParaTransicao === 'function') escurecerParaTransicao();
       window.location.href = pagina;
     }
     return;
@@ -154,6 +155,7 @@ async function inicializar() {
   inicializarGeneroBotIa();
 
   carregarModoNoturno();
+  carregarTamanhoFonte();
 
   bindSeExistir('btn-contraste', 'click', toggleContraste);
   bindSeExistir('btn-fonte-mais', 'click', () => ajustarFonte(2));
@@ -281,11 +283,15 @@ function mostrarModalSair() {
 
     document.getElementById('btn-modal-trocar-perfil').addEventListener('click', () => {
       fechar();
+      if (typeof resetarTamanhoFonte === 'function') resetarTamanhoFonte();
+      else localStorage.removeItem('mundoHistorias_tamanhoFonte');
       window.location.href = 'login.html';
     });
 
     document.getElementById('btn-modal-logout-geral').addEventListener('click', () => {
       fechar();
+      if (typeof resetarTamanhoFonte === 'function') resetarTamanhoFonte();
+      else localStorage.removeItem('mundoHistorias_tamanhoFonte');
       localStorage.removeItem('mundoHistorias_responsavel_sessao');
       localStorage.removeItem('mundoHistorias_estado');
       window.location.href = 'login.html';

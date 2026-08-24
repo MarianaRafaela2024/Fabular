@@ -49,6 +49,7 @@
 }
 
 /* Alto contraste */
+html.alto-contraste,
 body.alto-contraste {
   --bg: #000000;
   --bg-card: #111111;
@@ -118,7 +119,8 @@ body.alto-contraste {
 
 
 html {
-  font-size: 16px;
+  font-size: var(--fonte-base, 16px);
+  background-color: var(--bg, #F0F4FF);
   scroll-behavior: smooth;
 }
 
@@ -4047,6 +4049,7 @@ body.login-body {
 /* ==============================================
    RESPONSIVO APP + MODO NOTURNO (SISTEMA COMPLETO)
    ============================================== */
+html.alto-contraste,
 body.alto-contraste {
   --bg: #0D1117;
   --bg-card: #161B22;
@@ -4068,6 +4071,8 @@ body.alto-contraste {
 }
 
 /* Fundo da tela de Login em Dark Mode */
+html.alto-contraste body.login-body,
+html.alto-contraste .login-bg,
 body.alto-contraste.login-body,
 body.alto-contraste .login-bg {
   background: radial-gradient(circle at top left, #1a2332, #0d1117 70%) !important;

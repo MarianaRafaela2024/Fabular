@@ -2,6 +2,35 @@
 <html lang="pt-BR">
 
 <head>
+  <style>
+    html.alto-contraste,
+    html.alto-contraste body,
+    html.alto-contraste .login-bg,
+    html.alto-contraste body.login-body,
+    html.alto-contraste .app-header,
+    html.alto-contraste .sidebar,
+    html.alto-contraste .app-main,
+    html.alto-contraste .app-layout {
+      background-color: #0D1117 !important;
+      background: #0D1117 !important;
+      color: #E6EDF3 !important;
+    }
+  </style>
+  <script>
+    (function() {
+      try {
+        if (localStorage.getItem('mundoHistorias_modoNoturno') === '1') {
+          document.documentElement.classList.add('alto-contraste');
+          document.documentElement.style.backgroundColor = '#0D1117';
+        }
+        var f = localStorage.getItem('mundoHistorias_tamanhoFonte');
+        if (f) {
+          document.documentElement.style.fontSize = f + 'px';
+          document.documentElement.style.setProperty('--fonte-base', f + 'px');
+        }
+      } catch(e) {}
+    })();
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Progresso - Fabular</title>
@@ -79,6 +108,119 @@
       <!-- MAIN -->
       <main class="app-main" id="app-main">
 
+        <!-- BIBLIOTECA -->
+        <section id="tela-biblioteca" class="tela-app">
+          <div class="tela-header">
+            <h2>📚 Biblioteca de Histórias</h2>
+            <p class="tela-sub">Escolha uma aventura para começar!</p>
+          </div>
+          <div class="filtros-bar">
+            <div class="filtro-grupo">
+              <label class="filtro-label">Gênero:</label>
+              <div class="chip-grupo" id="filtro-genero">
+                <button class="chip chip-sm ativo" data-filtro-genero="todos">Todos</button>
+                <button class="chip chip-sm" data-filtro-genero="narrativo">Narrativo</button>
+                <button class="chip chip-sm" data-filtro-genero="poetico">Poético</button>
+                <button class="chip chip-sm" data-filtro-genero="cotidiano">Cotidiano</button>
+                <button class="chip chip-sm" data-filtro-genero="descritivo">Descritivo</button>
+                <button class="chip chip-sm" data-filtro-genero="informativo">Informativo</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="historias-grid" id="historias-grid"></div>
+        </section>
+
+        <!-- LEITURA -->
+        <section id="tela-leitura" class="tela-app">
+          <div class="leitura-container">
+            <div class="leitura-header">
+              <button class="btn-voltar" id="btn-voltar-biblioteca" aria-label="Voltar à biblioteca">←
+                Biblioteca</button>
+              <div class="leitura-info">
+                <span class="leitura-titulo-badge" id="leitura-titulo-badge">Título</span>
+                <div class="fase-indicador">
+                  <span id="fase-atual-label">Fase 1</span>
+                  <div class="fase-dots" id="fase-dots"></div>
+                </div>
+              </div>
+              <div class="leitura-acoes">
+                <button class="btn-icon" id="btn-ouvir" title="Ouvir história em voz alta"
+                  aria-label="Ouvir história em voz alta">🔊</button>
+                <button class="btn-icon" id="btn-destaque" title="Destacar palavras difíceis"
+                  aria-label="Destacar palavras difíceis">✨</button>
+              </div>
+            </div>
+
+            <div class="leitura-corpo" id="leitura-corpo">
+              <div class="leitura-texto-card">
+                <p id="historia-texto" class="historia-texto"></p>
+              </div>
+            </div>
+
+            <div class="leitura-rodape">
+              <button class="btn-secundario" id="btn-anterior-fase" disabled>← Anterior</button>
+              <button class="btn-principal" id="btn-proxima-fase">Próxima Fase →</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- MINIGAME -->
+        <section id="tela-minigame" class="tela-app">
+          <div class="minigame-container">
+            <div class="minigame-topo">
+              <span class="minigame-tipo-badge" id="mg-tipo-badge">Minigame</span>
+              <button class="btn-icon" id="btn-ouvir-mg" title="Ouvir pergunta" aria-label="Ouvir pergunta">🔊</button>
+            </div>
+            <div class="minigame-corpo" id="minigame-corpo"></div>
+            <div class="minigame-feedback oculto" id="mg-feedback">
+              <div class="feedback-card" id="mg-feedback-card">
+                <div class="feedback-emoji" id="mg-feedback-emoji">⭐</div>
+                <p id="mg-feedback-msg">Parabéns!</p>
+              </div>
+            </div>
+            <div class="minigame-rodape">
+              <button class="btn-principal oculto" id="btn-proximo-mg">Próximo Jogo →</button>
+              <button class="btn-principal oculto" id="btn-finalizar-mg">Ver Resultado 🏆</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- RESULTADO -->
+        <section id="tela-resultado" class="tela-app">
+          <div class="resultado-container">
+            <div class="resultado-topo">
+              <div class="resultado-estrelas" id="resultado-estrelas">⭐⭐⭐⭐⭐</div>
+              <h2 class="resultado-titulo" id="resultado-titulo">Incrível!</h2>
+              <p class="resultado-msg" id="resultado-msg">Você completou a história!</p>
+            </div>
+            <div class="resultado-stats">
+              <div class="stat-card">
+                <span class="stat-icon">⏱️</span>
+                <span class="stat-valor" id="stat-tempo">0 min</span>
+                <span class="stat-label">Tempo</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-icon">✅</span>
+                <span class="stat-valor" id="stat-acertos">0</span>
+                <span class="stat-label">Acertos</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-icon">💪</span>
+                <span class="stat-valor" id="stat-nivel">Iniciante</span>
+                <span class="stat-label">Nível</span>
+              </div>
+            </div>
+            <p class="resultado-aviso oculto" id="resultado-aviso">⚠️ Você precisa refazer a atividade e reler a
+              história para continuar!</p>
+            <div class="resultado-botoes">
+              <button class="btn-refazer" id="btn-refazer-atividade">🔄 Refazer Atividade e Reler</button>
+              <button class="btn-secundario" id="btn-jogar-novamente">📚 Jogar Outra História</button>
+              <button class="btn-principal" id="btn-ver-progresso">🏆 Ver Progresso</button>
+            </div>
+          </div>
+        </section>
+
         <!-- PROGRESSO -->
         <section id="tela-progresso" class="tela-app ativa">
           <div class="tela-header">
@@ -155,6 +297,51 @@
                 <div class="stat-card-prog"><span class="scp-icon"><img src="midia/gamepad.png"></span><span
                     class="scp-valor" id="prog-minigames">0</span><span class="scp-label">Minigames</span></div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- BOT IA -->
+        <section id="tela-bot-ia" class="tela-app">
+          <div class="tela-header">
+            <h2>Criar Histórias</h2>
+          </div>
+          <div class="bot-ia-wrap">
+            <div class="bot-ia-card">
+              <div class="bot-chat">
+                <div class="bot-chat-msg bot-chat-msg-ai">
+                  <span class="bot-chat-avatar">
+                    <img src="midia/IconeRaposa.png" alt="Assistente de IA">
+                  </span>
+                  <div class="bot-chat-bubble">
+                    Olá! Me conte sua ideia e eu crio uma história completa para você.
+                  </div>
+                </div>
+                <div class="bot-chat-msg bot-chat-msg-ai">
+                  <span class="bot-chat-avatar">
+                    <img src="midia/IconeRaposa.png" alt="Assistente de IA">
+                  </span>
+                  <div class="bot-chat-bubble">
+                    Escolha o gênero textual para começar:
+                  </div>
+                </div>
+              </div>
+
+              <label class="bot-ia-label" id="label-bot-ia-genero">Gênero textual</label>
+              <div class="chip-grupo bot-ia-genero-grupo" id="bot-ia-genero-grupo" role="radiogroup"
+                aria-labelledby="label-bot-ia-genero">
+                <button type="button" class="chip ativo" data-genero="narrativo" aria-pressed="true">Narrativo</button>
+                <button type="button" class="chip" data-genero="poetico" aria-pressed="false">Poético</button>
+                <button type="button" class="chip" data-genero="instrucional" aria-pressed="false">Instrucional</button>
+                <button type="button" class="chip" data-genero="descritivo" aria-pressed="false">Descritivo</button>
+                <button type="button" class="chip" data-genero="informativo" aria-pressed="false">Informativo</button>
+              </div>
+
+              <label class="bot-ia-label" for="bot-ia-prompt">Tema ou ideia da história</label>
+              <textarea id="bot-ia-prompt" class="bot-ia-textarea" rows="4" maxlength="700"
+                placeholder="Ex.: um coelho que aprende a colaborar com os amigos para montar uma horta..."></textarea>
+              <button type="button" class="btn-principal bot-ia-btn" id="btn-bot-ia-gerar">Criar história</button>
+              <p id="bot-ia-erro" class="bot-ia-erro oculto" role="alert"></p>
             </div>
           </div>
         </section>

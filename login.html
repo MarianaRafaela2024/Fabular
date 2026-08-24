@@ -1,6 +1,35 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <style>
+    html.alto-contraste,
+    html.alto-contraste body,
+    html.alto-contraste .login-bg,
+    html.alto-contraste body.login-body,
+    html.alto-contraste .app-header,
+    html.alto-contraste .sidebar,
+    html.alto-contraste .app-main,
+    html.alto-contraste .app-layout {
+      background-color: #0D1117 !important;
+      background: #0D1117 !important;
+      color: #E6EDF3 !important;
+    }
+  </style>
+  <script>
+    (function() {
+      try {
+        if (localStorage.getItem('mundoHistorias_modoNoturno') === '1') {
+          document.documentElement.classList.add('alto-contraste');
+          document.documentElement.style.backgroundColor = '#0D1117';
+        }
+        var f = localStorage.getItem('mundoHistorias_tamanhoFonte');
+        if (f) {
+          document.documentElement.style.fontSize = f + 'px';
+          document.documentElement.style.setProperty('--fonte-base', f + 'px');
+        }
+      } catch(e) {}
+    })();
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Login - Fabular</title>
