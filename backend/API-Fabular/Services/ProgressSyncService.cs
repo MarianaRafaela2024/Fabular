@@ -304,6 +304,8 @@ public class ProgressSyncService
 
         try
         {
+            // DEPRECATED (etapa 1): coluna oficial em CriarBanco.sql + migrations/001_*.up.sql.
+            // Rede de segurança para bancos antigos. Remover após a migration 001 estar aplicada em todos os ambientes.
             await conn.ExecuteAsync(
                 """
                 IF NOT EXISTS (
@@ -419,6 +421,7 @@ public class ProgressSyncService
             return;
         }
 
+        // DEPRECATED (etapa 1): após migrations/001, Id_Historia sempre existe. Ramo legado permanece até a etapa 8.
         var temColunaHistoria = await conn.ExecuteScalarAsync<int?>(
             "SELECT TOP 1 1 FROM sys.columns WHERE object_id = OBJECT_ID('Atividade_Diaria') AND name = 'Id_Historia'");
 
@@ -483,6 +486,7 @@ public class ProgressSyncService
 
         try
         {
+            // DEPRECATED (etapa 1): após migrations/001, Id_Historia sempre existe. Ramo legado permanece até a etapa 8.
             var temColunaHistoria = await conn.ExecuteScalarAsync<int?>(
                 "SELECT TOP 1 1 FROM sys.columns WHERE object_id = OBJECT_ID('Atividade_Diaria') AND name = 'Id_Historia'");
 

@@ -12,6 +12,8 @@ public class ChildrenLinkService
     {
         _db = db;
     }
+    // DEPRECATED (etapa 1): schema oficial em CriarBanco.sql + migrations/001_*.up.sql.
+    // Rede de segurança para bancos antigos ainda não migrados. Remover após a etapa 1 estar aplicada em todos os ambientes.
     private async Task GarantirColunasCriancaAsync(System.Data.Common.DbConnection conn)
     {
         try

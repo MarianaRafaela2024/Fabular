@@ -94,6 +94,8 @@ dotnet run
 
 Configurar a connection string `DefaultConnection` em `backend/API-Fabular/appsettings.json`.
 
+Banco **novo:** `backend/CriarBanco.sql` (destrutivo). Banco **já existente:** `backend/migrations/` (ver README na pasta).
+
 ## Estrutura de arquivos (resumo)
 
 - `qmsomos.html` — landing institucional.

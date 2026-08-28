@@ -1,3 +1,6 @@
+-- Install do zero (DROP + CREATE + seed). APAGA TODOS OS DADOS.
+-- Banco já existente: aplicar scripts em backend/migrations/ (nunca reexecute este arquivo).
+
 SET NOCOUNT ON;
 
 USE Fabular;
@@ -9,6 +12,7 @@ IF OBJECT_ID('Sessao_Leitura') IS NOT NULL DROP TABLE Sessao_Leitura;
 IF OBJECT_ID('IA_Geracao') IS NOT NULL DROP TABLE IA_Geracao;
 IF OBJECT_ID('Historia_Minigame') IS NOT NULL DROP TABLE Historia_Minigame;
 IF OBJECT_ID('Sincronizacao_Progresso') IS NOT NULL DROP TABLE Sincronizacao_Progresso;
+IF OBJECT_ID('Atividade_Diaria') IS NOT NULL DROP TABLE Atividade_Diaria;
 IF OBJECT_ID('Responsavel_Crianca') IS NOT NULL DROP TABLE Responsavel_Crianca;
 IF OBJECT_ID('Historia') IS NOT NULL DROP TABLE Historia;
 IF OBJECT_ID('Crianca') IS NOT NULL DROP TABLE Crianca;
