@@ -21,7 +21,9 @@ IF OBJECT_ID('Genero') IS NOT NULL DROP TABLE Genero;
 
 CREATE TABLE Genero (
     Id INT IDENTITY(1,1) PRIMARY KEY,
-    Nome NVARCHAR(50) NOT NULL UNIQUE
+    Nome NVARCHAR(50) NOT NULL UNIQUE,
+    Slug NVARCHAR(40) NOT NULL,
+    CONSTRAINT UQ_Genero_Slug UNIQUE (Slug)
 );
 
 CREATE TABLE Responsavel (
@@ -41,10 +43,12 @@ CREATE TABLE Crianca (
     DataNascimento DATE NULL,
     Avatar VARCHAR(32) NULL,
     GeneroFavorito VARCHAR(32) NULL,
+    Id_GeneroFavorito INT NULL,
     HorarioBrincar VARCHAR(10) NULL,
     Estrela SMALLINT NOT NULL DEFAULT 0,
     LocalChildKey VARCHAR(80) NULL,
-    CriadoEm DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+    CriadoEm DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    CONSTRAINT FK_Crianca_GeneroFavorito FOREIGN KEY (Id_GeneroFavorito) REFERENCES Genero(Id)
 );
 
 CREATE TABLE Responsavel_Crianca (
@@ -69,7 +73,9 @@ CREATE TABLE Historia (
     TextoHtml NVARCHAR(MAX) NOT NULL,
     PalavrasChaveJson NVARCHAR(MAX) NULL,
     PayloadJson NVARCHAR(MAX) NULL,
-    CriadoEm DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+    Id_Genero INT NULL,
+    CriadoEm DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    CONSTRAINT FK_Historia_Genero FOREIGN KEY (Id_Genero) REFERENCES Genero(Id)
 );
 
 CREATE TABLE Historia_Minigame (
@@ -162,7 +168,12 @@ CREATE INDEX IX_IAG_Historia ON IA_Geracao(Id_Historia);
 CREATE INDEX IX_IAG_Crianca ON IA_Geracao(Id_Crianca, CriadoEm DESC);
 CREATE INDEX IX_EM_Sessao ON Evento_Minigame(Id_SessaoLeitura);
 
-INSERT INTO Genero (Nome) VALUES ('Narrativo'), ('Poetico'), ('Instrucional'), ('Descritivo'), ('Informativo');
+INSERT INTO Genero (Nome, Slug) VALUES
+    ('Narrativo', 'narrativo'),
+    ('Poetico', 'poetico'),
+    ('Instrucional', 'instrucional'),
+    ('Descritivo', 'descritivo'),
+    ('Informativo', 'informativo');
 -- ============================================================
 -- Seed de historias (conteudo estatico migrado do array JS)
 -- ============================================================
@@ -239,4 +250,21 @@ N'{"idOriginal": "inf2", "fases": [
 {"texto": "Preservar a Amazônia, portanto, não é gesto de caridade distante, mas ato de <strong class=\"palavra-chave\">cuidado</strong>. Cada escolha de consumo, cada apoio a projetos de reflorestamento, cada exigência por políticas mais rígidas contra a devastação ilegal é um fio a mais tecido de volta nessa teia. A floresta resiste, mas sua resiliência tem limites — e talvez o verdadeiro teste de nossa geração seja decidir se seremos lembrados como quem salvou esse pulmão, ou como quem o deixou, aos poucos, sufocar."}
 ]}');
 
+GO
+
+-- Backfill de FK de gênero (Cotidiano → instrucional; Poético → poetico via CI_AI)
+UPDATE h
+SET h.Id_Genero = g.Id
+FROM Historia AS h
+INNER JOIN Genero AS g
+    ON g.Slug = CASE
+        WHEN h.Genero COLLATE Latin1_General_CI_AI = N'cotidiano' THEN N'instrucional'
+        WHEN h.Genero COLLATE Latin1_General_CI_AI = N'narrativo' THEN N'narrativo'
+        WHEN h.Genero COLLATE Latin1_General_CI_AI = N'poetico' THEN N'poetico'
+        WHEN h.Genero COLLATE Latin1_General_CI_AI = N'instrucional' THEN N'instrucional'
+        WHEN h.Genero COLLATE Latin1_General_CI_AI = N'descritivo' THEN N'descritivo'
+        WHEN h.Genero COLLATE Latin1_General_CI_AI = N'informativo' THEN N'informativo'
+        ELSE NULL
+    END
+WHERE h.Id_Genero IS NULL;
 GO
