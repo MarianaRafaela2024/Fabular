@@ -611,38 +611,25 @@ public class ProgressSyncService
 
             var est = Math.Clamp(historia.Estrelas, 0, 5);
 
-            var jaExiste = await conn.ExecuteScalarAsync<int?>(
-                "SELECT TOP 1 Id FROM Sessao_Leitura WHERE Id_Crianca = @CriancaId AND Id_Historia = @HistoriaId AND Concluida = 1",
-                new { CriancaId = criancaId, HistoriaId = historiaId });
-
-            if (jaExiste is null)
-            {
-                await conn.ExecuteAsync(
-                    """
-                    INSERT INTO Sessao_Leitura (Id_Crianca, Id_Historia, Estrelas, Concluida)
-                    VALUES (@CriancaId, @HistoriaId, @Estrelas, 1)
-                    """,
-                    new
-                    {
-                        CriancaId = criancaId,
-                        HistoriaId = historiaId,
-                        Estrelas = est
-                    });
-            }
-            else
-            {
-                await conn.ExecuteAsync(
-                    """
-                    UPDATE Sessao_Leitura
-                    SET Estrelas = CASE WHEN @Estrelas > Estrelas THEN @Estrelas ELSE Estrelas END
-                    WHERE Id = @Id
-                    """,
-                    new
-                    {
-                        Id = jaExiste.Value,
-                        Estrelas = est
-                    });
-            }
+            await conn.ExecuteAsync(
+                """
+                MERGE Sessao_Leitura AS alvo
+                USING (SELECT @CriancaId AS Id_Crianca, @HistoriaId AS Id_Historia) AS origem
+                ON alvo.Id_Crianca = origem.Id_Crianca AND alvo.Id_Historia = origem.Id_Historia
+                WHEN MATCHED THEN
+                    UPDATE SET
+                        Estrelas = CASE WHEN @Estrelas > alvo.Estrelas THEN @Estrelas ELSE alvo.Estrelas END,
+                        Concluida = 1
+                WHEN NOT MATCHED THEN
+                    INSERT (Id_Crianca, Id_Historia, Estrelas, Concluida)
+                    VALUES (origem.Id_Crianca, origem.Id_Historia, @Estrelas, 1);
+                """,
+                new
+                {
+                    CriancaId = criancaId,
+                    HistoriaId = historiaId,
+                    Estrelas = est
+                });
         }
     }
 

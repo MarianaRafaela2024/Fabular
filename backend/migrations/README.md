@@ -10,6 +10,7 @@ Ordem numérica. Cada etapa tem `NNN_*.up.sql` e `NNN_*.down.sql`.
 sqlcmd -S "(localdb)\MSSQLLocalDB" -d Fabular -i backend/migrations/001_congelar_schema_implicito.up.sql
 sqlcmd -S "(localdb)\MSSQLLocalDB" -d Fabular -i backend/migrations/004_indices_ia_evento.up.sql
 sqlcmd -S "(localdb)\MSSQLLocalDB" -d Fabular -i backend/migrations/005_genero_slug_fk.up.sql
+sqlcmd -S "(localdb)\MSSQLLocalDB" -d Fabular -i backend/migrations/007_sessao_unique.up.sql
 ```
 
 Verificação opcional:
@@ -18,6 +19,7 @@ Verificação opcional:
 sqlcmd -S "(localdb)\MSSQLLocalDB" -d Fabular -i backend/migrations/verify/001_congelar_schema_implicito.sql
 sqlcmd -S "(localdb)\MSSQLLocalDB" -d Fabular -i backend/migrations/verify/004_indices_ia_evento.sql
 sqlcmd -S "(localdb)\MSSQLLocalDB" -d Fabular -i backend/migrations/verify/005_genero_slug_fk.sql
+sqlcmd -S "(localdb)\MSSQLLocalDB" -d Fabular -i backend/migrations/verify/007_sessao_unique.sql
 ```
 
 ## Regras

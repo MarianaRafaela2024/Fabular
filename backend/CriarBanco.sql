@@ -106,13 +106,14 @@ CREATE TABLE Sessao_Leitura (
     Id_Crianca INT NOT NULL,
     Id_Historia INT NOT NULL,
     Estrelas TINYINT NOT NULL DEFAULT 1,
-    AcertosTotal INT NOT NULL DEFAULT 0,
-    ErrosTotal INT NOT NULL DEFAULT 0,
-    AjudasTotal INT NOT NULL DEFAULT 0,
+    AcertosTotal INT NOT NULL DEFAULT 0, -- deprecated: a API não grava
+    ErrosTotal INT NOT NULL DEFAULT 0,   -- deprecated: a API não grava
+    AjudasTotal INT NOT NULL DEFAULT 0,  -- deprecated: a API não grava
     Concluida BIT NOT NULL DEFAULT 0,
     CriadoEm DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
     CONSTRAINT FK_SL_Crianca FOREIGN KEY (Id_Crianca) REFERENCES Crianca(Id),
-    CONSTRAINT FK_SL_Historia FOREIGN KEY (Id_Historia) REFERENCES Historia(Id)
+    CONSTRAINT FK_SL_Historia FOREIGN KEY (Id_Historia) REFERENCES Historia(Id),
+    CONSTRAINT UQ_SL_CriancaHistoria UNIQUE (Id_Crianca, Id_Historia)
 );
 
 CREATE TABLE Relatorio_Crianca (
