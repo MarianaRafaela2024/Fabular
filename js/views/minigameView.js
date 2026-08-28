@@ -1209,17 +1209,106 @@ function renderVerdadeiroFalso(fase, h, corpo, spec) {
     const afirmacao = String(spec.afirmacao || spec.pergunta || '').trim();
     item = { afirmacao, correta: true };
   } else {
-    const kw = (h.palavrasChave || ['personagem'])[0];
-    const textoFase = extrairTextoCurto(fase.texto);
+    // ── Extrai conteúdo real da história ─────────────────────────────────────
+    const textoHistoria = obterTextoBaseHistoria(h)
+      .replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
 
-    const pares = [
-      { afirmacao: textoFase.length > 10 ? textoFase + '.' : `A história fala sobre "${kw}".`, correta: true },
-      { afirmacao: `A história se passa em outro planeta.`, correta: false },
-      { afirmacao: `A palavra ou elemento "${kw}" faz parte da história.`, correta: true },
-      { afirmacao: `A história não tem personagens.`, correta: false }
-    ];
-    item = pares[Math.floor(Math.random() * pares.length)];
+    const textoFase = fase ? extrairTextoCurto(String(fase.texto || '')) : '';
+
+    // ── Palavras-chave: validadas + ordenadas por frequência no texto ─────────
+    const STOPWORDS = new Set([
+      'para', 'como', 'mais', 'pela', 'pelo', 'esse', 'essa', 'isso', 'uma',
+      'uns', 'umas', 'são', 'está', 'este', 'esta', 'aqui', 'onde', 'quando',
+      'então', 'muito', 'também', 'assim', 'fazer', 'pode', 'com', 'que',
+      'não', 'mas', 'por', 'foi', 'ser', 'tem', 'seu', 'sua', 'nos', 'nas',
+      'dos', 'das', 'ele', 'ela', 'tinha', 'dele', 'dela', 'numa', 'num',
+      'após', 'logo', 'cada', 'todo', 'toda', 'entre', 'sobre', 'seus', 'suas'
+    ]);
+
+    // Conta frequência das palavras no texto para selecionar as mais relevantes
+    const freq = {};
+    textoHistoria.split(/\s+/)
+      .map(p => p.replace(/[^a-zA-ZÀ-ú]/g, '').trim().toLowerCase())
+      .filter(p => p.length >= 4 && !STOPWORDS.has(p))
+      .forEach(p => { freq[p] = (freq[p] || 0) + 1; });
+
+    const palavrasPorFreq = Object.entries(freq)
+      .sort((a, b) => b[1] - a[1])
+      .map(([p]) => p);
+
+    // Combina palavrasChave do modelo + palavras mais frequentes do texto
+    const palavrasValidas = (h.palavrasChave || [])
+      .map(p => String(p || '').trim().toLowerCase())
+      .filter(p => p.length >= 2 && p !== 'undefined' && p !== 'null');
+
+    const todasPalavras = [...new Set([...palavrasValidas, ...palavrasPorFreq])].slice(0, 8);
+
+    const kw  = todasPalavras[0] || 'história';
+    const kw2 = todasPalavras[1] || kw;
+    const kw3 = todasPalavras[2] || kw2;
+
+    // ── Frases reais do texto para afirmações ──────────────────────────────────
+    const frasesTexto = textoHistoria
+      .split(/[.!?]+/)
+      .map(s => s.trim())
+      .filter(s => s.length >= 20 && s.length <= 115);
+
+    const fraseReal = textoFase.length >= 15
+      ? textoFase
+      : (frasesTexto[Math.floor(Math.random() * frasesTexto.length)] || textoHistoria.slice(0, 100).trim());
+
+    const outraFrase = frasesTexto.find(f => f !== fraseReal) || fraseReal;
+
+    // Título e gênero
+    const titulo = String(h.titulo || '').trim();
+
+    // ── Distratores contextuais — claramente errados ───────────────────────────
+    const lugaresErrados  = ['em outro planeta', 'no fundo do mar', 'no espaço sideral', 'no polo norte', 'numa nave espacial'];
+    const personErrados   = ['um robô gigante', 'um extraterrestre', 'um super-herói voador', 'um vampiro'];
+    const lugarDistrator  = lugaresErrados [Math.floor(Math.random() * lugaresErrados.length)];
+    const personDistrator = personErrados  [Math.floor(Math.random() * personErrados.length)];
+
+    // ── Pool variado de perguntas ──────────────────────────────────────────────
+    const pool = [
+      // ─ Verdadeiras: baseadas em conteúdo real ─────────────────────────────
+      fraseReal.length >= 15
+        ? { afirmacao: `"${fraseReal.length > 105 ? fraseReal.slice(0, 102) + '…' : fraseReal}" é um trecho da história.`, correta: true }
+        : null,
+      outraFrase.length >= 15 && outraFrase !== fraseReal
+        ? { afirmacao: `"${outraFrase.length > 105 ? outraFrase.slice(0, 102) + '…' : outraFrase}" aparece no texto.`, correta: true }
+        : null,
+      { afirmacao: `A palavra "${kw}" aparece no texto da história.`,                     correta: true  },
+      kw2 !== kw
+        ? { afirmacao: `Tanto "${kw}" quanto "${kw2}" fazem parte da história.`,          correta: true  }
+        : null,
+      kw3 !== kw2
+        ? { afirmacao: `O texto menciona "${kw}", "${kw2}" e "${kw3}".`,                  correta: true  }
+        : null,
+      titulo
+        ? { afirmacao: `Esta história se chama "${titulo}".`,                             correta: true  }
+        : null,
+
+      // ─ Falsas: distratores contextuais e negações ─────────────────────────
+      { afirmacao: `A história se passa ${lugarDistrator}.`,                              correta: false },
+      { afirmacao: `O personagem principal da história é ${personDistrator}.`,            correta: false },
+      { afirmacao: `"${kw}" não aparece em nenhum momento da história.`,                  correta: false },
+      kw2 !== kw
+        ? { afirmacao: `A palavra "${kw2}" nunca é mencionada no texto.`,                 correta: false }
+        : null,
+      { afirmacao: `A história não apresenta nenhum personagem ou elemento principal.`,   correta: false },
+      { afirmacao: `A história foi escrita em outro idioma e traduzida.`,                 correta: false },
+    ].filter(p =>
+      p &&
+      p.afirmacao &&
+      !p.afirmacao.includes('undefined') &&
+      !p.afirmacao.includes('null') &&
+      p.afirmacao.trim().length > 10
+    );
+
+    item = pool[Math.floor(Math.random() * pool.length)]
+      || { afirmacao: `A palavra "${kw}" aparece na história.`, correta: true };
   }
+
 
   const wrap = document.createElement('div');
   wrap.innerHTML = `
