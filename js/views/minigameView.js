@@ -2237,47 +2237,51 @@ function renderOrdenarPassos(h, corpo, spec) {
     if (passosDeFases.length >= 3) {
       passos = passosDeFases;
     } else {
-      // ── Fallback: extrai frases do texto completo da história ─────────────
+      // ── Fallback: extrai bloco CONTÍGUO de frases do texto completo ────────
       const textoBase = obterTextoBaseHistoria(h)
         .replace(/<[^>]+>/g, '')
         .replace(/\s+/g, ' ')
         .trim();
 
-      // Divide por . ! ? preservando a ordem original do texto
+      // Divide por . ! ? preservando a ordem original — frases com tamanho adequado
       const todasFrases = (textoBase.match(/[^.!?]+[.!?]+/g) || [])
         .map(s => s.trim())
         .filter(s => s.length >= 15 && s.length <= 150);
 
-      // Distribui ao longo do texto (início, meio, fim) para representar a narrativa
       let selecionadas = [];
+
+      const QTD_PASSOS = 4; // quantidade ideal de passos sequenciais
+
       if (todasFrases.length >= 3) {
-        const idx0 = 0;
-        const idx2 = todasFrases.length - 1;
-        const idx1 = Math.floor(todasFrases.length / 2);
-        // Garante ao menos 3 distintas
-        const indices = [...new Set([idx0, idx1, idx2])];
-        // Se quisermos até 5, pega mais posições intermediárias
-        if (todasFrases.length >= 5 && indices.length < 5) {
-          const idx3 = Math.floor(todasFrases.length / 4);
-          const idx4 = Math.floor((3 * todasFrases.length) / 4);
-          indices.push(idx3, idx4);
-        }
-        selecionadas = [...new Set(indices)]
-          .sort((a, b) => a - b)           // mantém a ordem narrativa
-          .slice(0, 5)
-          .map((i, pos) => ({ id: pos, texto: todasFrases[i] }));
+        // Tenta pegar até QTD_PASSOS frases consecutivas
+        const qtd = Math.min(QTD_PASSOS, todasFrases.length);
+
+        // Escolhe ponto de início aleatório, garantindo qtd frases à frente
+        const maxInicio = todasFrases.length - qtd;
+        const inicio = maxInicio > 0
+          ? Math.floor(Math.random() * (maxInicio + 1))
+          : 0;
+
+        // Pega o bloco contíguo — juntas formam um trecho coeso
+        selecionadas = todasFrases
+          .slice(inicio, inicio + qtd)
+          .map((txt, pos) => ({ id: pos, texto: txt }));
       }
 
-      // Se ainda não tiver 3, usa o que tiver + frases por vírgula como último recurso
+      // Fallback: divide por vírgula e pega bloco contíguo
       if (selecionadas.length < 3) {
-        const porVirgula = textoBase.split(/[,;]+/)
+        const clausulas = textoBase.split(/[,;]+/)
           .map(s => s.trim())
-          .filter(s => s.length >= 15 && s.length <= 120)
-          .slice(0, 5);
-        selecionadas = porVirgula.map((txt, i) => ({ id: i, texto: txt }));
+          .filter(s => s.length >= 15 && s.length <= 120);
+        const qtd = Math.min(QTD_PASSOS, clausulas.length);
+        const maxInicio = clausulas.length - qtd;
+        const inicio = maxInicio > 0 ? Math.floor(Math.random() * (maxInicio + 1)) : 0;
+        selecionadas = clausulas
+          .slice(inicio, inicio + qtd)
+          .map((txt, pos) => ({ id: pos, texto: txt }));
       }
 
-      // Mínimo absoluto: se ainda faltar, preenche com frases genéricas numeradas
+      // Mínimo absoluto: preenche com marcadores genéricos se ainda faltar
       if (selecionadas.length < 3) {
         const qtdFaltando = 3 - selecionadas.length;
         for (let i = 0; i < qtdFaltando; i++) {
@@ -2288,7 +2292,24 @@ function renderOrdenarPassos(h, corpo, spec) {
       passos = selecionadas;
     }
   }
-  let ordem = embaralhar([...passos.map((_, i) => i)]);
+  // Embaralha garantindo que o resultado NUNCA seja igual à ordem correta
+  const embaralharGarantido = (arr) => {
+    if (arr.length <= 1) return [...arr];
+    let resultado;
+    let igual = true;
+    for (let t = 0; t < 20 && igual; t++) {
+      resultado = embaralhar([...arr]);
+      igual = resultado.every((v, i) => v === arr[i]);
+    }
+    // Se mesmo assim saiu igual (improvável), força rotação de 1 posição
+    if (igual) {
+      resultado = [...arr.slice(1), arr[0]];
+    }
+    return resultado;
+  };
+
+  const ordemCorreta = passos.map((_, i) => i);
+  let ordem = embaralharGarantido(ordemCorreta);
 
   const wrap = document.createElement('div');
   wrap.innerHTML = `
@@ -2308,15 +2329,15 @@ function renderOrdenarPassos(h, corpo, spec) {
       const ehCorreto = (stepId === i);
       const posicaoCorreta = stepId + 1;
       const classStatus = finalizado
-        ? (isDesistir || ehCorreto ? 'correta' : 'errada')
+        ? (ehCorreto ? 'correta' : 'errada')
         : '';
 
       let gabaritoHtml = '';
       if (finalizado) {
-        if (isDesistir || ehCorreto) {
+        if (ehCorreto) {
           gabaritoHtml = `<span class="op-gabarito ok">✓ Posição correta!</span>`;
         } else {
-          gabaritoHtml = `<span class="op-gabarito erro">➔ Posição correta: nº ${posicaoCorreta}</span>`;
+          gabaritoHtml = `<span class="op-gabarito erro">➔ Posição correta na história: nº ${posicaoCorreta}</span>`;
         }
       }
 
@@ -2354,17 +2375,13 @@ function renderOrdenarPassos(h, corpo, spec) {
   renderLista();
 
   const finalizarOP = (isDesistir = false) => {
-    const correta = passos.map((_, i) => i);
     let corretosCount = 0;
     ordem.forEach((stepId, i) => {
       if (stepId === i) corretosCount++;
     });
     const ok = isDesistir ? false : ((corretosCount / passos.length) > 0.5);
 
-    if (isDesistir) {
-      ordem = [...correta];
-    }
-
+    // Não reseta a ordem — mantém a do usuário para mostrar o gabarito real
     renderLista(true, isDesistir);
 
     const btnConf = document.getElementById('btnConfOP');
