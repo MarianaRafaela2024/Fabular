@@ -10,8 +10,7 @@ const PAGINAS_POR_TELA = {
   minigame: 'index.html',
   resultado: 'index.html',
   'bot-ia': 'bot.html',
-  progresso: 'progresso.html',
-  responsavel: 'responsavel.html'
+  progresso: 'progresso.html'
 };
 
 function irParaTela(nomeTela) {
@@ -38,7 +37,7 @@ function irParaTela(nomeTela) {
   const main = document.getElementById('app-main');
   if (main) main.scrollTop = 0;
 
-  if (nomeTela === 'progresso' || nomeTela === 'responsavel') {
+  if (nomeTela === 'progresso') {
     carregarProgressoDoServidor()
       .then(() => atualizarTelaProgresso())
       .catch(() => atualizarTelaProgresso());
@@ -104,9 +103,7 @@ function obterTelaInicialDaPagina() {
   if (document.getElementById('tela-progresso') && !document.getElementById('tela-biblioteca')) {
     return 'progresso';
   }
-  if (document.getElementById('tela-responsavel') && !document.getElementById('tela-biblioteca')) {
-    return 'responsavel';
-  }
+
   if (document.getElementById('tela-bot-ia') && !document.getElementById('tela-biblioteca')) {
     return 'bot-ia';
   }
