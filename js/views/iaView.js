@@ -90,8 +90,8 @@ async function gerarHistoriaBotIa() {
         'Authorization': `Bearer ${groqKey}`
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        max_tokens: 7000,
+        model: 'openai/gpt-oss-120b',
+        max_tokens: 4500,
         temperature: 0.75,
         response_format: { type: 'json_object' },
         messages: [
@@ -128,7 +128,7 @@ async function gerarHistoriaBotIa() {
       try {
         const salva = await apiPost(
           '/api/v1/stories/save',
-          montarBodySalvarHistoriaGroq(story, vinculo.criancaId, prompt, 'llama-3.3-70b-versatile', obterResponsavelId())
+          montarBodySalvarHistoriaGroq(story, vinculo.criancaId, prompt, 'openai/gpt-oss-120b', obterResponsavelId())
         );
         savedId = salva?.id ?? null;
         if (savedId) Object.assign(story, salva);
