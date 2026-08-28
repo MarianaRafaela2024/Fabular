@@ -359,11 +359,33 @@ function montarDadosCompletarMG(fase, h, spec) {
       .replace(/<[^>]+>/g, '')
       .replace(/\s+/g, ' ')
       .trim();
-    const frases = textoLimpo.split(/[.!?]/).map((s) => s.trim()).filter(Boolean);
+
     const re = new RegExp(`\\b${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-    const fraseTxt = frases.find((s) => re.test(s)) || frases.find((s) => s.length > 12) || textoLimpo;
+
+    // 1. Divide em frases completas por . ! ? (preferencial)
+    const frases = textoLimpo.split(/[.!?]+/).map((s) => s.trim()).filter((s) => s.length > 5);
+
+    // 2. Procura frase completa com a palavra-chave e tamanho adequado
+    let fraseTxt = frases.find((s) => re.test(s) && s.length >= 10 && s.length <= 120);
+
+    // 3. Fallback: divide por vírgula/ponto-e-vírgula para cláusulas menores
+    if (!fraseTxt) {
+      const clausulas = textoLimpo.split(/[,;]+/).map((s) => s.trim()).filter((s) => s.length > 5);
+      fraseTxt = clausulas.find((s) => re.test(s) && s.length >= 8 && s.length <= 80);
+    }
+
+    // 4. Fallback: qualquer frase completa de tamanho razoável (sem precisar ter a palavra-chave)
+    if (!fraseTxt) {
+      fraseTxt = frases.find((s) => s.length >= 10 && s.length <= 100);
+    }
+
+    // 5. Último recurso: primeira frase disponível (jamais o texto inteiro cortado no meio)
+    if (!fraseTxt) {
+      fraseTxt = frases[0] || textoLimpo.slice(0, 80).replace(/\s+\S+$/, '');
+    }
+
     if (re.test(fraseTxt)) frase = fraseTxt.replace(re, '___');
-    else frase = (fraseTxt.length > 80 ? fraseTxt.slice(0, 80) + '…' : fraseTxt) + ' ___';
+    else frase = fraseTxt + ' ___';
   }
 
   if (frase && resposta && !/_{2,}|___/.test(frase)) {
@@ -2195,11 +2217,76 @@ function renderOrdenarPassos(h, corpo, spec) {
   if (spec && Array.isArray(spec.passos) && spec.passos.length >= 3) {
     passos = spec.passos.map((txt, i) => ({ id: i, texto: String(txt) }));
   } else {
-    const fasesUsadas = Array.isArray(h?.fases) && h.fases.length > 5 ? h.fases.slice(0, 5) : (Array.isArray(h?.fases) ? h.fases : []);
-    passos = fasesUsadas.map((f, i) => ({
-      id: i,
-      texto: extrairFraseCompleta(f, i)
-    }));
+    // ── Tenta extrair de h.fases ──────────────────────────────────────────
+    const fasesUsadas = Array.isArray(h?.fases) && h.fases.length > 0
+      ? (h.fases.length > 5 ? h.fases.slice(0, 5) : h.fases)
+      : [];
+
+    const passosDeFases = fasesUsadas
+      .map((f, i) => {
+        const txt = String(f.texto || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+        if (!txt) return null;
+        const frases = txt.match(/[^.!?]+[.!?]+/g) || [];
+        const ideal = frases.find(f => f.trim().length >= 20 && f.trim().length <= 150);
+        const maior = frases.slice().sort((a, b) => b.length - a.length)[0];
+        const resultado = (ideal || maior || txt).trim();
+        return resultado.length >= 10 ? { id: i, texto: resultado } : null;
+      })
+      .filter(Boolean);
+
+    if (passosDeFases.length >= 3) {
+      passos = passosDeFases;
+    } else {
+      // ── Fallback: extrai frases do texto completo da história ─────────────
+      const textoBase = obterTextoBaseHistoria(h)
+        .replace(/<[^>]+>/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      // Divide por . ! ? preservando a ordem original do texto
+      const todasFrases = (textoBase.match(/[^.!?]+[.!?]+/g) || [])
+        .map(s => s.trim())
+        .filter(s => s.length >= 15 && s.length <= 150);
+
+      // Distribui ao longo do texto (início, meio, fim) para representar a narrativa
+      let selecionadas = [];
+      if (todasFrases.length >= 3) {
+        const idx0 = 0;
+        const idx2 = todasFrases.length - 1;
+        const idx1 = Math.floor(todasFrases.length / 2);
+        // Garante ao menos 3 distintas
+        const indices = [...new Set([idx0, idx1, idx2])];
+        // Se quisermos até 5, pega mais posições intermediárias
+        if (todasFrases.length >= 5 && indices.length < 5) {
+          const idx3 = Math.floor(todasFrases.length / 4);
+          const idx4 = Math.floor((3 * todasFrases.length) / 4);
+          indices.push(idx3, idx4);
+        }
+        selecionadas = [...new Set(indices)]
+          .sort((a, b) => a - b)           // mantém a ordem narrativa
+          .slice(0, 5)
+          .map((i, pos) => ({ id: pos, texto: todasFrases[i] }));
+      }
+
+      // Se ainda não tiver 3, usa o que tiver + frases por vírgula como último recurso
+      if (selecionadas.length < 3) {
+        const porVirgula = textoBase.split(/[,;]+/)
+          .map(s => s.trim())
+          .filter(s => s.length >= 15 && s.length <= 120)
+          .slice(0, 5);
+        selecionadas = porVirgula.map((txt, i) => ({ id: i, texto: txt }));
+      }
+
+      // Mínimo absoluto: se ainda faltar, preenche com frases genéricas numeradas
+      if (selecionadas.length < 3) {
+        const qtdFaltando = 3 - selecionadas.length;
+        for (let i = 0; i < qtdFaltando; i++) {
+          selecionadas.push({ id: selecionadas.length, texto: `Evento ${selecionadas.length + 1} da história` });
+        }
+      }
+
+      passos = selecionadas;
+    }
   }
   let ordem = embaralhar([...passos.map((_, i) => i)]);
 
