@@ -333,22 +333,56 @@ body.login-body {
   padding-top: 3%;
 }
 
-.campo-input {
-  border: 2px solid var(--borda);
-  border-radius: var(--radius-sm);
+.campo-input,
+input,
+select,
+textarea {
+  border: 2px solid var(--borda, #E5E7EB);
+  border-radius: var(--radius-sm, 10px);
   padding: 13px 16px;
   font-family: 'Nunito', sans-serif;
   font-size: 1rem;
-  color: var(--texto);
-  background: rgba(255, 255, 255, .8);
+  font-weight: 700 !important;
+  color: #111827 !important;
+  background: #FFFFFF !important;
   transition: border-color var(--trans), box-shadow var(--trans), background var(--trans);
 }
 
-.campo-input:focus {
-  border-color: var(--cor-primaria);
-  background: #fff;
+.campo-input::placeholder,
+input::placeholder,
+textarea::placeholder {
+  color: #4B5563 !important;
+  opacity: 1 !important;
+  font-weight: 600 !important;
+}
+
+.campo-input:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--cor-primaria, #FF6B35);
+  background: #FFFFFF !important;
+  color: #111827 !important;
   box-shadow: 0 0 0 4px rgba(255, 107, 53, .12);
   outline: none;
+}
+
+select.campo-input option,
+select option {
+  color: #111827 !important;
+  background-color: #FFFFFF !important;
+  font-weight: 700 !important;
+  padding: 8px;
+}
+
+/* Previne fundo claro com texto claro no autofill do navegador em Modo Claro */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: #111827 !important;
+  -webkit-box-shadow: 0 0 0px 1000px #FFFFFF inset !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 .campo-erro {
@@ -427,31 +461,33 @@ body.login-body {
 }
 
 .chip {
-  background: rgba(255, 255, 255, .7);
-  border: 2px solid var(--borda);
+  background: #FFFFFF !important;
+  border: 2px solid #D1D5DB !important;
   border-radius: 999px;
   padding: 8px 16px;
   font-family: 'Nunito', sans-serif;
   font-size: .9rem;
-  font-weight: 700;
+  font-weight: 800 !important;
+  color: #111827 !important;
   cursor: pointer;
   transition: all var(--trans);
-  color: var(--texto);
   position: relative;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .chip:hover {
-  border-color: var(--cor-primaria);
-  color: var(--cor-primaria);
-  background: rgba(255, 107, 53, .06);
+  border-color: #FF6B35 !important;
+  color: #C2410C !important;
+  background: #FFF3ED !important;
   transform: translateY(-1px);
 }
 
 .chip.ativo {
-  background: var(--grad-btn);
-  border-color: transparent;
-  color: #fff;
+  background: linear-gradient(135deg, #FF6B35, #FF8E53) !important;
+  border-color: #FF6B35 !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
   transform: translateY(-1px) scale(1.04);
   box-shadow: 0 4px 14px rgba(255, 107, 53, .35);
 }
@@ -538,7 +574,7 @@ body.login-body {
 
 .btn-secundario {
   background: transparent;
-  color: var(--cor-secundaria);
+  color: #ffffff;
   border: 2px solid var(--cor-secundaria);
   border-radius: var(--radius);
   padding: 12px 24px;
@@ -551,19 +587,22 @@ body.login-body {
   transition: all var(--trans);
   position: relative;
   overflow: hidden;
+  z-index: 1;
 }
 
 .btn-secundario::before {
   content: '';
+  color: #ffffff;
   position: absolute;
   inset: 0;
   background: var(--grad-btn-sec);
   opacity: 0;
   transition: opacity var(--trans);
+
 }
 
 .btn-secundario:hover {
-  color: #fff;
+  color: #ffffff;
   border-color: transparent;
   transform: translateY(-1px);
   box-shadow: 0 4px 16px rgba(78, 205, 196, .3);
@@ -571,12 +610,14 @@ body.login-body {
 
 .btn-secundario:hover::before {
   opacity: 1;
+  color: #ffffff;
 }
 
 .btn-secundario span,
 .btn-secundario {
   position: relative;
   z-index: 1;
+  color: #ffffff;
 }
 
 .btn-voltar {
@@ -4094,12 +4135,13 @@ body.alto-contraste {
   color: #E6EDF3 !important;
 }
 
-/* Fundo da tela de Login em Dark Mode */
+/* Fundo da tela de Login em Dark Mode - Roxo escuro e fechado */
 html.alto-contraste body.login-body,
 html.alto-contraste .login-bg,
 body.alto-contraste.login-body,
 body.alto-contraste .login-bg {
-  background: radial-gradient(circle at top left, #1a2332, #0d1117 70%) !important;
+  background-color: #140A24 !important;
+  background: radial-gradient(circle at top left, #28143E, #12081F 70%) !important;
 }
 
 /* Header & Barra Superior */
@@ -4176,9 +4218,14 @@ body.alto-contraste .resp-titulo {
 }
 
 body.alto-contraste .tela-sub,
-body.alto-contraste .campo-label,
 body.alto-contraste .vazio-msg {
-  color: #9BA7B4 !important;
+  color: #C9D1D9 !important;
+}
+
+body.alto-contraste .campo-label,
+body.alto-contraste label {
+  color: #F0F6FC !important;
+  font-weight: 800 !important;
 }
 
 /* ─────────────────────────────────────────────
@@ -4487,12 +4534,19 @@ body.alto-contraste .interacao-input,
 body.alto-contraste .verso-input,
 body.alto-contraste .bot-ia-textarea,
 body.alto-contraste .bot-ia-select,
-body.alto-contraste .ia-gerar-textarea {
+body.alto-contraste .ia-gerar-textarea,
+body.alto-contraste select {
   background: #0D1117 !important;
   color: #F0F6FC !important;
   font-weight: 700 !important;
   font-size: 1.02rem !important;
   border: 2px solid #484F58 !important;
+}
+
+body.alto-contraste select option {
+  background: #161B22 !important;
+  color: #F0F6FC !important;
+  padding: 8px !important;
 }
 
 body.alto-contraste .pesquisa-input::placeholder,
@@ -4512,10 +4566,23 @@ body.alto-contraste .interacao-input:focus,
 body.alto-contraste .verso-input:focus,
 body.alto-contraste .bot-ia-textarea:focus,
 body.alto-contraste .bot-ia-select:focus,
-body.alto-contraste .ia-gerar-textarea:focus {
+body.alto-contraste .ia-gerar-textarea:focus,
+body.alto-contraste select:focus {
+  background: #0D1117 !important;
+  color: #F0F6FC !important;
   border-color: #58A6FF !important;
   box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.3) !important;
   outline: none !important;
+}
+
+/* Previne fundo claro e texto branco no autofill do navegador em Dark Mode */
+body.alto-contraste input:-webkit-autofill,
+body.alto-contraste input:-webkit-autofill:hover,
+body.alto-contraste input:-webkit-autofill:focus,
+body.alto-contraste input:-webkit-autofill:active {
+  -webkit-text-fill-color: #F0F6FC !important;
+  -webkit-box-shadow: 0 0 0px 1000px #0D1117 inset !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 body.alto-contraste .chip {
@@ -5622,8 +5689,8 @@ body.alto-contraste .modal-vidas-timer-valor {
 }
 
 .btn-config-engrenagem {
-  background: rgba(255, 255, 255, 0.75);
-  border: 1.5px solid var(--borda, #e5e7eb);
+  background: transparent;
+  border: none;
   border-radius: 50%;
   width: 42px;
   height: 42px;
@@ -5634,14 +5701,14 @@ body.alto-contraste .modal-vidas-timer-valor {
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   padding: 0;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+  box-shadow: none;
+  overflow: hidden;
 }
 
 .btn-config-engrenagem:hover {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.15);
   transform: rotate(60deg) scale(1.1);
-  border-color: var(--cor-primaria, #ff6b35);
-  box-shadow: 0 6px 16px rgba(255, 107, 53, 0.25);
+  box-shadow: none;
 }
 
 .btn-config-engrenagem:active {
@@ -5649,10 +5716,21 @@ body.alto-contraste .modal-vidas-timer-valor {
 }
 
 .img-engrenagem {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   object-fit: contain;
   display: block;
+  border-radius: 50%;
+}
+
+body.alto-contraste .btn-config-engrenagem {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+body.alto-contraste .btn-config-engrenagem:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
 }
 
 /* MODO PÁGINA SEPARADA PARA CONFIGURAÇÕES */
@@ -5755,15 +5833,19 @@ body.alto-contraste .modal-vidas-timer-valor {
 
 .config-relatorio-card {
   background: rgba(255, 255, 255, .75);
-  border: 1.5px solid var(--borda, #e5e7eb);
+  border: 2px solid #E5E7EB !important;
   border-radius: 18px;
   padding: 20px 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  color: #111827 !important;
 }
 
 .config-relatorio-card h4 {
-  margin: 0 0 12px;
+  margin: 0 0 14px;
   font-family: 'Baloo 2', cursive;
-  font-size: 1.15rem;
+  font-size: 1.2rem;
+  font-weight: 800 !important;
+  color: #111827 !important;
 }
 
 .config-stats-grid {
@@ -5773,19 +5855,22 @@ body.alto-contraste .modal-vidas-timer-valor {
 }
 
 .config-stat {
-  background: rgba(255, 255, 255, .9);
+  background: #F8FAFC !important;
   border-radius: 14px;
   padding: 14px;
   text-align: center;
-  font-size: .88rem;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+  font-size: .9rem;
+  font-weight: 700 !important;
+  color: #1F2937 !important;
+  border: 1.5px solid #E2E8F0 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
 }
 
 .config-stat strong {
   display: block;
-  font-size: 1.35rem;
-  color: var(--cor-primaria, #ff6b35);
+  font-size: 1.45rem;
+  font-weight: 800 !important;
+  color: #C2410C !important;
   margin-top: 4px;
 }
 
@@ -5796,8 +5881,68 @@ body.alto-contraste .modal-vidas-timer-valor {
   text-align: center;
 }
 
-/* .config-avatar-grid .avatar-btn img {
-  width: 100%;
-  height: auto;
-  display: block;
-} */
+/* Modo escuro / Alto contraste para Configurações */
+body.alto-contraste .config-card-pagina {
+  background: #161B22 !important;
+  border: 1.5px solid #30363D !important;
+  color: #E6EDF3 !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5) !important;
+}
+
+body.alto-contraste .config-topo-header {
+  border-bottom: 2px solid #30363D !important;
+}
+
+body.alto-contraste .config-topo-header h2 {
+  color: #F0F6FC !important;
+}
+
+body.alto-contraste .config-topo-header .tela-sub {
+  color: #C9D1D9 !important;
+}
+
+body.alto-contraste .config-aba {
+  background: #21262D !important;
+  border: 2px solid #30363D !important;
+  color: #C9D1D9 !important;
+  font-weight: 700 !important;
+}
+
+body.alto-contraste .config-aba:hover {
+  background: #30363D !important;
+  color: #FFFFFF !important;
+  border-color: #58A6FF !important;
+}
+
+body.alto-contraste .config-aba.ativo {
+  background: rgba(255, 107, 53, 0.2) !important;
+  border-color: #FF6B35 !important;
+  color: #FF6B35 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 3px 10px rgba(255, 107, 53, 0.2) !important;
+}
+
+body.alto-contraste .config-relatorio-card {
+  background: #FFFFFF !important;
+  border: 2px solid #D1D5DB !important;
+  color: #111827 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2) !important;
+}
+
+body.alto-contraste .config-relatorio-card h4 {
+  color: #111827 !important;
+  font-weight: 800 !important;
+}
+
+body.alto-contraste .config-stat {
+  background: #F1F5F9 !important;
+  border: 1.5px solid #CBD5E1 !important;
+  color: #0F172A !important;
+  font-weight: 700 !important;
+}
+
+body.alto-contraste .config-stat strong {
+  color: #C2410C !important;
+  font-weight: 800 !important;
+  font-size: 1.45rem !important;
+}
