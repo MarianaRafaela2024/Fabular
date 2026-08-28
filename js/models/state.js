@@ -35,30 +35,12 @@ let estado = {
 let syncTimer = null;
 const CHAVE_VIDAS_PERSISTENTES = 'mundoHistorias_vidas_criancas';
 
-function salvarEstado() {
-  const dados = {
-    perfil: estado.perfil,
-    vidasPerdidas: estado.vidasPerdidas || [],
-    vidasPerdidasPorCrianca: estado.vidasPerdidasPorCrianca || {},
-    historiasLidas: estado.historiasLidas || [],
-    atividadeDiaria: estado.atividadeDiaria || [],
-    totalEstrelas: estado.totalEstrelas || 0,
-    tempoTotal: estado.tempoTotal || 0,
-    minigamesJogados: estado.minigamesJogados || 0,
-    tentativasReprovadas: estado.tentativasReprovadas || 0,
-    acertosMG: estado.acertosMG || 0,
-    errosMG: estado.errosMG || 0,
-    naoConsigoOuvir: estado.naoConsigoOuvir || 0
-  };
-  localStorage.setItem('mundoHistorias_estado', JSON.stringify(dados));
-  try {
-    localStorage.setItem(CHAVE_VIDAS_PERSISTENTES, JSON.stringify(estado.vidasPerdidasPorCrianca || {}));
-  } catch (_) { }
-  agendarSyncProgresso();
+function obterChaveEstadoCrianca(childId) {
+  if (!childId) return null;
+  return `mundoHistorias_estado_crianca_${childId}`;
 }
 
-function carregarEstado() {
-  // Limpa estado de progresso em memória para evitar resquícios de outros perfis
+function resetarProgressoEmMemoria() {
   estado.totalEstrelas = 0;
   estado.historiasLidas = [];
   estado.tempoTotal = 0;
@@ -69,6 +51,73 @@ function carregarEstado() {
   estado.naoConsigoOuvir = 0;
   estado.atividadeDiaria = [];
   estado.relatorioEventos = [];
+  estado.nivel = 'iniciante';
+}
+
+function aplicarDadosProgresso(dados) {
+  if (!dados) return;
+
+  if (Array.isArray(dados.vidasPerdidas)) {
+    estado.vidasPerdidas = dados.vidasPerdidas;
+  }
+  if (dados.vidasPerdidasPorCrianca && typeof dados.vidasPerdidasPorCrianca === 'object') {
+    estado.vidasPerdidasPorCrianca = Object.assign({}, estado.vidasPerdidasPorCrianca, dados.vidasPerdidasPorCrianca);
+  }
+
+  estado.historiasLidas = Array.isArray(dados.historiasLidas) ? dados.historiasLidas : [];
+  estado.atividadeDiaria = Array.isArray(dados.atividadeDiaria) ? dados.atividadeDiaria : [];
+  estado.relatorioEventos = Array.isArray(dados.relatorioEventos) ? dados.relatorioEventos : [];
+
+  estado.totalEstrelas = Number(dados.totalEstrelas) || 0;
+  estado.tempoTotal = Number(dados.tempoTotal) || 0;
+  estado.minigamesJogados = Number(dados.minigamesJogados) || 0;
+  estado.tentativasReprovadas = Number(dados.tentativasReprovadas) || 0;
+  estado.acertosMG = Number(dados.acertosMG) || 0;
+  estado.errosMG = Number(dados.errosMG) || 0;
+  estado.naoConsigoOuvir = Number(dados.naoConsigoOuvir) || 0;
+
+  if (dados.perfil) {
+    estado.perfil = typeof normalizarPerfilCrianca === 'function' ? normalizarPerfilCrianca(dados.perfil) : dados.perfil;
+  }
+  estado.nivel = typeof calcularNivelPorXp === 'function' ? calcularNivelPorXp(estado.totalEstrelas) : 'iniciante';
+}
+
+function salvarEstado() {
+  const dados = {
+    perfil: estado.perfil,
+    vidasPerdidas: estado.vidasPerdidas || [],
+    vidasPerdidasPorCrianca: estado.vidasPerdidasPorCrianca || {},
+    historiasLidas: estado.historiasLidas || [],
+    atividadeDiaria: estado.atividadeDiaria || [],
+    relatorioEventos: estado.relatorioEventos || [],
+    totalEstrelas: estado.totalEstrelas || 0,
+    tempoTotal: estado.tempoTotal || 0,
+    minigamesJogados: estado.minigamesJogados || 0,
+    tentativasReprovadas: estado.tentativasReprovadas || 0,
+    acertosMG: estado.acertosMG || 0,
+    errosMG: estado.errosMG || 0,
+    naoConsigoOuvir: estado.naoConsigoOuvir || 0
+  };
+
+  localStorage.setItem('mundoHistorias_estado', JSON.stringify(dados));
+
+  const childId = estado?.perfil?.id || estado?.perfil?.Id;
+  if (childId) {
+    const chaveCrianca = obterChaveEstadoCrianca(childId);
+    if (chaveCrianca) {
+      localStorage.setItem(chaveCrianca, JSON.stringify(dados));
+    }
+  }
+
+  try {
+    localStorage.setItem(CHAVE_VIDAS_PERSISTENTES, JSON.stringify(estado.vidasPerdidasPorCrianca || {}));
+  } catch (_) { }
+
+  agendarSyncProgresso();
+}
+
+function carregarEstado() {
+  resetarProgressoEmMemoria();
 
   const raw = localStorage.getItem('mundoHistorias_estado');
   let dados = null;
@@ -79,45 +128,26 @@ function carregarEstado() {
   }
 
   if (dados) {
-    if (Array.isArray(dados.vidasPerdidas)) {
-      estado.vidasPerdidas = dados.vidasPerdidas;
-    } else {
-      estado.vidasPerdidas = [];
-    }
+    const childId = dados.perfil?.id || dados.perfil?.Id;
+    let dadosCrianca = dados;
 
-    if (dados.vidasPerdidasPorCrianca && typeof dados.vidasPerdidasPorCrianca === 'object') {
-      estado.vidasPerdidasPorCrianca = dados.vidasPerdidasPorCrianca;
-    } else {
-      estado.vidasPerdidasPorCrianca = {};
-    }
-
-    if (Array.isArray(dados.historiasLidas)) {
-      estado.historiasLidas = dados.historiasLidas;
-    }
-    if (Array.isArray(dados.atividadeDiaria)) {
-      estado.atividadeDiaria = dados.atividadeDiaria;
-    }
-    if (dados.totalEstrelas != null) estado.totalEstrelas = Number(dados.totalEstrelas) || 0;
-    if (dados.tempoTotal != null) estado.tempoTotal = Number(dados.tempoTotal) || 0;
-    if (dados.minigamesJogados != null) estado.minigamesJogados = Number(dados.minigamesJogados) || 0;
-    if (dados.tentativasReprovadas != null) estado.tentativasReprovadas = Number(dados.tentativasReprovadas) || 0;
-    if (dados.acertosMG != null) estado.acertosMG = Number(dados.acertosMG) || 0;
-    if (dados.errosMG != null) estado.errosMG = Number(dados.errosMG) || 0;
-    if (dados.naoConsigoOuvir != null) estado.naoConsigoOuvir = Number(dados.naoConsigoOuvir) || 0;
-
-    if (dados?.perfil) {
-      const faixaAnterior = dados.perfil.faixa;
-      estado.perfil = normalizarPerfilCrianca(dados.perfil);
-      if (estado.perfil.faixa !== faixaAnterior) {
-        salvarEstado();
+    if (childId) {
+      const chaveCrianca = obterChaveEstadoCrianca(childId);
+      const rawCrianca = localStorage.getItem(chaveCrianca);
+      if (rawCrianca) {
+        try {
+          const parsedC = JSON.parse(rawCrianca);
+          if (parsedC) {
+            dadosCrianca = parsedC;
+            if (dados.perfil) dadosCrianca.perfil = dados.perfil;
+          }
+        } catch (_) { }
       }
     }
-  } else {
-    estado.vidasPerdidas = [];
-    estado.vidasPerdidasPorCrianca = {};
+
+    aplicarDadosProgresso(dadosCrianca);
   }
 
-  // Carrega e mescla também de CHAVE_VIDAS_PERSISTENTES para resgatar históricos mantidos entre perfis e sessoes
   try {
     const rawVidas = localStorage.getItem(CHAVE_VIDAS_PERSISTENTES);
     if (rawVidas) {
@@ -127,6 +157,35 @@ function carregarEstado() {
       }
     }
   } catch (_) { }
+}
+
+function trocarPerfilCriancaEstado(perfilNovo) {
+  if (estado?.perfil?.id || estado?.perfil?.Id) {
+    salvarEstado();
+  }
+
+  resetarProgressoEmMemoria();
+
+  const perfilNorm = typeof normalizarPerfilCrianca === 'function' ? normalizarPerfilCrianca(perfilNovo) : perfilNovo;
+  const childId = perfilNorm?.id || perfilNorm?.Id;
+
+  estado.perfil = perfilNorm;
+
+  if (childId) {
+    const chaveCrianca = obterChaveEstadoCrianca(childId);
+    const rawCrianca = localStorage.getItem(chaveCrianca);
+    if (rawCrianca) {
+      try {
+        const dadosCrianca = JSON.parse(rawCrianca);
+        if (dadosCrianca) {
+          aplicarDadosProgresso(dadosCrianca);
+        }
+      } catch (_) { }
+    }
+  }
+
+  estado.perfil = perfilNorm;
+  salvarEstado();
 }
 
 function garantirContadoresRelatorio() {

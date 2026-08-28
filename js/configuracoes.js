@@ -172,36 +172,45 @@
     const nome = crianca.nome || crianca.Nome;
     cont.innerHTML = '<p class="tela-sub">Carregando relatório...</p>';
 
+    let prog = null;
     try {
-      const prog = await apiRequest(
+      prog = await apiRequest(
         `/api/v1/sync/progress?responsavelId=${encodeURIComponent(responsavelId)}&criancaId=${encodeURIComponent(criancaId)}`,
         'GET'
       );
-      const historias = Array.isArray(prog.historiasLidas) ? prog.historiasLidas.length : (prog.HistoriasLidas?.length || 0);
-      const estrelas = prog.totalEstrelas ?? prog.TotalEstrelas ?? 0;
-      const tempo = prog.tempoTotal ?? prog.TempoTotal ?? 0;
-      const minigames = prog.minigamesJogados ?? prog.MinigamesJogados ?? 0;
-      const reprovadas = prog.tentativasReprovadas ?? prog.TentativasReprovadas ?? 0;
-      const acertos = prog.acertosMG ?? prog.AcertosMG ?? 0;
-      const erros = prog.errosMG ?? prog.ErrosMG ?? 0;
+    } catch (_) { }
 
-      cont.innerHTML = `
-        <div class="config-relatorio-card">
-          <h4>📄 Relatório — ${nome}</h4>
-          <div class="config-stats-grid">
-            <div class="config-stat"><strong>${historias}</strong>Histórias concluídas</div>
-            <div class="config-stat"><strong>${estrelas}</strong>Estrelas</div>
-            <div class="config-stat"><strong>${tempo} min</strong>Tempo total</div>
-            <div class="config-stat"><strong>${minigames}</strong>Minigames</div>
-            <div class="config-stat"><strong>${reprovadas}</strong>Tentativas reprovadas</div>
-            <div class="config-stat"><strong>${acertos}</strong>Acertos MG</div>
-            <div class="config-stat"><strong>${erros}</strong>Erros MG</div>
-          </div>
+    let localDados = null;
+    try {
+      const rawC = localStorage.getItem(`mundoHistorias_estado_crianca_${criancaId}`);
+      if (rawC) localDados = JSON.parse(rawC);
+    } catch (_) { }
+
+    const hlLocal = localDados?.historiasLidas || [];
+    const hlRemoto = Array.isArray(prog?.historiasLidas) ? prog.historiasLidas : (prog?.HistoriasLidas || []);
+
+    const historias = Math.max(hlLocal.length, hlRemoto.length);
+    const estrelas = Math.max(prog?.totalEstrelas ?? prog?.TotalEstrelas ?? 0, localDados?.totalEstrelas || 0);
+    const tempo = Math.max(prog?.tempoTotal ?? prog?.TempoTotal ?? 0, localDados?.tempoTotal || 0);
+    const minigames = Math.max(prog?.minigamesJogados ?? prog?.MinigamesJogados ?? 0, localDados?.minigamesJogados || 0);
+    const reprovadas = Math.max(prog?.tentativasReprovadas ?? prog?.TentativasReprovadas ?? 0, localDados?.tentativasReprovadas || 0);
+    const acertos = Math.max(prog?.acertosMG ?? prog?.AcertosMG ?? 0, localDados?.acertosMG || 0);
+    const erros = Math.max(prog?.errosMG ?? prog?.ErrosMG ?? 0, localDados?.errosMG || 0);
+
+    cont.innerHTML = `
+      <div class="config-relatorio-card">
+        <h4>📄 Relatório — ${nome}</h4>
+        <div class="config-stats-grid">
+          <div class="config-stat"><strong>${historias}</strong>Histórias concluídas</div>
+          <div class="config-stat"><strong>${estrelas}</strong>Estrelas</div>
+          <div class="config-stat"><strong>${tempo} min</strong>Tempo total</div>
+          <div class="config-stat"><strong>${minigames}</strong>Minigames</div>
+          <div class="config-stat"><strong>${reprovadas}</strong>Tentativas reprovadas</div>
+          <div class="config-stat"><strong>${acertos}</strong>Acertos MG</div>
+          <div class="config-stat"><strong>${erros}</strong>Erros MG</div>
         </div>
-      `;
-    } catch (e) {
-      cont.innerHTML = `<p class="tela-sub">Não foi possível carregar o relatório de ${nome}. ${e.message || ''}</p>`;
-    }
+      </div>
+    `;
   }
 
   function configurarAbasConfig() {

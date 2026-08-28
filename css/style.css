@@ -574,7 +574,7 @@ input:-webkit-autofill:active {
 
 .btn-secundario {
   background: transparent;
-  color: #ffffff;
+  color: var(--cor-secundaria);
   border: 2px solid var(--cor-secundaria);
   border-radius: var(--radius);
   padding: 12px 24px;

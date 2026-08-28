@@ -516,34 +516,32 @@
       horarioBrincar: perfilApi.horarioBrincar || perfilApi.HorarioBrincar
     };
 
-    const perfilNorm = typeof normalizarPerfilCrianca === 'function'
-      ? normalizarPerfilCrianca(perfilObj)
-      : perfilObj;
+    if (typeof trocarPerfilCriancaEstado === 'function') {
+      trocarPerfilCriancaEstado(perfilObj);
+    } else {
+      const perfilNorm = typeof normalizarPerfilCrianca === 'function'
+        ? normalizarPerfilCrianca(perfilObj)
+        : perfilObj;
 
-    // Preserva o histórico de vidas por criança no localStorage ao alternar de perfil
-    let estadoExistente = {};
-    try {
-      const raw = localStorage.getItem(CHAVE_ESTADO);
-      if (raw) estadoExistente = JSON.parse(raw);
-    } catch (_) { }
+      const childId = perfilNorm.id || perfilNorm.Id;
+      let estadoCrianca = { perfil: perfilNorm };
 
-    let vidasPerdidasPorCrianca = estadoExistente.vidasPerdidasPorCrianca || {};
-    try {
-      const rawVidas = localStorage.getItem('mundoHistorias_vidas_criancas');
-      if (rawVidas) {
-        const parsed = JSON.parse(rawVidas);
-        if (parsed && typeof parsed === 'object') {
-          vidasPerdidasPorCrianca = Object.assign({}, vidasPerdidasPorCrianca, parsed);
+      if (childId) {
+        const rawC = localStorage.getItem(`mundoHistorias_estado_crianca_${childId}`);
+        if (rawC) {
+          try {
+            const parsedC = JSON.parse(rawC);
+            if (parsedC) estadoCrianca = Object.assign({}, parsedC, { perfil: perfilNorm });
+          } catch (_) { }
         }
       }
-    } catch (_) { }
 
-    const estadoFinal = Object.assign({}, estadoExistente, {
-      perfil: perfilNorm,
-      vidasPerdidasPorCrianca: vidasPerdidasPorCrianca
-    });
+      salvarJSON(CHAVE_ESTADO, estadoCrianca);
+      if (childId) {
+        salvarJSON(`mundoHistorias_estado_crianca_${childId}`, estadoCrianca);
+      }
+    }
 
-    salvarJSON(CHAVE_ESTADO, estadoFinal);
     window.location.href = "index.html";
   }
 
