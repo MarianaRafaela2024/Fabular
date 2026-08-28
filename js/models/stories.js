@@ -490,7 +490,7 @@ function montarBodySalvarHistoriaGroq(story, criancaId, prompt, modelo, responsa
   return {
     criancaId,
     promptCrianca: prompt,
-    modelo: modelo || 'llama-3.3-70b-versatile',
+    modelo: modelo || 'openai/gpt-oss-120b',
     responsavelId: responsavelId || null,
     story: {
       titulo: story.titulo,
