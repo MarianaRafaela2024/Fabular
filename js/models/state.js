@@ -76,6 +76,15 @@ function aplicarDadosProgresso(dados) {
   estado.errosMG = Number(dados.errosMG) || 0;
   estado.naoConsigoOuvir = Number(dados.naoConsigoOuvir) || 0;
 
+  if (estado.minigamesJogados > 0) {
+    if (estado.acertosMG > estado.minigamesJogados) {
+      estado.acertosMG = estado.minigamesJogados;
+    }
+    if (estado.acertosMG + estado.errosMG > estado.minigamesJogados) {
+      estado.errosMG = Math.max(0, estado.minigamesJogados - estado.acertosMG);
+    }
+  }
+
   if (dados.perfil) {
     estado.perfil = typeof normalizarPerfilCrianca === 'function' ? normalizarPerfilCrianca(dados.perfil) : dados.perfil;
   }
@@ -191,12 +200,17 @@ function trocarPerfilCriancaEstado(perfilNovo) {
 function garantirContadoresRelatorio() {
   const eventos = estado.relatorioEventos || [];
   if (!eventos.length) return;
-  const acertosEventos = eventos.filter(e => e.acao === 'acerto').length;
-  const errosEventos = eventos.filter(e => e.acao === 'erro').length;
   const naoOucoEventos = eventos.filter(e => e.acao === 'nao_consigo_ouvir').length;
-  estado.acertosMG = Math.max(Number(estado.acertosMG) || 0, acertosEventos);
-  estado.errosMG = Math.max(Number(estado.errosMG) || 0, errosEventos);
   estado.naoConsigoOuvir = Math.max(Number(estado.naoConsigoOuvir) || 0, naoOucoEventos);
+
+  if (estado.minigamesJogados > 0) {
+    if (estado.acertosMG > estado.minigamesJogados) {
+      estado.acertosMG = estado.minigamesJogados;
+    }
+    if (estado.acertosMG + estado.errosMG > estado.minigamesJogados) {
+      estado.errosMG = Math.max(0, estado.minigamesJogados - estado.acertosMG);
+    }
+  }
 }
 
 function obterVinculoCrianca() {

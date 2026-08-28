@@ -233,10 +233,17 @@ function mostrarResultado(estrelas, tempoMin, acertosTotal) {
 function finalizarMinigames() {
   const tempoMin = Math.max(1, Math.round((Date.now() - (estado.iniciouEm || Date.now())) / 60000));
   estado.tempoTotal += tempoMin;
-  estado.minigamesJogados += estado.minigamesLista.length;
 
-  const acertosTotal = (estado.acertos || 0) + (estado.mgAcertos || 0);
   const totalJogos = estado.minigamesLista.length || 5;
+  estado.minigamesJogados += totalJogos;
+
+  const acertosSessao = Math.min(totalJogos, Math.max(0, Number(estado.mgAcertos) || 0));
+  const errosSessao = Math.max(0, totalJogos - acertosSessao);
+
+  estado.acertosMG = (Number(estado.acertosMG) || 0) + acertosSessao;
+  estado.errosMG = (Number(estado.errosMG) || 0) + errosSessao;
+
+  const acertosTotal = acertosSessao;
   const estrelas = calcularEstrelasPorAcertos(acertosTotal, totalJogos);
 
   registrarEstrelasHistoria(estrelas);
@@ -253,12 +260,12 @@ function finalizarMinigames() {
 }
 
 function embaralhar(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
+    [copy[i], copy[j]] = [copy[j], copy[i]];
   }
-  return a;
+  return copy;
 }
 
 function prepararMinigamesPreset(h) {
