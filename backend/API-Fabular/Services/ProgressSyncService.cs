@@ -29,18 +29,34 @@ public class ProgressSyncService
             request.ResumoMinigames
         });
 
+        var payloadArgs = new
+        {
+            request.ResponsavelId,
+            request.CriancaId,
+            PayloadJson = payloadJson,
+            request.UpdatedAt
+        };
+
+        await conn.ExecuteAsync(
+            """
+            MERGE Progresso_Snapshot AS alvo
+            USING (SELECT @ResponsavelId AS Id_Responsavel, @CriancaId AS Id_Crianca) AS origem
+            ON alvo.Id_Responsavel = origem.Id_Responsavel AND alvo.Id_Crianca = origem.Id_Crianca
+            WHEN MATCHED THEN
+                UPDATE SET PayloadJson = @PayloadJson, UpdatedAt = @UpdatedAt
+            WHEN NOT MATCHED THEN
+                INSERT (Id_Responsavel, Id_Crianca, PayloadJson, UpdatedAt)
+                VALUES (origem.Id_Responsavel, origem.Id_Crianca, @PayloadJson, @UpdatedAt);
+            """,
+            payloadArgs);
+
+        // Log append-only (deprecated como estado atual; GET lê o snapshot).
         await conn.ExecuteAsync(
             """
             INSERT INTO Sincronizacao_Progresso (Id_Responsavel, Id_Crianca, PayloadJson, UpdatedAt)
             VALUES (@ResponsavelId, @CriancaId, @PayloadJson, @UpdatedAt)
             """,
-            new
-            {
-                request.ResponsavelId,
-                request.CriancaId,
-                PayloadJson = payloadJson,
-                request.UpdatedAt
-            });
+            payloadArgs);
 
         var totalEstrelas = ExtrairTotalEstrelas(request.ProgressoHistorias);
         if (totalEstrelas >= 0)
@@ -124,12 +140,23 @@ public class ProgressSyncService
 
         var payloadRow = await conn.QueryFirstOrDefaultAsync<(string PayloadJson, DateTime UpdatedAt)?>(
             """
-            SELECT TOP 1 PayloadJson, UpdatedAt
-            FROM Sincronizacao_Progresso
+            SELECT PayloadJson, UpdatedAt
+            FROM Progresso_Snapshot
             WHERE Id_Responsavel = @ResponsavelId AND Id_Crianca = @CriancaId
-            ORDER BY UpdatedAt DESC
             """,
             new { ResponsavelId = responsavelId, CriancaId = criancaId });
+
+        if (!payloadRow.HasValue)
+        {
+            payloadRow = await conn.QueryFirstOrDefaultAsync<(string PayloadJson, DateTime UpdatedAt)?>(
+                """
+                SELECT TOP 1 PayloadJson, UpdatedAt
+                FROM Sincronizacao_Progresso
+                WHERE Id_Responsavel = @ResponsavelId AND Id_Crianca = @CriancaId
+                ORDER BY UpdatedAt DESC
+                """,
+                new { ResponsavelId = responsavelId, CriancaId = criancaId });
+        }
 
         if (payloadRow.HasValue)
         {

@@ -12,6 +12,7 @@ IF OBJECT_ID('Relatorio_Crianca') IS NOT NULL DROP TABLE Relatorio_Crianca;
 IF OBJECT_ID('Sessao_Leitura') IS NOT NULL DROP TABLE Sessao_Leitura;
 IF OBJECT_ID('IA_Geracao') IS NOT NULL DROP TABLE IA_Geracao;
 IF OBJECT_ID('Historia_Minigame') IS NOT NULL DROP TABLE Historia_Minigame;
+IF OBJECT_ID('Progresso_Snapshot') IS NOT NULL DROP TABLE Progresso_Snapshot;
 IF OBJECT_ID('Sincronizacao_Progresso') IS NOT NULL DROP TABLE Sincronizacao_Progresso;
 IF OBJECT_ID('Atividade_Diaria_Backup_008') IS NOT NULL DROP TABLE Atividade_Diaria_Backup_008;
 IF OBJECT_ID('Atividade_Diaria') IS NOT NULL DROP TABLE Atividade_Diaria;
@@ -148,6 +149,16 @@ CREATE TABLE Sincronizacao_Progresso (
     CriadoEm DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
     CONSTRAINT FK_SP_Responsavel FOREIGN KEY (Id_Responsavel) REFERENCES Responsavel(Id),
     CONSTRAINT FK_SP_Crianca FOREIGN KEY (Id_Crianca) REFERENCES Crianca(Id)
+);
+
+CREATE TABLE Progresso_Snapshot (
+    Id_Responsavel INT NOT NULL,
+    Id_Crianca INT NOT NULL,
+    PayloadJson NVARCHAR(MAX) NOT NULL,
+    UpdatedAt DATETIME2 NOT NULL,
+    CONSTRAINT PK_Progresso_Snapshot PRIMARY KEY (Id_Responsavel, Id_Crianca),
+    CONSTRAINT FK_PSnap_Responsavel FOREIGN KEY (Id_Responsavel) REFERENCES Responsavel(Id),
+    CONSTRAINT FK_PSnap_Crianca FOREIGN KEY (Id_Crianca) REFERENCES Crianca(Id)
 );
 
 CREATE TABLE Atividade_Diaria (

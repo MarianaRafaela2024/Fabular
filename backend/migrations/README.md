@@ -12,6 +12,7 @@ sqlcmd -S "(localdb)\MSSQLLocalDB" -d Fabular -i backend/migrations/004_indices_
 sqlcmd -S "(localdb)\MSSQLLocalDB" -d Fabular -i backend/migrations/005_genero_slug_fk.up.sql
 sqlcmd -S "(localdb)\MSSQLLocalDB" -d Fabular -i backend/migrations/007_sessao_unique.up.sql
 sqlcmd -S "(localdb)\MSSQLLocalDB" -d Fabular -i backend/migrations/008_atividade_diaria_idempotente.up.sql
+sqlcmd -S "(localdb)\MSSQLLocalDB" -d Fabular -i backend/migrations/010_progresso_snapshot.up.sql
 ```
 
 Verificação opcional:
@@ -22,6 +23,7 @@ sqlcmd -S "(localdb)\MSSQLLocalDB" -d Fabular -i backend/migrations/verify/004_i
 sqlcmd -S "(localdb)\MSSQLLocalDB" -d Fabular -i backend/migrations/verify/005_genero_slug_fk.sql
 sqlcmd -S "(localdb)\MSSQLLocalDB" -d Fabular -i backend/migrations/verify/007_sessao_unique.sql
 sqlcmd -S "(localdb)\MSSQLLocalDB" -d Fabular -i backend/migrations/verify/008_atividade_diaria_idempotente.sql
+sqlcmd -S "(localdb)\MSSQLLocalDB" -d Fabular -i backend/migrations/verify/010_progresso_snapshot.sql
 ```
 
 ## Regras
