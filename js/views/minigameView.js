@@ -1112,14 +1112,47 @@ function renderMontaFrase(fase, corpo, spec) {
     return;
   }
 
-  const textoLimpo = extrairTextoCurto(fase.texto);
-  const todasFrases = textoLimpo.split(/[.!?]/).map(f => f.trim()).filter(f => {
-    const p = f.split(' ').filter(Boolean);
-    return p.length >= 3 && p.length <= 9;
-  });
-  const frase = todasFrases[0] || textoLimpo.split(' ').slice(0, 7).join(' ');
-  const palavrasCorretas = frase.split(' ').filter(Boolean);
+  // ── Extrai frase COMPLETA (terminada em . ! ?) do texto da fase/história ──
+  const textoFonte = String(fase?.texto || '')
+    .replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+
+  // Captura frases completas com pontuação final incluída
+  const extrairFrasesCompletas = (texto) =>
+    (texto.match(/[^.!?]+[.!?]+/g) || [])
+      .map(f => f.trim())
+      .filter(f => {
+        const palavras = f.split(/\s+/).filter(Boolean);
+        return palavras.length >= 3 && palavras.length <= 10;
+      });
+
+  let frasesValidas = extrairFrasesCompletas(textoFonte);
+
+  // Fallback: usa texto completo da história se a fase não tiver frases adequadas
+  if (frasesValidas.length === 0) {
+    const textoHistoria = obterTextoBaseHistoria(h)
+      .replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+    frasesValidas = extrairFrasesCompletas(textoHistoria);
+  }
+
+  // Escolhe uma frase aleatória entre as válidas
+  const fraseSelecionada = frasesValidas.length > 0
+    ? frasesValidas[Math.floor(Math.random() * frasesValidas.length)]
+    : null;
+
+  // Remove pontuação final para não aparecer como palavra separada
+  const frase = fraseSelecionada
+    ? fraseSelecionada.replace(/[.!?]+$/, '').trim()
+    : null;
+
+  if (!frase) {
+    // Sem nenhuma frase válida — usa VF como fallback seguro
+    renderVerdadeiroFalso(fase, h, corpo, null);
+    return;
+  }
+
+  const palavrasCorretas = frase.split(/\s+/).filter(Boolean);
   const embaralhadas = embaralhar([...palavrasCorretas]);
+
 
   let colocadosIdx = [];
 
