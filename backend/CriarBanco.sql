@@ -11,6 +11,7 @@ IF OBJECT_ID('Evento_Minigame') IS NOT NULL DROP TABLE Evento_Minigame;
 IF OBJECT_ID('Relatorio_Crianca') IS NOT NULL DROP TABLE Relatorio_Crianca;
 IF OBJECT_ID('Sessao_Leitura') IS NOT NULL DROP TABLE Sessao_Leitura;
 IF OBJECT_ID('IA_Geracao') IS NOT NULL DROP TABLE IA_Geracao;
+IF OBJECT_ID('Historia_PalavraChave') IS NOT NULL DROP TABLE Historia_PalavraChave;
 IF OBJECT_ID('Historia_Minigame') IS NOT NULL DROP TABLE Historia_Minigame;
 IF OBJECT_ID('Progresso_Snapshot') IS NOT NULL DROP TABLE Progresso_Snapshot;
 IF OBJECT_ID('Sincronizacao_Progresso') IS NOT NULL DROP TABLE Sincronizacao_Progresso;
@@ -89,6 +90,15 @@ CREATE TABLE Historia_Minigame (
     DadosJson NVARCHAR(MAX) NOT NULL,
     CONSTRAINT FK_HM_Historia FOREIGN KEY (Id_Historia) REFERENCES Historia(Id) ON DELETE CASCADE,
     CONSTRAINT UQ_HM UNIQUE (Id_Historia, Ordem)
+);
+
+CREATE TABLE Historia_PalavraChave (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    Id_Historia INT NOT NULL,
+    Palavra NVARCHAR(80) NOT NULL,
+    Ordem TINYINT NOT NULL,
+    CONSTRAINT FK_HPC_Historia FOREIGN KEY (Id_Historia) REFERENCES Historia(Id) ON DELETE CASCADE,
+    CONSTRAINT UQ_HPC UNIQUE (Id_Historia, Ordem)
 );
 
 CREATE TABLE IA_Geracao (
@@ -282,4 +292,27 @@ INNER JOIN Genero AS g
         ELSE NULL
     END
 WHERE h.Id_Genero IS NULL;
+GO
+
+-- Backfill de palavras-chave (PalavrasChaveJson permanece)
+INSERT INTO Historia_PalavraChave (Id_Historia, Palavra, Ordem)
+SELECT
+    h.Id,
+    LEFT(LTRIM(RTRIM(j.value)), 80),
+    CAST(TRY_CAST(j.[key] AS INT) + 1 AS TINYINT)
+FROM Historia AS h
+CROSS APPLY OPENJSON(h.PalavrasChaveJson) AS j
+WHERE h.PalavrasChaveJson IS NOT NULL
+  AND LTRIM(RTRIM(h.PalavrasChaveJson)) <> N''
+  AND ISJSON(h.PalavrasChaveJson) = 1
+  AND LEFT(LTRIM(h.PalavrasChaveJson), 1) = N'['
+  AND j.type = 1
+  AND LTRIM(RTRIM(j.value)) <> N''
+  AND TRY_CAST(j.[key] AS INT) BETWEEN 0 AND 254
+  AND NOT EXISTS (
+        SELECT 1
+        FROM Historia_PalavraChave AS p
+        WHERE p.Id_Historia = h.Id
+          AND p.Ordem = CAST(TRY_CAST(j.[key] AS INT) + 1 AS TINYINT)
+  );
 GO

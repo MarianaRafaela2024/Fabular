@@ -190,6 +190,8 @@ public class StoriesService
             return ApplicationResult<StoryDetailDto>.NotFound("História não encontrada.");
         }
 
+        var palavrasTabela = await LoadPalavrasChaveAsync(conn, id);
+
         if (!string.IsNullOrWhiteSpace(row.PayloadJson))
         {
             try
@@ -197,7 +199,8 @@ public class StoriesService
                 var fromPayload = JsonSerializer.Deserialize<StoryDetailDto>(row.PayloadJson);
                 if (fromPayload is not null && !string.IsNullOrWhiteSpace(fromPayload.Texto))
                 {
-                    return ApplicationResult<StoryDetailDto>.Ok(fromPayload with { Id = row.Id });
+                    var palavras = PalavrasChaveNormalizer.PreferirTabela(palavrasTabela, fromPayload.PalavrasChave);
+                    return ApplicationResult<StoryDetailDto>.Ok(fromPayload with { Id = row.Id, PalavrasChave = palavras });
                 }
             }
             catch
@@ -206,10 +209,20 @@ public class StoriesService
             }
         }
 
-        var words = string.IsNullOrWhiteSpace(row.PalavrasChaveJson)
-            ? new List<string>()
-            : JsonSerializer.Deserialize<List<string>>(row.PalavrasChaveJson) ?? new List<string>();
+        List<string>? wordsJson = null;
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(row.PalavrasChaveJson))
+            {
+                wordsJson = JsonSerializer.Deserialize<List<string>>(row.PalavrasChaveJson);
+            }
+        }
+        catch
+        {
+            // JSON inválido permanece na coluna; a tabela (se houver) prevalece.
+        }
 
+        var words = PalavrasChaveNormalizer.PreferirTabela(palavrasTabela, wordsJson);
         var minigames = await LoadMinigamesAsync(conn, id);
         return ApplicationResult<StoryDetailDto>.Ok(new StoryDetailDto(
             row.Id, row.Titulo, row.Genero, row.FaixaEtaria, row.Duracao, row.Emoji, row.Cena, row.TextoHtml, words, minigames));
@@ -243,8 +256,36 @@ public class StoriesService
                 IdGenero = idGenero
             });
 
+        await SavePalavrasChaveAsync(conn, id, story.PalavrasChave);
         await SaveMinigamesAsync(conn, id, story.Minigames);
         return id;
+    }
+
+    private static async Task SavePalavrasChaveAsync(IDbConnection conn, int historiaId, List<string>? palavras)
+    {
+        foreach (var (ordem, palavra) in PalavrasChaveNormalizer.DeLista(palavras))
+        {
+            await conn.ExecuteAsync(
+                """
+                INSERT INTO Historia_PalavraChave (Id_Historia, Palavra, Ordem)
+                VALUES (@Id_Historia, @Palavra, @Ordem)
+                """,
+                new { Id_Historia = historiaId, Palavra = palavra, Ordem = ordem });
+        }
+    }
+
+    private static async Task<List<string>> LoadPalavrasChaveAsync(IDbConnection conn, int historiaId)
+    {
+        var rows = await conn.QueryAsync<string>(
+            """
+            SELECT Palavra
+            FROM Historia_PalavraChave
+            WHERE Id_Historia = @Id
+            ORDER BY Ordem
+            """,
+            new { Id = historiaId });
+
+        return rows.AsList();
     }
 
     private static async Task SaveMinigamesAsync(IDbConnection conn, int historiaId, List<MinigameDto> minigames)
