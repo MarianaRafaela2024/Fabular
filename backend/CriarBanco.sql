@@ -158,6 +158,9 @@ CREATE INDEX IX_Historia_FaixaGenero ON Historia(FaixaEtaria, Genero);
 CREATE INDEX IX_SL_Crianca ON Sessao_Leitura(Id_Crianca, CriadoEm DESC);
 CREATE INDEX IX_SP_ResponsavelCrianca ON Sincronizacao_Progresso(Id_Responsavel, Id_Crianca, UpdatedAt DESC);
 CREATE INDEX IX_AD_CriancaData ON Atividade_Diaria(Id_Crianca, Data DESC);
+CREATE INDEX IX_IAG_Historia ON IA_Geracao(Id_Historia);
+CREATE INDEX IX_IAG_Crianca ON IA_Geracao(Id_Crianca, CriadoEm DESC);
+CREATE INDEX IX_EM_Sessao ON Evento_Minigame(Id_SessaoLeitura);
 
 INSERT INTO Genero (Nome) VALUES ('Narrativo'), ('Poetico'), ('Instrucional'), ('Descritivo'), ('Informativo');
 -- ============================================================
