@@ -64,7 +64,7 @@ public class StoriesService
         }
 
         var faixa = Math.Clamp(request.Story.FaixaEtaria, 1, 3);
-        var genero = string.IsNullOrWhiteSpace(request.Story.Genero) ? "narrativo" : request.Story.Genero.ToLowerInvariant();
+        var genero = GeneroCatalog.NormalizarSlug(request.Story.Genero) ?? GeneroCatalog.Narrativo;
         var minigames = request.Story.Minigames ?? new List<MinigameDto>();
 
         var detail = new StoryDetailDto(
@@ -111,7 +111,11 @@ public class StoriesService
                   FROM Historia h
                   LEFT JOIN IA_Geracao g ON g.Id_Historia = h.Id
                   WHERE (@Faixa IS NULL OR h.FaixaEtaria = @Faixa)
-                    AND (@Genero IS NULL OR h.Genero = @Genero)
+                    AND (
+                      @Genero IS NULL
+                      OR LOWER(h.Genero COLLATE Latin1_General_CI_AI) = @Genero
+                      OR (@Genero = N'instrucional' AND LOWER(h.Genero COLLATE Latin1_General_CI_AI) = N'cotidiano')
+                    )
                     AND (
                       h.Origem = 'manual'
                       OR (@CriancaId IS NOT NULL AND g.Id_Crianca = @CriancaId)
@@ -130,7 +134,7 @@ public class StoriesService
         var result = await conn.QueryAsync<StorySummaryDto>(sql, new
         {
             Faixa = faixaEtaria,
-            Genero = string.IsNullOrWhiteSpace(genero) ? null : genero.ToLowerInvariant(),
+            Genero = GeneroCatalog.NormalizarSlug(genero),
             CriancaId = criancaId,
             ResponsavelId = responsavelId
         });
