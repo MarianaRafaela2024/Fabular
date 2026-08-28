@@ -106,17 +106,31 @@ public class StoriesService
         // Retorna histórias base de origem 'manual' (do banco de dados MySQL)
         // juntamente com as histórias geradas pela IA vinculadas à criança/responsável.
         var sql = """
-                  SELECT DISTINCT h.Id, h.Titulo, h.Genero,
+                  SELECT DISTINCT h.Id, h.Titulo,
+                         COALESCE(gen.Slug, h.Genero) AS Genero,
                          CAST(h.FaixaEtaria AS INT) AS FaixaEtaria,
                          h.Duracao, h.Emoji, h.Cena,
                          CAST(g.Id_Crianca AS INT) AS CriancaId
                   FROM Historia h
                   LEFT JOIN IA_Geracao g ON g.Id_Historia = h.Id
+                  LEFT JOIN Genero gen ON gen.Id = h.Id_Genero
                   WHERE (@Faixa IS NULL OR h.FaixaEtaria = @Faixa)
                     AND (
                       @Genero IS NULL
-                      OR LOWER(h.Genero COLLATE Latin1_General_CI_AI) = @Genero
-                      OR (@Genero = N'instrucional' AND LOWER(h.Genero COLLATE Latin1_General_CI_AI) = N'cotidiano')
+                      OR (@IdGenero IS NOT NULL AND (
+                            h.Id_Genero = @IdGenero
+                            OR (
+                              h.Id_Genero IS NULL
+                              AND (
+                                LOWER(h.Genero COLLATE Latin1_General_CI_AI) = @Genero
+                                OR (@Genero = N'instrucional' AND LOWER(h.Genero COLLATE Latin1_General_CI_AI) = N'cotidiano')
+                              )
+                            )
+                          ))
+                      OR (@IdGenero IS NULL AND (
+                            LOWER(h.Genero COLLATE Latin1_General_CI_AI) = @Genero
+                            OR (@Genero = N'instrucional' AND LOWER(h.Genero COLLATE Latin1_General_CI_AI) = N'cotidiano')
+                          ))
                     )
                     AND (
                       h.Origem = 'manual'
@@ -133,10 +147,20 @@ public class StoriesService
                   ORDER BY h.Id DESC
                   """;
 
+        var slug = GeneroCatalog.NormalizarSlug(genero);
+        int? idGenero = null;
+        if (slug is not null)
+        {
+            idGenero = await conn.QueryFirstOrDefaultAsync<int?>(
+                "SELECT Id FROM Genero WHERE Slug = @Slug",
+                new { Slug = slug });
+        }
+
         var result = await conn.QueryAsync<StorySummaryDto>(sql, new
         {
             Faixa = faixaEtaria,
-            Genero = GeneroCatalog.NormalizarSlug(genero),
+            Genero = slug,
+            IdGenero = idGenero,
             CriancaId = criancaId,
             ResponsavelId = responsavelId
         });
@@ -152,7 +176,13 @@ public class StoriesService
         }
 
         var row = await conn.QueryFirstOrDefaultAsync<(int Id, string Titulo, string Genero, int FaixaEtaria, string Duracao, string Emoji, string Cena, string TextoHtml, string PalavrasChaveJson, string PayloadJson)>(
-            "SELECT Id, Titulo, Genero, FaixaEtaria, Duracao, Emoji, Cena, TextoHtml, PalavrasChaveJson, PayloadJson FROM Historia WHERE Id = @Id",
+            """
+            SELECT h.Id, h.Titulo, COALESCE(gen.Slug, h.Genero) AS Genero, h.FaixaEtaria, h.Duracao, h.Emoji, h.Cena,
+                   h.TextoHtml, h.PalavrasChaveJson, h.PayloadJson
+            FROM Historia h
+            LEFT JOIN Genero gen ON gen.Id = h.Id_Genero
+            WHERE h.Id = @Id
+            """,
             new { Id = id });
 
         if (row.Id == 0)
@@ -187,27 +217,30 @@ public class StoriesService
 
     private static async Task<int> PersistStoryAsync(IDbConnection conn, StoryDetailDto story, string origem)
     {
+        var (generoSlug, idGenero) = await GeneroCatalog.ResolverAsync(conn, story.Genero);
+        var generoTexto = generoSlug ?? story.Genero ?? GeneroCatalog.Narrativo;
         var wordsJson = JsonSerializer.Serialize(story.PalavrasChave);
-        var payloadJson = JsonSerializer.Serialize(story);
+        var payloadJson = JsonSerializer.Serialize(story with { Genero = generoTexto });
 
         var id = await conn.QuerySingleAsync<int>(
             """
-            INSERT INTO Historia (Origem, Titulo, Genero, FaixaEtaria, Duracao, Emoji, Cena, TextoHtml, PalavrasChaveJson, PayloadJson)
+            INSERT INTO Historia (Origem, Titulo, Genero, FaixaEtaria, Duracao, Emoji, Cena, TextoHtml, PalavrasChaveJson, PayloadJson, Id_Genero)
             OUTPUT INSERTED.Id
-            VALUES (@Origem, @Titulo, @Genero, @FaixaEtaria, @Duracao, @Emoji, @Cena, @TextoHtml, @PalavrasChaveJson, @PayloadJson)
+            VALUES (@Origem, @Titulo, @Genero, @FaixaEtaria, @Duracao, @Emoji, @Cena, @TextoHtml, @PalavrasChaveJson, @PayloadJson, @IdGenero)
             """,
             new
             {
                 Origem = origem,
                 story.Titulo,
-                story.Genero,
+                Genero = generoTexto,
                 story.FaixaEtaria,
                 story.Duracao,
                 story.Emoji,
                 story.Cena,
                 TextoHtml = story.Texto,
                 PalavrasChaveJson = wordsJson,
-                PayloadJson = payloadJson
+                PayloadJson = payloadJson,
+                IdGenero = idGenero
             });
 
         await SaveMinigamesAsync(conn, id, story.Minigames);

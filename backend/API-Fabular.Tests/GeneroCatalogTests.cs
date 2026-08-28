@@ -32,4 +32,15 @@ public class GeneroCatalogTests
     {
         Assert.Equal("aventura", GeneroCatalog.NormalizarSlug("Aventura"));
     }
+
+    [Theory]
+    [InlineData("narrativo")]
+    [InlineData("poetico")]
+    [InlineData("instrucional")]
+    [InlineData("descritivo")]
+    [InlineData("informativo")]
+    public void NormalizarSlug_slugs_canonicos_sao_estaveis(string slug)
+    {
+        Assert.Equal(slug, GeneroCatalog.NormalizarSlug(slug));
+    }
 }

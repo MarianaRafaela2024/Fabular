@@ -40,11 +40,12 @@ public class ChildrenLinkService
             c.FaixaEtaria,
             c.DataNascimento,
             c.Avatar,
-            c.GeneroFavorito,
+            COALESCE(g.Slug, c.GeneroFavorito) AS GeneroFavorito,
             c.HorarioBrincar
         FROM Crianca c
         INNER JOIN Responsavel_Crianca rc
             ON rc.Id_Crianca = c.Id
+        LEFT JOIN Genero g ON g.Id = c.Id_GeneroFavorito
         WHERE rc.Id_Responsavel = @ResponsavelId
         ORDER BY c.Nome
         """,
@@ -85,14 +86,15 @@ public class ChildrenLinkService
         await GarantirColunasCriancaAsync(conn);
 
         var dataNascParam = request.DataNascimento.Value.ToDateTime(TimeOnly.MinValue);
+        var (generoSlug, idGeneroFavorito) = await GeneroCatalog.ResolverAsync(conn, request.GeneroFavorito);
 
         var childId = await conn.QuerySingleAsync<int>(
             """
         INSERT INTO Crianca
-            (Nome, FaixaEtaria, DataNascimento, Avatar, GeneroFavorito, HorarioBrincar)
+            (Nome, FaixaEtaria, DataNascimento, Avatar, GeneroFavorito, Id_GeneroFavorito, HorarioBrincar)
         OUTPUT INSERTED.Id
         VALUES
-            (@Nome, @FaixaEtaria, @DataNascimento, @Avatar, @GeneroFavorito, @HorarioBrincar)
+            (@Nome, @FaixaEtaria, @DataNascimento, @Avatar, @GeneroFavorito, @IdGeneroFavorito, @HorarioBrincar)
         """,
             new
             {
@@ -100,7 +102,8 @@ public class ChildrenLinkService
                 FaixaEtaria = faixaEtaria,
                 DataNascimento = dataNascParam,
                 request.Avatar,
-                request.GeneroFavorito,
+                GeneroFavorito = generoSlug ?? request.GeneroFavorito,
+                IdGeneroFavorito = idGeneroFavorito,
                 request.HorarioBrincar
             });
 
@@ -150,6 +153,7 @@ public class ChildrenLinkService
 
         var faixaEtaria = FaixaEtariaHelper.Calcular(request.DataNascimento);
         var dataNascParam = request.DataNascimento.Value.ToDateTime(TimeOnly.MinValue);
+        var (generoSlug, idGeneroFavorito) = await GeneroCatalog.ResolverAsync(conn, request.GeneroFavorito);
 
         await conn.ExecuteAsync(
             """
@@ -159,6 +163,7 @@ public class ChildrenLinkService
                 DataNascimento = @DataNascimento,
                 Avatar = @Avatar,
                 GeneroFavorito = @GeneroFavorito,
+                Id_GeneroFavorito = @IdGeneroFavorito,
                 HorarioBrincar = @HorarioBrincar
             WHERE Id = @Id
             """,
@@ -169,15 +174,18 @@ public class ChildrenLinkService
                 FaixaEtaria = faixaEtaria,
                 DataNascimento = dataNascParam,
                 request.Avatar,
-                request.GeneroFavorito,
+                GeneroFavorito = generoSlug ?? request.GeneroFavorito,
+                IdGeneroFavorito = idGeneroFavorito,
                 request.HorarioBrincar
             });
 
         var updated = await conn.QueryFirstOrDefaultAsync<ChildResponse>(
             """
-            SELECT Id, Nome, FaixaEtaria, DataNascimento, Avatar, GeneroFavorito, HorarioBrincar
-            FROM Crianca
-            WHERE Id = @Id
+            SELECT c.Id, c.Nome, c.FaixaEtaria, c.DataNascimento, c.Avatar,
+                   COALESCE(g.Slug, c.GeneroFavorito) AS GeneroFavorito, c.HorarioBrincar
+            FROM Crianca c
+            LEFT JOIN Genero g ON g.Id = c.Id_GeneroFavorito
+            WHERE c.Id = @Id
             """,
             new { Id = childId });
 
@@ -244,11 +252,12 @@ public class ChildrenLinkService
             }
             else
             {
+                var (generoSlug, idGeneroFavorito) = await GeneroCatalog.ResolverAsync(conn, child.GeneroFavorito, tx);
                 childId = await conn.QuerySingleAsync<int>(
                     """
-                    INSERT INTO Crianca (Nome, FaixaEtaria, DataNascimento, Avatar, GeneroFavorito, HorarioBrincar, LocalChildKey)
+                    INSERT INTO Crianca (Nome, FaixaEtaria, DataNascimento, Avatar, GeneroFavorito, Id_GeneroFavorito, HorarioBrincar, LocalChildKey)
                     OUTPUT INSERTED.Id
-                    VALUES (@Nome, @FaixaEtaria, @DataNascimento, @Avatar, @GeneroFavorito, @HorarioBrincar, @LocalChildKey)
+                    VALUES (@Nome, @FaixaEtaria, @DataNascimento, @Avatar, @GeneroFavorito, @IdGeneroFavorito, @HorarioBrincar, @LocalChildKey)
                     """,
                     new
                     {
@@ -256,7 +265,8 @@ public class ChildrenLinkService
                         FaixaEtaria = faixaEtaria,
                         child.DataNascimento,
                         child.Avatar,
-                        child.GeneroFavorito,
+                        GeneroFavorito = generoSlug ?? child.GeneroFavorito,
+                        IdGeneroFavorito = idGeneroFavorito,
                         child.HorarioBrincar,
                         child.LocalChildKey
                     },

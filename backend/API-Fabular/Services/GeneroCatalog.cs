@@ -1,5 +1,7 @@
+using System.Data;
 using System.Globalization;
 using System.Text;
+using Dapper;
 
 namespace API_Fabular.Services;
 
@@ -33,6 +35,28 @@ public static class GeneroCatalog
         }
 
         return slug;
+    }
+
+    /// <summary>
+    /// Resolve slug canônico e Id do catálogo. Id fica null se o slug não existir em Genero
+    /// (órfão: ainda gravamos o VARCHAR).
+    /// </summary>
+    public static async Task<(string? Slug, int? Id)> ResolverAsync(
+        IDbConnection conn,
+        string? genero,
+        IDbTransaction? tx = null)
+    {
+        var slug = NormalizarSlug(genero);
+        if (slug is null)
+        {
+            return (null, null);
+        }
+
+        var id = await conn.QueryFirstOrDefaultAsync<int?>(
+            "SELECT Id FROM Genero WHERE Slug = @Slug",
+            new { Slug = slug },
+            tx);
+        return (slug, id);
     }
 
     private static string RemoverAcentos(string valor)
