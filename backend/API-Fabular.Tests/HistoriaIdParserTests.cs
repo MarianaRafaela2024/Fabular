@@ -26,4 +26,13 @@ public class HistoriaIdParserTests
     {
         Assert.False(HistoriaIdParser.TryParse(entrada, out _));
     }
+
+    [Fact]
+    public void CanonicalKey_n1_api1_e_1_sao_a_mesma_chave()
+    {
+        Assert.Equal("api-1", HistoriaIdParser.CanonicalKey("n1"));
+        Assert.Equal("api-1", HistoriaIdParser.CanonicalKey("api-1"));
+        Assert.Equal("api-1", HistoriaIdParser.CanonicalKey("1"));
+        Assert.Equal(HistoriaIdParser.CanonicalKey("n1"), HistoriaIdParser.CanonicalKey("api-1"));
+    }
 }

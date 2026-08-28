@@ -40,4 +40,16 @@ public static class HistoriaIdParser
 
         return int.TryParse(storyId, out historiaId) && historiaId > 0;
     }
+
+    public static string ToApiId(int historiaId) => $"api-{historiaId}";
+
+    public static string CanonicalKey(string? storyId)
+    {
+        if (TryParse(storyId, out var id))
+        {
+            return ToApiId(id);
+        }
+
+        return string.IsNullOrWhiteSpace(storyId) ? string.Empty : storyId.Trim();
+    }
 }

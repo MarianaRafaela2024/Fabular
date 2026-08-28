@@ -96,6 +96,32 @@ public class ProgressSyncService
         var naoConsigoOuvir = 0;
         DateTime? updatedAt = null;
 
+        var sessoesDb = await conn.QueryAsync<(int Id, int IdHistoria, int Estrelas, DateTime CriadoEm, string Titulo, string Emoji, string Genero)>(
+            """
+            SELECT S.Id, S.Id_Historia, S.Estrelas, S.CriadoEm, H.Titulo, H.Emoji,
+                   COALESCE(gen.Slug, H.Genero) AS Genero
+            FROM Sessao_Leitura S
+            LEFT JOIN Historia H ON S.Id_Historia = H.Id
+            LEFT JOIN Genero gen ON gen.Id = H.Id_Genero
+            WHERE S.Id_Crianca = @CriancaId AND S.Concluida = 1
+            ORDER BY S.CriadoEm DESC, S.Id DESC
+            """,
+            new { CriancaId = criancaId });
+
+        foreach (var sessao in sessoesDb)
+        {
+            var idStr = HistoriaIdParser.ToApiId(sessao.IdHistoria);
+            var est = Math.Clamp(sessao.Estrelas, 0, 5);
+            historiasMap[idStr] = new HistoriaProgressoDto(
+                idStr,
+                est,
+                sessao.CriadoEm.ToString("dd/MM/yyyy"),
+                sessao.CriadoEm.ToString("yyyy-MM-dd"),
+                sessao.Titulo,
+                sessao.Emoji,
+                sessao.Genero);
+        }
+
         var payloadRow = await conn.QueryFirstOrDefaultAsync<(string PayloadJson, DateTime UpdatedAt)?>(
             """
             SELECT TOP 1 PayloadJson, UpdatedAt
@@ -108,7 +134,7 @@ public class ProgressSyncService
         if (payloadRow.HasValue)
         {
             updatedAt = payloadRow.Value.UpdatedAt;
-            MesclarPayloadNoMapa(payloadRow.Value.PayloadJson, historiasMap, ref tempoTotal, ref minigamesJogados, ref tentativasReprovadas, ref acertosMG, ref errosMG, ref naoConsigoOuvir);
+            ExtrairMetricasDoPayload(payloadRow.Value.PayloadJson, ref tempoTotal, ref minigamesJogados, ref tentativasReprovadas, ref acertosMG, ref errosMG, ref naoConsigoOuvir);
         }
 
         var relatorioDb = await CarregarRelatorioCriancaAsync(conn, criancaId);
@@ -119,6 +145,7 @@ public class ProgressSyncService
             errosMG = Math.Max(errosMG, relatorioDb.Value.ErrosMG);
             naoConsigoOuvir = Math.Max(naoConsigoOuvir, relatorioDb.Value.NaoConsigoOuvir);
 
+            // DEPRECATED (etapa 9): lista canônica é Sessao_Leitura. JSON só cobre ids sem sessão.
             if (!string.IsNullOrWhiteSpace(relatorioDb.Value.HistoriasConcluidasJson))
             {
                 try
@@ -128,10 +155,13 @@ public class ProgressSyncService
                     {
                         foreach (var id in ids)
                         {
-                            if (!string.IsNullOrWhiteSpace(id) && !historiasMap.ContainsKey(id))
+                            var chave = HistoriaIdParser.CanonicalKey(id);
+                            if (string.IsNullOrWhiteSpace(chave) || historiasMap.ContainsKey(chave))
                             {
-                                historiasMap[id] = new HistoriaProgressoDto(id, 1, DateTime.Today.ToString("dd/MM/yyyy"), DateTime.Today.ToString("yyyy-MM-dd"));
+                                continue;
                             }
+
+                            historiasMap[chave] = new HistoriaProgressoDto(chave, 1, DateTime.Today.ToString("dd/MM/yyyy"), DateTime.Today.ToString("yyyy-MM-dd"));
                         }
                     }
                 }
@@ -141,34 +171,6 @@ public class ProgressSyncService
             updatedAt = updatedAt.HasValue
                 ? (relatorioDb.Value.UpdatedAt > updatedAt.Value ? relatorioDb.Value.UpdatedAt : updatedAt)
                 : relatorioDb.Value.UpdatedAt;
-        }
-
-        var sessoesDb = await conn.QueryAsync<(int Id, int IdHistoria, int Estrelas, DateTime CriadoEm, string Titulo, string Emoji, string Genero)>(
-            """
-            SELECT S.Id, S.Id_Historia, S.Estrelas, S.CriadoEm, H.Titulo, H.Emoji, H.Genero
-            FROM Sessao_Leitura S
-            LEFT JOIN Historia H ON S.Id_Historia = H.Id
-            WHERE S.Id_Crianca = @CriancaId AND S.Concluida = 1
-            ORDER BY S.CriadoEm DESC, S.Id DESC
-            """,
-            new { CriancaId = criancaId });
-
-        foreach (var sessao in sessoesDb)
-        {
-            var idStr = ConverterIdHistoriaParaString(sessao.IdHistoria);
-            var est = Math.Clamp(sessao.Estrelas, 0, 5);
-
-            if (historiasMap.TryGetValue(idStr, out var exist))
-            {
-                if (est >= exist.Estrelas)
-                {
-                    historiasMap[idStr] = new HistoriaProgressoDto(idStr, est, sessao.CriadoEm.ToString("dd/MM/yyyy"), sessao.CriadoEm.ToString("yyyy-MM-dd"), exist.Titulo ?? sessao.Titulo, exist.Emoji ?? sessao.Emoji, exist.Genero ?? sessao.Genero);
-                }
-            }
-            else
-            {
-                historiasMap[idStr] = new HistoriaProgressoDto(idStr, est, sessao.CriadoEm.ToString("dd/MM/yyyy"), sessao.CriadoEm.ToString("yyyy-MM-dd"), sessao.Titulo, sessao.Emoji, sessao.Genero);
-            }
         }
 
         var historiasLidas = historiasMap.Values.OrderBy(h => h.Id).ToList();
@@ -200,9 +202,8 @@ public class ProgressSyncService
             updatedAt));
     }
 
-    private static void MesclarPayloadNoMapa(
+    private static void ExtrairMetricasDoPayload(
         string payloadJson,
-        Dictionary<string, HistoriaProgressoDto> historiasMap,
         ref int tempoTotal,
         ref int minigamesJogados,
         ref int tentativasReprovadas,
@@ -222,25 +223,6 @@ public class ProgressSyncService
                 doc.RootElement.TryGetProperty("progressoHistorias", out progressoEl))
             {
                 tempoTotal = Math.Max(tempoTotal, ExtrairInt(progressoEl, "tempoTotal"));
-                foreach (var item in ExtrairHistoriasLidas(progressoEl))
-                {
-                    if (string.IsNullOrWhiteSpace(item.Id))
-                    {
-                        continue;
-                    }
-
-                    if (historiasMap.TryGetValue(item.Id, out var existente))
-                    {
-                        if (item.Estrelas >= existente.Estrelas)
-                        {
-                            historiasMap[item.Id] = item;
-                        }
-                    }
-                    else
-                    {
-                        historiasMap[item.Id] = item;
-                    }
-                }
             }
 
             if (doc.RootElement.TryGetProperty("ResumoMinigames", out var resumoEl) ||
@@ -255,7 +237,7 @@ public class ProgressSyncService
         }
         catch
         {
-            // Payload inválido não impede retorno parcial via Sessao_Leitura.
+            // Payload inválido não impede retorno via Sessao_Leitura.
         }
     }
 
@@ -274,6 +256,8 @@ public class ProgressSyncService
             .ToList();
 
         var historiasConcluidasJson = historiasIds.Count > 0 ? JsonSerializer.Serialize(historiasIds) : null;
+
+        // Dual-write: HistoriasConcluidasJson continua gravado (deprecated na leitura; GET usa Sessao_Leitura).
 
         if (resumo.TentativasReprovadas == 0 &&
             resumo.AcertosMG == 0 &&
@@ -676,11 +660,6 @@ public class ProgressSyncService
         }
 
         return 0;
-    }
-
-    private static string ConverterIdHistoriaParaString(int historiaId)
-    {
-        return $"api-{historiaId}";
     }
 
     private static int ExtrairTotalEstrelas(object progressoHistorias)

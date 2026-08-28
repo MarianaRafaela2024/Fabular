@@ -3,6 +3,7 @@
 -- Idempotente: o backup só é criado na primeira aplicação.
 
 SET NOCOUNT ON;
+SET QUOTED_IDENTIFIER ON;
 USE Fabular;
 GO
 
@@ -78,7 +79,10 @@ IF OBJECT_ID(N'dbo.Atividade_Diaria', N'U') IS NOT NULL
         GROUP BY Id_Crianca, Data
         HAVING COUNT(*) > 1
    )
+BEGIN
+    SET QUOTED_IDENTIFIER ON;
     CREATE UNIQUE INDEX UQ_AD_CriancaData_SemHistoria
         ON dbo.Atividade_Diaria (Id_Crianca, Data)
         WHERE Id_Historia IS NULL;
+END
 GO
