@@ -3,6 +3,7 @@ using API_Fabular.Contracts;
 
 namespace API_Fabular.Services;
 
+// DEPRECATED (etapa 3): geração ocorre no JS (Groq). Este template só atende POST /stories/generate.
 public class StoryGeneratorService
 {
     public StoryDetailDto Generate(StoryGenerateRequest request)

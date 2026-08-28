@@ -15,10 +15,13 @@ public class StoriesController : ControllerBase
         _storiesService = storiesService;
     }
 
+    [Obsolete("Geração ocorre no JS (Groq). Persistência: POST /api/v1/stories/save.")]
     [HttpPost("generate")]
     public async Task<ActionResult<StoryDetailDto>> Generate([FromBody] StoryGenerateRequest request)
     {
+#pragma warning disable CS0618
         var result = await _storiesService.GenerateAsync(request);
+#pragma warning restore CS0618
         if (!result.Success)
         {
             return StatusCode(result.StatusCode, new { message = result.Error });

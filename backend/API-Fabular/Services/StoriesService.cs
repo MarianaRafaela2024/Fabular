@@ -17,6 +17,8 @@ public class StoriesService
         _generator = generator;
     }
 
+    // DEPRECATED (etapa 3): o cliente gera com Groq e persiste via SaveAsync.
+    [Obsolete("Geração ocorre no JS (Groq). Persistência: POST /api/v1/stories/save.")]
     public async Task<ApplicationResult<StoryDetailDto>> GenerateAsync(StoryGenerateRequest request)
     {
         if (!request.CriancaId.HasValue || request.CriancaId.Value <= 0)

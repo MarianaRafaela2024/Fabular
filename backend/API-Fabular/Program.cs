@@ -13,7 +13,7 @@ builder.Services.Configure<API_Fabular.Services.BrevoEmailOptions>(builder.Confi
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<API_Fabular.Infra.DbConnectionFactory>();
 builder.Services.AddScoped<API_Fabular.Services.BrevoEmailService>();
-builder.Services.AddSingleton<API_Fabular.Services.StoryGeneratorService>();
+builder.Services.AddSingleton<API_Fabular.Services.StoryGeneratorService>(); // deprecated: geração no JS
 builder.Services.AddScoped<API_Fabular.Services.ParentAuthService>();
 builder.Services.AddScoped<API_Fabular.Services.ChildrenLinkService>();
 builder.Services.AddScoped<API_Fabular.Services.StoriesService>();
