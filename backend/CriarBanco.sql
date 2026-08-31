@@ -11,6 +11,7 @@ IF OBJECT_ID('Evento_Minigame') IS NOT NULL DROP TABLE Evento_Minigame;
 IF OBJECT_ID('Relatorio_Crianca') IS NOT NULL DROP TABLE Relatorio_Crianca;
 IF OBJECT_ID('Sessao_Leitura') IS NOT NULL DROP TABLE Sessao_Leitura;
 IF OBJECT_ID('IA_Geracao') IS NOT NULL DROP TABLE IA_Geracao;
+IF OBJECT_ID('Historia_Fase') IS NOT NULL DROP TABLE Historia_Fase;
 IF OBJECT_ID('Historia_PalavraChave') IS NOT NULL DROP TABLE Historia_PalavraChave;
 IF OBJECT_ID('Historia_Minigame') IS NOT NULL DROP TABLE Historia_Minigame;
 IF OBJECT_ID('Progresso_Snapshot') IS NOT NULL DROP TABLE Progresso_Snapshot;
@@ -99,6 +100,16 @@ CREATE TABLE Historia_PalavraChave (
     Ordem TINYINT NOT NULL,
     CONSTRAINT FK_HPC_Historia FOREIGN KEY (Id_Historia) REFERENCES Historia(Id) ON DELETE CASCADE,
     CONSTRAINT UQ_HPC UNIQUE (Id_Historia, Ordem)
+);
+
+CREATE TABLE Historia_Fase (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    Id_Historia INT NOT NULL,
+    Ordem TINYINT NOT NULL,
+    TextoHtml NVARCHAR(MAX) NOT NULL,
+    Cena NVARCHAR(40) NULL,
+    CONSTRAINT FK_HF_Historia FOREIGN KEY (Id_Historia) REFERENCES Historia(Id) ON DELETE CASCADE,
+    CONSTRAINT UQ_HF UNIQUE (Id_Historia, Ordem)
 );
 
 CREATE TABLE IA_Geracao (
@@ -314,5 +325,59 @@ WHERE h.PalavrasChaveJson IS NOT NULL
         FROM Historia_PalavraChave AS p
         WHERE p.Id_Historia = h.Id
           AND p.Ordem = CAST(TRY_CAST(j.[key] AS INT) + 1 AS TINYINT)
+  );
+GO
+
+-- Backfill de fases (PayloadJson permanece)
+INSERT INTO Historia_Fase (Id_Historia, Ordem, TextoHtml, Cena)
+SELECT
+    h.Id,
+    CAST(TRY_CAST(j.[key] AS INT) + 1 AS TINYINT),
+    LTRIM(RTRIM(CASE
+        WHEN j.type = 1 THEN j.value
+        WHEN j.type = 5 THEN COALESCE(
+            JSON_VALUE(j.value, N'$.texto'),
+            JSON_VALUE(j.value, N'$.Texto'),
+            JSON_VALUE(j.value, N'$.textoHtml'),
+            JSON_VALUE(j.value, N'$.TextoHtml')
+        )
+        ELSE NULL
+    END)),
+    LEFT(NULLIF(LTRIM(RTRIM(COALESCE(
+        CASE WHEN j.type = 5 THEN COALESCE(JSON_VALUE(j.value, N'$.cena'), JSON_VALUE(j.value, N'$.Cena')) END,
+        h.Cena
+    ))), N''), 40)
+FROM Historia AS h
+CROSS APPLY OPENJSON(
+    COALESCE(JSON_QUERY(h.PayloadJson, N'$.fases'), JSON_QUERY(h.PayloadJson, N'$.Fases'))
+) AS j
+WHERE h.PayloadJson IS NOT NULL
+  AND LTRIM(RTRIM(h.PayloadJson)) <> N''
+  AND ISJSON(h.PayloadJson) = 1
+  AND TRY_CAST(j.[key] AS INT) BETWEEN 0 AND 254
+  AND LTRIM(RTRIM(CASE
+        WHEN j.type = 1 THEN j.value
+        WHEN j.type = 5 THEN COALESCE(
+            JSON_VALUE(j.value, N'$.texto'),
+            JSON_VALUE(j.value, N'$.Texto'),
+            JSON_VALUE(j.value, N'$.textoHtml'),
+            JSON_VALUE(j.value, N'$.TextoHtml')
+        )
+        ELSE NULL
+    END)) <> N''
+  AND NOT EXISTS (
+        SELECT 1
+        FROM Historia_Fase AS f
+        WHERE f.Id_Historia = h.Id
+          AND f.Ordem = CAST(TRY_CAST(j.[key] AS INT) + 1 AS TINYINT)
+  );
+GO
+
+INSERT INTO Historia_Fase (Id_Historia, Ordem, TextoHtml, Cena)
+SELECT h.Id, CAST(1 AS TINYINT), h.TextoHtml, LEFT(NULLIF(LTRIM(RTRIM(h.Cena)), N''), 40)
+FROM Historia AS h
+WHERE LTRIM(RTRIM(h.TextoHtml)) <> N''
+  AND NOT EXISTS (
+        SELECT 1 FROM Historia_Fase AS f WHERE f.Id_Historia = h.Id
   );
 GO

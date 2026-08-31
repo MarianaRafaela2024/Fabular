@@ -14,6 +14,7 @@ sqlcmd -S "(localdb)\MSSQLLocalDB" -d Fabular -i backend/migrations/007_sessao_u
 sqlcmd -S "(localdb)\MSSQLLocalDB" -d Fabular -i backend/migrations/008_atividade_diaria_idempotente.up.sql
 sqlcmd -S "(localdb)\MSSQLLocalDB" -d Fabular -i backend/migrations/010_progresso_snapshot.up.sql
 sqlcmd -S "(localdb)\MSSQLLocalDB" -d Fabular -i backend/migrations/011_historia_palavra_chave.up.sql
+sqlcmd -S "(localdb)\MSSQLLocalDB" -d Fabular -i backend/migrations/012_historia_fase.up.sql
 ```
 
 Verificação opcional:
@@ -26,6 +27,7 @@ sqlcmd -S "(localdb)\MSSQLLocalDB" -d Fabular -i backend/migrations/verify/007_s
 sqlcmd -S "(localdb)\MSSQLLocalDB" -d Fabular -i backend/migrations/verify/008_atividade_diaria_idempotente.sql
 sqlcmd -S "(localdb)\MSSQLLocalDB" -d Fabular -i backend/migrations/verify/010_progresso_snapshot.sql
 sqlcmd -S "(localdb)\MSSQLLocalDB" -d Fabular -i backend/migrations/verify/011_historia_palavra_chave.sql
+sqlcmd -S "(localdb)\MSSQLLocalDB" -d Fabular -i backend/migrations/verify/012_historia_fase.sql
 ```
 
 ## Regras

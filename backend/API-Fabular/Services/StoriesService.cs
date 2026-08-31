@@ -224,8 +224,10 @@ public class StoriesService
 
         var words = PalavrasChaveNormalizer.PreferirTabela(palavrasTabela, wordsJson);
         var minigames = await LoadMinigamesAsync(conn, id);
+        var fases = await LoadFasesAsync(conn, id);
+        var texto = HistoriaFaseAssembler.Concatenar(fases, row.TextoHtml);
         return ApplicationResult<StoryDetailDto>.Ok(new StoryDetailDto(
-            row.Id, row.Titulo, row.Genero, row.FaixaEtaria, row.Duracao, row.Emoji, row.Cena, row.TextoHtml, words, minigames));
+            row.Id, row.Titulo, row.Genero, row.FaixaEtaria, row.Duracao, row.Emoji, row.Cena, texto, words, minigames));
     }
 
     private static async Task<int> PersistStoryAsync(IDbConnection conn, StoryDetailDto story, string origem)
@@ -257,6 +259,7 @@ public class StoriesService
             });
 
         await SavePalavrasChaveAsync(conn, id, story.PalavrasChave);
+        await SaveFasesAsync(conn, id, HistoriaFaseAssembler.DeTextoUnico(story.Texto, story.Cena));
         await SaveMinigamesAsync(conn, id, story.Minigames);
         return id;
     }
@@ -280,6 +283,39 @@ public class StoriesService
             """
             SELECT Palavra
             FROM Historia_PalavraChave
+            WHERE Id_Historia = @Id
+            ORDER BY Ordem
+            """,
+            new { Id = historiaId });
+
+        return rows.AsList();
+    }
+
+    private static async Task SaveFasesAsync(IDbConnection conn, int historiaId, List<HistoriaFaseDto> fases)
+    {
+        foreach (var fase in fases)
+        {
+            await conn.ExecuteAsync(
+                """
+                INSERT INTO Historia_Fase (Id_Historia, Ordem, TextoHtml, Cena)
+                VALUES (@Id_Historia, @Ordem, @TextoHtml, @Cena)
+                """,
+                new
+                {
+                    Id_Historia = historiaId,
+                    fase.Ordem,
+                    fase.TextoHtml,
+                    fase.Cena
+                });
+        }
+    }
+
+    private static async Task<List<HistoriaFaseDto>> LoadFasesAsync(IDbConnection conn, int historiaId)
+    {
+        var rows = await conn.QueryAsync<HistoriaFaseDto>(
+            """
+            SELECT Ordem, TextoHtml, Cena
+            FROM Historia_Fase
             WHERE Id_Historia = @Id
             ORDER BY Ordem
             """,
