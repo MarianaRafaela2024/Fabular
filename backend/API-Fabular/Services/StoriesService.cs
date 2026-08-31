@@ -112,7 +112,8 @@ public class StoriesService
                          COALESCE(gen.Slug, h.Genero) AS Genero,
                          CAST(h.FaixaEtaria AS INT) AS FaixaEtaria,
                          h.Duracao, h.Emoji, h.Cena,
-                         CAST(g.Id_Crianca AS INT) AS CriancaId
+                         CAST(g.Id_Crianca AS INT) AS CriancaId,
+                         h.Origem
                   FROM Historia h
                   LEFT JOIN IA_Geracao g ON g.Id_Historia = h.Id
                   LEFT JOIN Genero gen ON gen.Id = h.Id_Genero

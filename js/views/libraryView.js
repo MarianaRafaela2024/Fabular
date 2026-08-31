@@ -11,6 +11,9 @@ function renderizarBiblioteca() {
   const faixaPerfil = parseInt(estado?.perfil?.faixa, 10) || 1;
 
   let lista = HISTORIAS.filter(h => {
+    if (typeof historiaVisivelParaCriancaAtual === 'function' && !historiaVisivelParaCriancaAtual(h)) {
+      return false;
+    }
     const okGenero = estado.filtroGenero === 'todos' || String(h.genero).toLowerCase() === String(estado.filtroGenero).toLowerCase();
     const okFaixaFiltro = estado.filtroFaixa === 'todos' || parseInt(h.faixa, 10) === parseInt(estado.filtroFaixa, 10);
     return okGenero && okFaixaFiltro;

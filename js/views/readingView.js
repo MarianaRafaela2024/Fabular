@@ -12,10 +12,14 @@ async function iniciarHistoria(id, opcoes) {
 
   if (!historia && typeof carregarCacheHistorias === 'function') {
     const cache = carregarCacheHistorias();
-    historia = cache.find((c) => c && c.id === id);
+    historia = cache.find((c) => c && c.id === id && (typeof historiaVisivelParaCriancaAtual !== 'function' || historiaVisivelParaCriancaAtual(c)));
     if (historia && typeof garantirHistoriaNaBiblioteca === 'function') {
       garantirHistoriaNaBiblioteca(historia);
     }
+  }
+
+  if (historia && typeof historiaVisivelParaCriancaAtual === 'function' && !historiaVisivelParaCriancaAtual(historia)) {
+    historia = null;
   }
 
   if (String(id).startsWith('api-') && (!historia || !historiaApiTemTextoCompleto(historia))) {
