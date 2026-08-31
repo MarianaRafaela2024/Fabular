@@ -29,17 +29,27 @@ let estado = {
   modoLeituraCompleta: false,
   relatorioEventos: [], // eventos locais por minigame
   vidasPerdidas: [],   // fallback legado
-  vidasPerdidasPorCrianca: {} // mapa { [childKey]: [timestamps (ms)] } por perfil infantil
+  vidasPerdidasPorCrianca: {}, // mapa { [childKey]: [timestamps (ms)] } por perfil infantil
+  progressoCriancaId: null,
+  syncPermitido: false
 };
 
 let syncTimer = null;
 const CHAVE_VIDAS_PERSISTENTES = 'mundoHistorias_vidas_criancas';
 
-function salvarEstado() {
-  const dados = {
-    perfil: estado.perfil,
-    vidasPerdidas: estado.vidasPerdidas || [],
-    vidasPerdidasPorCrianca: estado.vidasPerdidasPorCrianca || {},
+function obterIdCriancaAtual() {
+  const id = estado?.perfil?.id || estado?.perfil?.Id;
+  const n = Number(id);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function chaveProgressoLocal(criancaId) {
+  return `mundoHistorias_progresso_${criancaId}`;
+}
+
+function snapshotProgresso() {
+  return {
+    progressoCriancaId: estado.progressoCriancaId || obterIdCriancaAtual(),
     historiasLidas: estado.historiasLidas || [],
     atividadeDiaria: estado.atividadeDiaria || [],
     totalEstrelas: estado.totalEstrelas || 0,
@@ -48,17 +58,12 @@ function salvarEstado() {
     tentativasReprovadas: estado.tentativasReprovadas || 0,
     acertosMG: estado.acertosMG || 0,
     errosMG: estado.errosMG || 0,
-    naoConsigoOuvir: estado.naoConsigoOuvir || 0
+    naoConsigoOuvir: estado.naoConsigoOuvir || 0,
+    relatorioEventos: estado.relatorioEventos || []
   };
-  localStorage.setItem('mundoHistorias_estado', JSON.stringify(dados));
-  try {
-    localStorage.setItem(CHAVE_VIDAS_PERSISTENTES, JSON.stringify(estado.vidasPerdidasPorCrianca || {}));
-  } catch (_) { }
-  agendarSyncProgresso();
 }
 
-function carregarEstado() {
-  // Limpa estado de progresso em memória para evitar resquícios de outros perfis
+function limparProgressoMemoria() {
   estado.totalEstrelas = 0;
   estado.historiasLidas = [];
   estado.tempoTotal = 0;
@@ -69,6 +74,51 @@ function carregarEstado() {
   estado.naoConsigoOuvir = 0;
   estado.atividadeDiaria = [];
   estado.relatorioEventos = [];
+}
+
+function aplicarSnapshotProgresso(dados) {
+  if (!dados || typeof dados !== 'object') return;
+  if (Array.isArray(dados.historiasLidas)) estado.historiasLidas = dados.historiasLidas;
+  if (Array.isArray(dados.atividadeDiaria)) estado.atividadeDiaria = dados.atividadeDiaria;
+  if (Array.isArray(dados.relatorioEventos)) estado.relatorioEventos = dados.relatorioEventos;
+  if (dados.totalEstrelas != null) estado.totalEstrelas = Number(dados.totalEstrelas) || 0;
+  if (dados.tempoTotal != null) estado.tempoTotal = Number(dados.tempoTotal) || 0;
+  if (dados.minigamesJogados != null) estado.minigamesJogados = Number(dados.minigamesJogados) || 0;
+  if (dados.tentativasReprovadas != null) estado.tentativasReprovadas = Number(dados.tentativasReprovadas) || 0;
+  if (dados.acertosMG != null) estado.acertosMG = Number(dados.acertosMG) || 0;
+  if (dados.errosMG != null) estado.errosMG = Number(dados.errosMG) || 0;
+  if (dados.naoConsigoOuvir != null) estado.naoConsigoOuvir = Number(dados.naoConsigoOuvir) || 0;
+}
+
+function salvarEstado() {
+  const criancaId = obterIdCriancaAtual();
+  estado.progressoCriancaId = criancaId;
+
+  const dados = {
+    perfil: estado.perfil,
+    vidasPerdidas: estado.vidasPerdidas || [],
+    vidasPerdidasPorCrianca: estado.vidasPerdidasPorCrianca || {},
+    progressoCriancaId: criancaId
+  };
+  localStorage.setItem('mundoHistorias_estado', JSON.stringify(dados));
+
+  if (criancaId) {
+    try {
+      localStorage.setItem(chaveProgressoLocal(criancaId), JSON.stringify(snapshotProgresso()));
+    } catch (_) { }
+  }
+
+  try {
+    localStorage.setItem(CHAVE_VIDAS_PERSISTENTES, JSON.stringify(estado.vidasPerdidasPorCrianca || {}));
+  } catch (_) { }
+  agendarSyncProgresso();
+}
+
+function carregarEstado() {
+  estado.syncPermitido = false;
+  limparProgressoMemoria();
+  estado.progressoCriancaId = null;
+  let precisaSalvarFaixa = false;
 
   const raw = localStorage.getItem('mundoHistorias_estado');
   let dados = null;
@@ -91,33 +141,16 @@ function carregarEstado() {
       estado.vidasPerdidasPorCrianca = {};
     }
 
-    if (Array.isArray(dados.historiasLidas)) {
-      estado.historiasLidas = dados.historiasLidas;
-    }
-    if (Array.isArray(dados.atividadeDiaria)) {
-      estado.atividadeDiaria = dados.atividadeDiaria;
-    }
-    if (dados.totalEstrelas != null) estado.totalEstrelas = Number(dados.totalEstrelas) || 0;
-    if (dados.tempoTotal != null) estado.tempoTotal = Number(dados.tempoTotal) || 0;
-    if (dados.minigamesJogados != null) estado.minigamesJogados = Number(dados.minigamesJogados) || 0;
-    if (dados.tentativasReprovadas != null) estado.tentativasReprovadas = Number(dados.tentativasReprovadas) || 0;
-    if (dados.acertosMG != null) estado.acertosMG = Number(dados.acertosMG) || 0;
-    if (dados.errosMG != null) estado.errosMG = Number(dados.errosMG) || 0;
-    if (dados.naoConsigoOuvir != null) estado.naoConsigoOuvir = Number(dados.naoConsigoOuvir) || 0;
-
     if (dados?.perfil) {
       const faixaAnterior = dados.perfil.faixa;
       estado.perfil = normalizarPerfilCrianca(dados.perfil);
-      if (estado.perfil.faixa !== faixaAnterior) {
-        salvarEstado();
-      }
+      precisaSalvarFaixa = estado.perfil.faixa !== faixaAnterior;
     }
   } else {
     estado.vidasPerdidas = [];
     estado.vidasPerdidasPorCrianca = {};
   }
 
-  // Carrega e mescla também de CHAVE_VIDAS_PERSISTENTES para resgatar históricos mantidos entre perfis e sessoes
   try {
     const rawVidas = localStorage.getItem(CHAVE_VIDAS_PERSISTENTES);
     if (rawVidas) {
@@ -127,6 +160,27 @@ function carregarEstado() {
       }
     }
   } catch (_) { }
+
+  const criancaId = obterIdCriancaAtual();
+  estado.progressoCriancaId = criancaId;
+  if (!criancaId) {
+    if (precisaSalvarFaixa) salvarEstado();
+    return;
+  }
+
+  try {
+    const rawProg = localStorage.getItem(chaveProgressoLocal(criancaId));
+    if (rawProg) {
+      const dedicado = JSON.parse(rawProg);
+      const dono = Number(dedicado?.progressoCriancaId);
+      if (dedicado && (Number.isNaN(dono) || dono === criancaId)) {
+        aplicarSnapshotProgresso(dedicado);
+      }
+    }
+  } catch (_) { }
+
+  if (typeof recalcularTotalEstrelas === 'function') recalcularTotalEstrelas();
+  if (precisaSalvarFaixa) salvarEstado();
 }
 
 function garantirContadoresRelatorio() {
@@ -142,10 +196,10 @@ function garantirContadoresRelatorio() {
 
 function obterVinculoCrianca() {
   try {
-    const criancaId = estado?.perfil?.id || estado?.perfil?.Id;
+    const criancaId = obterIdCriancaAtual();
     const responsavelId = obterResponsavelId();
     if (!criancaId) return null;
-    return { criancaId: Number(criancaId), responsavelId: responsavelId ? Number(responsavelId) : null };
+    return { criancaId, responsavelId: responsavelId ? Number(responsavelId) : null };
   } catch (_) {
     return null;
   }
@@ -168,14 +222,17 @@ function agendarSyncProgresso() {
 }
 
 async function enviarSyncProgresso() {
+  if (!estado.syncPermitido) return;
+
   const sessao = (() => {
     try { return JSON.parse(localStorage.getItem('mundoHistorias_responsavel_sessao') || 'null'); } catch (_) { return null; }
   })();
   const vinculo = obterVinculoCrianca();
   const respId = sessao?.responsavelId || sessao?.ResponsavelId || vinculo?.responsavelId;
-  const childId = vinculo?.criancaId || estado?.perfil?.id || estado?.perfil?.Id;
+  const childId = vinculo?.criancaId || obterIdCriancaAtual();
 
   if (!respId || !childId) return;
+  if (estado.progressoCriancaId != null && Number(estado.progressoCriancaId) !== Number(childId)) return;
 
   try {
     await apiPost('/api/v1/sync/progress', {
@@ -208,7 +265,7 @@ async function carregarProgressoDoServidor() {
   })();
   const vinculo = obterVinculoCrianca();
   const respId = sessao?.responsavelId || sessao?.ResponsavelId || vinculo?.responsavelId;
-  const childId = vinculo?.criancaId || estado?.perfil?.id || estado?.perfil?.Id;
+  const childId = vinculo?.criancaId || obterIdCriancaAtual();
 
   if (!respId || !childId) return;
 
@@ -219,15 +276,82 @@ async function carregarProgressoDoServidor() {
     });
     const data = await apiGet(`/api/v1/sync/progress?${query.toString()}`);
     if (data) {
-      mesclarProgressoServidor(data);
+      mesclarProgressoServidor(data, childId);
     }
   } catch (err) {
     console.warn('Falha ao carregar progresso do banco:', err);
   }
 }
 
-function mesclarProgressoServidor(servidor) {
+function chaveHistoriaProgresso(registro) {
+  if (!registro) return '';
+  const idStr = String(registro.id || registro.Id || '');
+  if (!idStr) return '';
+  return typeof normalizarIdHistoria === 'function'
+    ? String(normalizarIdHistoria(idStr))
+    : idStr.replace(/^api-/i, '');
+}
+
+function registroProgressoNormalizado(r) {
+  const idStr = String(r.id || r.Id || '');
+  const idNorm = chaveHistoriaProgresso(r);
+  const est = Math.max(0, Math.min(5, Number(r.estrelas || r.Estrelas) || 0));
+  let titulo = r.titulo || r.Titulo || '';
+  let emoji = r.emoji || r.Emoji || '';
+  let genero = r.genero || r.Genero || '';
+
+  if (!titulo && typeof HISTORIAS !== 'undefined') {
+    const hFound = HISTORIAS.find(x => {
+      const xNorm = typeof normalizarIdHistoria === 'function' ? normalizarIdHistoria(x.id) : String(x.id).replace(/^api-/i, '');
+      return String(xNorm) === String(idNorm) || String(x.id) === idStr;
+    });
+    if (hFound) {
+      titulo = hFound.titulo || '';
+      emoji = emoji || hFound.emoji || '📖';
+      genero = genero || hFound.genero || 'narrativo';
+    }
+  }
+
+  return {
+    id: idNorm ? `api-${idNorm}` : idStr,
+    titulo,
+    emoji: emoji || '📖',
+    genero: genero || 'narrativo',
+    estrelas: est,
+    data: r.data || r.Data || '',
+    dataIso: r.dataIso || r.DataIso || (typeof obterDataIsoHistoria === 'function' ? obterDataIsoHistoria(r) : '') || '',
+    timestamp: r.timestamp || r.Timestamp || Date.now()
+  };
+}
+
+function incorporarHistoriaUnica(mapa, bruto) {
+  if (!bruto || (bruto.id == null && bruto.Id == null)) return;
+  const chave = chaveHistoriaProgresso(bruto);
+  if (!chave) return;
+  const novo = registroProgressoNormalizado(bruto);
+  const prev = mapa.get(chave);
+  if (!prev) {
+    mapa.set(chave, novo);
+    return;
+  }
+  prev.estrelas = Math.max(prev.estrelas, novo.estrelas);
+  if (!prev.titulo && novo.titulo) prev.titulo = novo.titulo;
+  if ((!prev.emoji || prev.emoji === '📖') && novo.emoji) prev.emoji = novo.emoji;
+  if (!prev.genero && novo.genero) prev.genero = novo.genero;
+  if (!prev.data && novo.data) prev.data = novo.data;
+  if (!prev.dataIso && novo.dataIso) prev.dataIso = novo.dataIso;
+}
+
+function mesclarProgressoServidor(servidor, criancaIdEsperada) {
   if (!servidor) return;
+
+  const idAtual = Number(criancaIdEsperada || obterIdCriancaAtual());
+  if (!idAtual) return;
+
+  if (estado.progressoCriancaId != null && Number(estado.progressoCriancaId) !== idAtual) {
+    limparProgressoMemoria();
+  }
+  estado.progressoCriancaId = idAtual;
 
   const prog = servidor.progressoHistorias || servidor.ProgressoHistorias || servidor;
   const resumo = servidor.resumoMinigames || servidor.ResumoMinigames || servidor;
@@ -242,69 +366,11 @@ function mesclarProgressoServidor(servidor) {
           ? prog.HistoriasLidas
           : [])));
 
-  // Combina lista local e remota mantendo todos os eventos de leitura individuais
-  const listaCombinada = [...(estado.historiasLidas || []), ...remoto];
-  const unicos = [];
-  const chavesVistas = new Set();
-
-  listaCombinada.forEach((r) => {
-    if (!r || (r.id == null && r.Id == null)) return;
-    const idStr = String(r.id || r.Id);
-    const idNorm = typeof normalizarIdHistoria === 'function' ? normalizarIdHistoria(idStr) : idStr.replace('api-', '');
-    const dataStr = r.dataIso || r.DataIso || r.data || r.Data || '';
-    const est = Number(r.estrelas || r.Estrelas) || 0;
-    const ts = r.timestamp || r.Timestamp || '';
-
-    let titulo = r.titulo || r.Titulo || '';
-    let emoji = r.emoji || r.Emoji || '';
-    let genero = r.genero || r.Genero || '';
-
-    if (!titulo && typeof HISTORIAS !== 'undefined') {
-      const hFound = HISTORIAS.find(x => {
-        const xNorm = typeof normalizarIdHistoria === 'function' ? normalizarIdHistoria(x.id) : String(x.id).replace('api-', '');
-        return xNorm === idNorm || String(x.id) === idStr;
-      });
-      if (hFound) {
-        titulo = hFound.titulo || '';
-        emoji = emoji || hFound.emoji || '📖';
-        genero = genero || hFound.genero || 'narrativo';
-      }
-    }
-
-    const canonicalId = `api-${idNorm}`;
-    const chave = ts ? `${idNorm}_${ts}` : `${idNorm}_${dataStr || 'data'}`;
-
-    const existenteIdx = unicos.findIndex(u => {
-      const uNorm = typeof normalizarIdHistoria === 'function' ? normalizarIdHistoria(u.id) : String(u.id).replace('api-', '');
-      return uNorm === idNorm && (ts ? u.timestamp === ts : true);
-    });
-
-    if (existenteIdx < 0 && !chavesVistas.has(chave)) {
-      chavesVistas.add(chave);
-      unicos.push({
-        id: canonicalId,
-        titulo: titulo,
-        emoji: emoji || '📖',
-        genero: genero || 'narrativo',
-        estrelas: est,
-        data: r.data || r.Data || '',
-        dataIso: r.dataIso || r.DataIso || (typeof obterDataIsoHistoria === 'function' ? obterDataIsoHistoria(r) : '') || '',
-        timestamp: ts || Date.now()
-      });
-    } else if (existenteIdx >= 0) {
-      const u = unicos[existenteIdx];
-      u.estrelas = Math.max(u.estrelas, est);
-      if (!u.titulo && titulo) u.titulo = titulo;
-      if ((!u.emoji || u.emoji === '📖') && emoji) u.emoji = emoji;
-      if (!u.genero && genero) u.genero = genero;
-      if (!u.data && (r.data || r.Data)) u.data = r.data || r.Data;
-      if (!u.dataIso && (r.dataIso || r.DataIso)) u.dataIso = r.dataIso || r.DataIso;
-    }
-  });
-
-  estado.historiasLidas = unicos;
+  const mapa = new Map();
+  remoto.forEach((r) => incorporarHistoriaUnica(mapa, r));
+  (estado.historiasLidas || []).forEach((r) => incorporarHistoriaUnica(mapa, r));
+  estado.historiasLidas = Array.from(mapa.values());
   recalcularTotalEstrelas();
-  salvarEstado();
 
   const atividadeRemota = Array.isArray(servidor.atividadeDiaria)
     ? servidor.atividadeDiaria
@@ -316,50 +382,44 @@ function mesclarProgressoServidor(servidor) {
 
   if (atividadeRemota) {
     const mapaAtv = new Map();
-    (estado.atividadeDiaria || []).forEach(a => {
-      if (a && a.data) mapaAtv.set(a.data, Number(a.quantidade) || 0);
-    });
     atividadeRemota.forEach(a => {
       if (!a) return;
       const dt = a.data || a.Data;
       const qtd = Number(a.quantidade || a.Quantidade) || 0;
       if (dt) mapaAtv.set(dt, Math.max(mapaAtv.get(dt) || 0, qtd));
     });
+    (estado.atividadeDiaria || []).forEach(a => {
+      if (a && a.data) mapaAtv.set(a.data, Math.max(mapaAtv.get(a.data) || 0, Number(a.quantidade) || 0));
+    });
     estado.atividadeDiaria = Array.from(mapaAtv.entries()).map(([data, quantidade]) => ({ data, quantidade }));
   }
 
-  const estTotalRemoto = servidor.totalEstrelas || prog.totalEstrelas || servidor.TotalEstrelas;
-  if (estTotalRemoto != null && Number(estTotalRemoto) > 0) {
-    estado.totalEstrelas = Math.max(estado.totalEstrelas, Number(estTotalRemoto));
-  }
-  estado.nivel = calcularNivelPorXp(estado.totalEstrelas);
-
-  const tempoRemoto = servidor.tempoTotal || prog.tempoTotal || servidor.TempoTotal;
+  const tempoRemoto = servidor.tempoTotal ?? prog.tempoTotal ?? servidor.TempoTotal;
   if (tempoRemoto != null) {
     estado.tempoTotal = Math.max(Number(estado.tempoTotal) || 0, Number(tempoRemoto) || 0);
   }
 
-  const mgJogadosRemoto = resumo.minigamesJogados || servidor.minigamesJogados;
+  const mgJogadosRemoto = resumo.minigamesJogados ?? servidor.minigamesJogados ?? servidor.MinigamesJogados;
   if (mgJogadosRemoto != null) {
     estado.minigamesJogados = Math.max(Number(estado.minigamesJogados) || 0, Number(mgJogadosRemoto) || 0);
   }
 
-  const tentReprovadasRemoto = resumo.tentativasReprovadas || servidor.tentativasReprovadas;
+  const tentReprovadasRemoto = resumo.tentativasReprovadas ?? servidor.tentativasReprovadas ?? servidor.TentativasReprovadas;
   if (tentReprovadasRemoto != null) {
     estado.tentativasReprovadas = Math.max(Number(estado.tentativasReprovadas) || 0, Number(tentReprovadasRemoto) || 0);
   }
 
-  const acertosRemoto = resumo.acertosMG || servidor.acertosMG;
+  const acertosRemoto = resumo.acertosMG ?? servidor.acertosMG ?? servidor.AcertosMG;
   if (acertosRemoto != null) {
     estado.acertosMG = Math.max(Number(estado.acertosMG) || 0, Number(acertosRemoto) || 0);
   }
 
-  const errosRemoto = resumo.errosMG || servidor.errosMG;
+  const errosRemoto = resumo.errosMG ?? servidor.errosMG ?? servidor.ErrosMG;
   if (errosRemoto != null) {
     estado.errosMG = Math.max(Number(estado.errosMG) || 0, Number(errosRemoto) || 0);
   }
 
-  const naoOucoRemoto = resumo.naoConsigoOuvir || servidor.naoConsigoOuvir;
+  const naoOucoRemoto = resumo.naoConsigoOuvir ?? servidor.naoConsigoOuvir ?? servidor.NaoConsigoOuvir;
   if (naoOucoRemoto != null) {
     estado.naoConsigoOuvir = Math.max(Number(estado.naoConsigoOuvir) || 0, Number(naoOucoRemoto) || 0);
   }

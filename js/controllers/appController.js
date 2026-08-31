@@ -129,6 +129,7 @@ async function inicializar() {
   try {
     await carregarProgressoDoServidor();
   } catch (_) { }
+  estado.syncPermitido = true;
 
   try {
     await carregarHistoriasDaApi();
@@ -289,6 +290,7 @@ function mostrarModalSair() {
 
     document.getElementById('btn-modal-trocar-perfil').addEventListener('click', () => {
       fechar();
+      if (typeof salvarEstado === 'function') salvarEstado();
       if (typeof resetarTamanhoFonte === 'function') resetarTamanhoFonte();
       else localStorage.removeItem('mundoHistorias_tamanhoFonte');
       window.location.href = 'login.html';

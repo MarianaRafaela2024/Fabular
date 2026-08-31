@@ -213,7 +213,11 @@
         ? normalizarPerfilCrianca(perfilFinal)
         : perfilFinal;
 
-      const estadoFinal = Object.assign({}, estadoExistente, { perfil: perfilNorm });
+      const estadoFinal = {
+        perfil: perfilNorm,
+        vidasPerdidasPorCrianca: estadoExistente.vidasPerdidasPorCrianca || {},
+        progressoCriancaId: childId ? Number(childId) : null
+      };
       salvarJSON(CHAVE_ESTADO, estadoFinal);
 
       const card = document.getElementById('crianca-card');
@@ -538,10 +542,11 @@
       }
     } catch (_) { }
 
-    const estadoFinal = Object.assign({}, estadoExistente, {
+    const estadoFinal = {
       perfil: perfilNorm,
-      vidasPerdidasPorCrianca: vidasPerdidasPorCrianca
-    });
+      vidasPerdidasPorCrianca: vidasPerdidasPorCrianca,
+      progressoCriancaId: perfilNorm.id ? Number(perfilNorm.id) : null
+    };
 
     salvarJSON(CHAVE_ESTADO, estadoFinal);
     window.location.href = "index.html";

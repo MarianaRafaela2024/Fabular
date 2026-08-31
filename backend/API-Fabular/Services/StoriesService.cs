@@ -85,6 +85,8 @@ public class StoriesService
         var payloadJson = JsonSerializer.Serialize(detail with { Id = id });
         var modelo = string.IsNullOrWhiteSpace(request.Modelo) ? "groq" : request.Modelo.Trim();
 
+        // Etapa 13: PayloadRespostaJson continua com o JSON completo; resumo só na 13b.
+
         await LinkIaGeracaoAsync(
             conn,
             request.CriancaId,
@@ -191,43 +193,24 @@ public class StoriesService
         }
 
         var palavrasTabela = await LoadPalavrasChaveAsync(conn, id);
-
-        if (!string.IsNullOrWhiteSpace(row.PayloadJson))
-        {
-            try
-            {
-                var fromPayload = JsonSerializer.Deserialize<StoryDetailDto>(row.PayloadJson);
-                if (fromPayload is not null && !string.IsNullOrWhiteSpace(fromPayload.Texto))
-                {
-                    var palavras = PalavrasChaveNormalizer.PreferirTabela(palavrasTabela, fromPayload.PalavrasChave);
-                    return ApplicationResult<StoryDetailDto>.Ok(fromPayload with { Id = row.Id, PalavrasChave = palavras });
-                }
-            }
-            catch
-            {
-                // Fallback para os campos individuais caso PayloadJson use esquema diferente
-            }
-        }
-
-        List<string>? wordsJson = null;
-        try
-        {
-            if (!string.IsNullOrWhiteSpace(row.PalavrasChaveJson))
-            {
-                wordsJson = JsonSerializer.Deserialize<List<string>>(row.PalavrasChaveJson);
-            }
-        }
-        catch
-        {
-            // JSON inválido permanece na coluna; a tabela (se houver) prevalece.
-        }
-
-        var words = PalavrasChaveNormalizer.PreferirTabela(palavrasTabela, wordsJson);
         var minigames = await LoadMinigamesAsync(conn, id);
         var fases = await LoadFasesAsync(conn, id);
-        var texto = HistoriaFaseAssembler.Concatenar(fases, row.TextoHtml);
-        return ApplicationResult<StoryDetailDto>.Ok(new StoryDetailDto(
-            row.Id, row.Titulo, row.Genero, row.FaixaEtaria, row.Duracao, row.Emoji, row.Cena, texto, words, minigames));
+        var detalhe = StoryDetailAssembler.Montar(
+            new StoryColumnSnapshot(
+                row.Id,
+                row.Titulo,
+                row.Genero,
+                row.FaixaEtaria,
+                row.Duracao,
+                row.Emoji,
+                row.Cena,
+                row.TextoHtml),
+            fases,
+            palavrasTabela,
+            row.PalavrasChaveJson,
+            minigames,
+            row.PayloadJson);
+        return ApplicationResult<StoryDetailDto>.Ok(detalhe);
     }
 
     private static async Task<int> PersistStoryAsync(IDbConnection conn, StoryDetailDto story, string origem)
@@ -235,6 +218,7 @@ public class StoriesService
         var (generoSlug, idGenero) = await GeneroCatalog.ResolverAsync(conn, story.Genero);
         var generoTexto = generoSlug ?? story.Genero ?? GeneroCatalog.Narrativo;
         var wordsJson = JsonSerializer.Serialize(story.PalavrasChave);
+        // PayloadJson permanece (rollback da etapa 13). Leitura já não depende dele.
         var payloadJson = JsonSerializer.Serialize(story with { Genero = generoTexto });
 
         var id = await conn.QuerySingleAsync<int>(
