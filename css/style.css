@@ -24,6 +24,7 @@
   --grad-card: linear-gradient(160deg, #ffffff 0%, #f8f3ff 100%);
   --grad-btn: linear-gradient(135deg, #FF6B35, #FF8E53);
   --grad-btn-sec: linear-gradient(135deg, #4ECDC4, #44A08D);
+  --cor-btn-sec: #0d7a73;
 
   --bg: #F0F4FF;
   --bg-card: #FFFFFF;
@@ -573,9 +574,9 @@ input:-webkit-autofill:active {
 }
 
 .btn-secundario {
-  background: transparent;
-  color: var(--cor-secundaria);
-  border: 2px solid var(--cor-secundaria);
+  background: rgba(78, 205, 196, 0.08);
+  color: var(--cor-btn-sec);
+  border: 2.5px solid var(--cor-secundaria);
   border-radius: var(--radius);
   padding: 12px 24px;
   margin-bottom: 2%;
@@ -588,36 +589,28 @@ input:-webkit-autofill:active {
   position: relative;
   overflow: hidden;
   z-index: 1;
+  box-shadow: 0 2px 10px rgba(78, 205, 196, 0.18);
 }
 
 .btn-secundario::before {
   content: '';
-  color: #ffffff;
   position: absolute;
   inset: 0;
   background: var(--grad-btn-sec);
   opacity: 0;
   transition: opacity var(--trans);
-
+  z-index: -1;
 }
 
 .btn-secundario:hover {
   color: #ffffff;
   border-color: transparent;
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(78, 205, 196, .3);
+  box-shadow: 0 4px 18px rgba(78, 205, 196, .35);
 }
 
 .btn-secundario:hover::before {
   opacity: 1;
-  color: #ffffff;
-}
-
-.btn-secundario span,
-.btn-secundario {
-  position: relative;
-  z-index: 1;
-  color: #ffffff;
 }
 
 .btn-voltar {
