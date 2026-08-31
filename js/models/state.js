@@ -52,6 +52,7 @@ function snapshotProgresso() {
     progressoCriancaId: estado.progressoCriancaId || obterIdCriancaAtual(),
     historiasLidas: estado.historiasLidas || [],
     atividadeDiaria: estado.atividadeDiaria || [],
+    relatorioEventos: estado.relatorioEventos || [],
     totalEstrelas: estado.totalEstrelas || 0,
     tempoTotal: estado.tempoTotal || 0,
     minigamesJogados: estado.minigamesJogados || 0,
@@ -146,9 +147,8 @@ function carregarEstado() {
       estado.perfil = normalizarPerfilCrianca(dados.perfil);
       precisaSalvarFaixa = estado.perfil.faixa !== faixaAnterior;
     }
-  } else {
-    estado.vidasPerdidas = [];
-    estado.vidasPerdidasPorCrianca = {};
+
+    aplicarDadosProgresso(dadosCrianca);
   }
 
   try {
@@ -183,15 +183,49 @@ function carregarEstado() {
   if (precisaSalvarFaixa) salvarEstado();
 }
 
+function trocarPerfilCriancaEstado(perfilNovo) {
+  if (estado?.perfil?.id || estado?.perfil?.Id) {
+    salvarEstado();
+  }
+
+  resetarProgressoEmMemoria();
+
+  const perfilNorm = typeof normalizarPerfilCrianca === 'function' ? normalizarPerfilCrianca(perfilNovo) : perfilNovo;
+  const childId = perfilNorm?.id || perfilNorm?.Id;
+
+  estado.perfil = perfilNorm;
+
+  if (childId) {
+    const chaveCrianca = obterChaveEstadoCrianca(childId);
+    const rawCrianca = localStorage.getItem(chaveCrianca);
+    if (rawCrianca) {
+      try {
+        const dadosCrianca = JSON.parse(rawCrianca);
+        if (dadosCrianca) {
+          aplicarDadosProgresso(dadosCrianca);
+        }
+      } catch (_) { }
+    }
+  }
+
+  estado.perfil = perfilNorm;
+  salvarEstado();
+}
+
 function garantirContadoresRelatorio() {
   const eventos = estado.relatorioEventos || [];
   if (!eventos.length) return;
-  const acertosEventos = eventos.filter(e => e.acao === 'acerto').length;
-  const errosEventos = eventos.filter(e => e.acao === 'erro').length;
   const naoOucoEventos = eventos.filter(e => e.acao === 'nao_consigo_ouvir').length;
-  estado.acertosMG = Math.max(Number(estado.acertosMG) || 0, acertosEventos);
-  estado.errosMG = Math.max(Number(estado.errosMG) || 0, errosEventos);
   estado.naoConsigoOuvir = Math.max(Number(estado.naoConsigoOuvir) || 0, naoOucoEventos);
+
+  if (estado.minigamesJogados > 0) {
+    if (estado.acertosMG > estado.minigamesJogados) {
+      estado.acertosMG = estado.minigamesJogados;
+    }
+    if (estado.acertosMG + estado.errosMG > estado.minigamesJogados) {
+      estado.errosMG = Math.max(0, estado.minigamesJogados - estado.acertosMG);
+    }
+  }
 }
 
 function obterVinculoCrianca() {

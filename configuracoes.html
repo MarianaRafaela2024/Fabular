@@ -10,8 +10,8 @@
     html.alto-contraste .sidebar,
     html.alto-contraste .app-main,
     html.alto-contraste .app-layout {
-      background-color: #0D1117 !important;
-      background: #0D1117 !important;
+      background-color: #140A24 !important;
+      background: radial-gradient(circle at top left, #28143E, #12081F 70%) !important;
       color: #E6EDF3 !important;
     }
   </style>
@@ -20,7 +20,7 @@
       try {
         if (localStorage.getItem('mundoHistorias_modoNoturno') === '1') {
           document.documentElement.classList.add('alto-contraste');
-          document.documentElement.style.backgroundColor = '#0D1117';
+          document.documentElement.style.backgroundColor = '#140A24';
         }
         var f = localStorage.getItem('mundoHistorias_tamanhoFonte');
         if (f) {

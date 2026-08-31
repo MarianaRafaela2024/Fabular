@@ -24,8 +24,14 @@ function atualizarTelaProgresso() {
   if (ppNome) ppNome.textContent = p.nome;
   if (ppNivelBadge) ppNivelBadge.textContent = labelNivel(estado.nivel);
   if (ppTotal) ppTotal.textContent = estado.totalEstrelas + ' ⭐';
-  const acertosMG = Number(estado.acertosMG) || 0;
-  const errosMG = Number(estado.errosMG) || 0;
+  const minigamesJogados = Number(estado.minigamesJogados) || 0;
+  let acertosMG = Number(estado.acertosMG) || 0;
+  let errosMG = Number(estado.errosMG) || 0;
+
+  if (minigamesJogados > 0) {
+    if (acertosMG > minigamesJogados) acertosMG = minigamesJogados;
+    if (acertosMG + errosMG > minigamesJogados) errosMG = Math.max(0, minigamesJogados - acertosMG);
+  }
   const naoOuco = Number(estado.naoConsigoOuvir) || 0;
   if (progressoSub) {
     progressoSub.textContent =
@@ -214,7 +220,7 @@ function calcularSequenciaLeitura(atividade) {
 const FRASES_MOTIVACIONAIS_RAPOSA = [
   'Cada página que você lê traz uma nova aventura mágica! ',
   'Ler todos os dias deixa sua imaginação super poderosa! ',
-  'A raposinha está muito orgulhosa do seu progresso! ',
+  'A Lumi está muito orgulhosa do seu progresso! ',
   'Quanto mais histórias você lê, mais longe você pode voar! ',
   'Aprender lendo é o melhor minigame de todos! ',
   'Você é um verdadeiro campeão das histórias! ',
@@ -222,9 +228,9 @@ const FRASES_MOTIVACIONAIS_RAPOSA = [
 ];
 
 function obterFraseMotivacionalRaposa(streak, totalMes) {
-  if (streak >= 5) return `Nossa! ${streak} dias seguidos lendo! Você é imbatível! `;
-  if (streak >= 3) return `Uau! ${streak} dias de leitura seguidos! Continue assim! `;
-  if (totalMes >= 10) return `Já foram ${totalMes} histórias este mês! Você lê super bem! `;
+  if (streak >= 5) return `Nossa! ${streak} dias seguidos lendo! A Lumi te ama! `;
+  if (streak >= 3) return `Uau! ${streak} dias seguidos! A Lumi ficou muito feliz! `;
+  if (totalMes >= 10) return `Já foram ${totalMes} histórias este mês! A Lumi está impressionada! `;
   const idx = (totalMes + streak) % FRASES_MOTIVACIONAIS_RAPOSA.length;
   return FRASES_MOTIVACIONAIS_RAPOSA[idx];
 }
@@ -492,35 +498,35 @@ function renderizarCalendarioAtividade() {
 const ETAGES_RAPOSA = [
   {
     id: 'filhote',
-    nome: 'Raposa Filhote',
+    nome: 'Lumi — Filhote',
     minEstrelas: 0,
     maxEstrelas: 10,
     imagem: 'midia/raposa/raposa1.png',
-    mensagem: 'Sua raposinha acabou de nascer! Continue lendo histórias e completando minigames para ajudá-la a crescer. '
+    mensagem: 'A Lumi acabou de nascer! Continue lendo histórias e completando minigames para ajudá-la a crescer. '
   },
   {
     id: 'jovem',
-    nome: 'Raposa Jovem',
+    nome: 'Lumi — Jovem',
     minEstrelas: 10,
     maxEstrelas: 25,
     imagem: 'midia/raposa/raposa2.png',
-    mensagem: 'Sua raposa está crescendo forte e curiosa! Continue praticando para ver o próximo estágio. '
+    mensagem: 'A Lumi está crescendo forte e curiosa! Continue praticando para ver o próximo estágio. '
   },
   {
     id: 'aventureira',
-    nome: 'Raposa Aventureira',
+    nome: 'Lumi — Aventureira',
     minEstrelas: 25,
     maxEstrelas: 45,
     imagem: 'midia/raposa/raposa3.png',
-    mensagem: 'Que incrível! Sua raposa agora é uma grande aventureira explorando novos mundos! '
+    mensagem: 'Que incrível! A Lumi agora é uma grande aventureira explorando novos mundos! '
   },
   {
     id: 'mestre',
-    nome: 'Raposa Mestre',
+    nome: 'Lumi — Mestre',
     minEstrelas: 45,
     maxEstrelas: Infinity,
     imagem: 'midia/raposa/raposa4.png',
-    mensagem: 'Parabéns! Sua raposa atingiu a sabedoria máxima e se tornou uma grande Mestre! '
+    mensagem: 'Parabéns! A Lumi atingiu a sabedoria máxima e se tornou uma grande Mestre! '
   }
 ];
 

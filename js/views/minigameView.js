@@ -233,10 +233,17 @@ function mostrarResultado(estrelas, tempoMin, acertosTotal) {
 function finalizarMinigames() {
   const tempoMin = Math.max(1, Math.round((Date.now() - (estado.iniciouEm || Date.now())) / 60000));
   estado.tempoTotal += tempoMin;
-  estado.minigamesJogados += estado.minigamesLista.length;
 
-  const acertosTotal = (estado.acertos || 0) + (estado.mgAcertos || 0);
   const totalJogos = estado.minigamesLista.length || 5;
+  estado.minigamesJogados += totalJogos;
+
+  const acertosSessao = Math.min(totalJogos, Math.max(0, Number(estado.mgAcertos) || 0));
+  const errosSessao = Math.max(0, totalJogos - acertosSessao);
+
+  estado.acertosMG = (Number(estado.acertosMG) || 0) + acertosSessao;
+  estado.errosMG = (Number(estado.errosMG) || 0) + errosSessao;
+
+  const acertosTotal = acertosSessao;
   const estrelas = calcularEstrelasPorAcertos(acertosTotal, totalJogos);
 
   registrarEstrelasHistoria(estrelas);
@@ -253,12 +260,12 @@ function finalizarMinigames() {
 }
 
 function embaralhar(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
+    [copy[i], copy[j]] = [copy[j], copy[i]];
   }
-  return a;
+  return copy;
 }
 
 function prepararMinigamesPreset(h) {
@@ -359,11 +366,33 @@ function montarDadosCompletarMG(fase, h, spec) {
       .replace(/<[^>]+>/g, '')
       .replace(/\s+/g, ' ')
       .trim();
-    const frases = textoLimpo.split(/[.!?]/).map((s) => s.trim()).filter(Boolean);
+
     const re = new RegExp(`\\b${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-    const fraseTxt = frases.find((s) => re.test(s)) || frases.find((s) => s.length > 12) || textoLimpo;
+
+    // 1. Divide em frases completas por . ! ? (preferencial)
+    const frases = textoLimpo.split(/[.!?]+/).map((s) => s.trim()).filter((s) => s.length > 5);
+
+    // 2. Procura frase completa com a palavra-chave e tamanho adequado
+    let fraseTxt = frases.find((s) => re.test(s) && s.length >= 10 && s.length <= 120);
+
+    // 3. Fallback: divide por vírgula/ponto-e-vírgula para cláusulas menores
+    if (!fraseTxt) {
+      const clausulas = textoLimpo.split(/[,;]+/).map((s) => s.trim()).filter((s) => s.length > 5);
+      fraseTxt = clausulas.find((s) => re.test(s) && s.length >= 8 && s.length <= 80);
+    }
+
+    // 4. Fallback: qualquer frase completa de tamanho razoável (sem precisar ter a palavra-chave)
+    if (!fraseTxt) {
+      fraseTxt = frases.find((s) => s.length >= 10 && s.length <= 100);
+    }
+
+    // 5. Último recurso: primeira frase disponível (jamais o texto inteiro cortado no meio)
+    if (!fraseTxt) {
+      fraseTxt = frases[0] || textoLimpo.slice(0, 80).replace(/\s+\S+$/, '');
+    }
+
     if (re.test(fraseTxt)) frase = fraseTxt.replace(re, '___');
-    else frase = (fraseTxt.length > 80 ? fraseTxt.slice(0, 80) + '…' : fraseTxt) + ' ___';
+    else frase = fraseTxt + ' ___';
   }
 
   if (frase && resposta && !/_{2,}|___/.test(frase)) {
@@ -1090,14 +1119,47 @@ function renderMontaFrase(fase, corpo, spec) {
     return;
   }
 
-  const textoLimpo = extrairTextoCurto(fase.texto);
-  const todasFrases = textoLimpo.split(/[.!?]/).map(f => f.trim()).filter(f => {
-    const p = f.split(' ').filter(Boolean);
-    return p.length >= 3 && p.length <= 9;
-  });
-  const frase = todasFrases[0] || textoLimpo.split(' ').slice(0, 7).join(' ');
-  const palavrasCorretas = frase.split(' ').filter(Boolean);
+  // ── Extrai frase COMPLETA (terminada em . ! ?) do texto da fase/história ──
+  const textoFonte = String(fase?.texto || '')
+    .replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+
+  // Captura frases completas com pontuação final incluída
+  const extrairFrasesCompletas = (texto) =>
+    (texto.match(/[^.!?]+[.!?]+/g) || [])
+      .map(f => f.trim())
+      .filter(f => {
+        const palavras = f.split(/\s+/).filter(Boolean);
+        return palavras.length >= 3 && palavras.length <= 10;
+      });
+
+  let frasesValidas = extrairFrasesCompletas(textoFonte);
+
+  // Fallback: usa texto completo da história se a fase não tiver frases adequadas
+  if (frasesValidas.length === 0) {
+    const textoHistoria = obterTextoBaseHistoria(h)
+      .replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+    frasesValidas = extrairFrasesCompletas(textoHistoria);
+  }
+
+  // Escolhe uma frase aleatória entre as válidas
+  const fraseSelecionada = frasesValidas.length > 0
+    ? frasesValidas[Math.floor(Math.random() * frasesValidas.length)]
+    : null;
+
+  // Remove pontuação final para não aparecer como palavra separada
+  const frase = fraseSelecionada
+    ? fraseSelecionada.replace(/[.!?]+$/, '').trim()
+    : null;
+
+  if (!frase) {
+    // Sem nenhuma frase válida — usa VF como fallback seguro
+    renderVerdadeiroFalso(fase, h, corpo, null);
+    return;
+  }
+
+  const palavrasCorretas = frase.split(/\s+/).filter(Boolean);
   const embaralhadas = embaralhar([...palavrasCorretas]);
+
 
   let colocadosIdx = [];
 
@@ -1187,17 +1249,106 @@ function renderVerdadeiroFalso(fase, h, corpo, spec) {
     const afirmacao = String(spec.afirmacao || spec.pergunta || '').trim();
     item = { afirmacao, correta: true };
   } else {
-    const kw = (h.palavrasChave || ['personagem'])[0];
-    const textoFase = extrairTextoCurto(fase.texto);
+    // ── Extrai conteúdo real da história ─────────────────────────────────────
+    const textoHistoria = obterTextoBaseHistoria(h)
+      .replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
 
-    const pares = [
-      { afirmacao: textoFase.length > 10 ? textoFase + '.' : `A história fala sobre "${kw}".`, correta: true },
-      { afirmacao: `A história se passa em outro planeta.`, correta: false },
-      { afirmacao: `A palavra ou elemento "${kw}" faz parte da história.`, correta: true },
-      { afirmacao: `A história não tem personagens.`, correta: false }
-    ];
-    item = pares[Math.floor(Math.random() * pares.length)];
+    const textoFase = fase ? extrairTextoCurto(String(fase.texto || '')) : '';
+
+    // ── Palavras-chave: validadas + ordenadas por frequência no texto ─────────
+    const STOPWORDS = new Set([
+      'para', 'como', 'mais', 'pela', 'pelo', 'esse', 'essa', 'isso', 'uma',
+      'uns', 'umas', 'são', 'está', 'este', 'esta', 'aqui', 'onde', 'quando',
+      'então', 'muito', 'também', 'assim', 'fazer', 'pode', 'com', 'que',
+      'não', 'mas', 'por', 'foi', 'ser', 'tem', 'seu', 'sua', 'nos', 'nas',
+      'dos', 'das', 'ele', 'ela', 'tinha', 'dele', 'dela', 'numa', 'num',
+      'após', 'logo', 'cada', 'todo', 'toda', 'entre', 'sobre', 'seus', 'suas'
+    ]);
+
+    // Conta frequência das palavras no texto para selecionar as mais relevantes
+    const freq = {};
+    textoHistoria.split(/\s+/)
+      .map(p => p.replace(/[^a-zA-ZÀ-ú]/g, '').trim().toLowerCase())
+      .filter(p => p.length >= 4 && !STOPWORDS.has(p))
+      .forEach(p => { freq[p] = (freq[p] || 0) + 1; });
+
+    const palavrasPorFreq = Object.entries(freq)
+      .sort((a, b) => b[1] - a[1])
+      .map(([p]) => p);
+
+    // Combina palavrasChave do modelo + palavras mais frequentes do texto
+    const palavrasValidas = (h.palavrasChave || [])
+      .map(p => String(p || '').trim().toLowerCase())
+      .filter(p => p.length >= 2 && p !== 'undefined' && p !== 'null');
+
+    const todasPalavras = [...new Set([...palavrasValidas, ...palavrasPorFreq])].slice(0, 8);
+
+    const kw  = todasPalavras[0] || 'história';
+    const kw2 = todasPalavras[1] || kw;
+    const kw3 = todasPalavras[2] || kw2;
+
+    // ── Frases reais do texto para afirmações ──────────────────────────────────
+    const frasesTexto = textoHistoria
+      .split(/[.!?]+/)
+      .map(s => s.trim())
+      .filter(s => s.length >= 20 && s.length <= 115);
+
+    const fraseReal = textoFase.length >= 15
+      ? textoFase
+      : (frasesTexto[Math.floor(Math.random() * frasesTexto.length)] || textoHistoria.slice(0, 100).trim());
+
+    const outraFrase = frasesTexto.find(f => f !== fraseReal) || fraseReal;
+
+    // Título e gênero
+    const titulo = String(h.titulo || '').trim();
+
+    // ── Distratores contextuais — claramente errados ───────────────────────────
+    const lugaresErrados  = ['em outro planeta', 'no fundo do mar', 'no espaço sideral', 'no polo norte', 'numa nave espacial'];
+    const personErrados   = ['um robô gigante', 'um extraterrestre', 'um super-herói voador', 'um vampiro'];
+    const lugarDistrator  = lugaresErrados [Math.floor(Math.random() * lugaresErrados.length)];
+    const personDistrator = personErrados  [Math.floor(Math.random() * personErrados.length)];
+
+    // ── Pool variado de perguntas ──────────────────────────────────────────────
+    const pool = [
+      // ─ Verdadeiras: baseadas em conteúdo real ─────────────────────────────
+      fraseReal.length >= 15
+        ? { afirmacao: `"${fraseReal.length > 105 ? fraseReal.slice(0, 102) + '…' : fraseReal}" é um trecho da história.`, correta: true }
+        : null,
+      outraFrase.length >= 15 && outraFrase !== fraseReal
+        ? { afirmacao: `"${outraFrase.length > 105 ? outraFrase.slice(0, 102) + '…' : outraFrase}" aparece no texto.`, correta: true }
+        : null,
+      { afirmacao: `A palavra "${kw}" aparece no texto da história.`,                     correta: true  },
+      kw2 !== kw
+        ? { afirmacao: `Tanto "${kw}" quanto "${kw2}" fazem parte da história.`,          correta: true  }
+        : null,
+      kw3 !== kw2
+        ? { afirmacao: `O texto menciona "${kw}", "${kw2}" e "${kw3}".`,                  correta: true  }
+        : null,
+      titulo
+        ? { afirmacao: `Esta história se chama "${titulo}".`,                             correta: true  }
+        : null,
+
+      // ─ Falsas: distratores contextuais e negações ─────────────────────────
+      { afirmacao: `A história se passa ${lugarDistrator}.`,                              correta: false },
+      { afirmacao: `O personagem principal da história é ${personDistrator}.`,            correta: false },
+      { afirmacao: `"${kw}" não aparece em nenhum momento da história.`,                  correta: false },
+      kw2 !== kw
+        ? { afirmacao: `A palavra "${kw2}" nunca é mencionada no texto.`,                 correta: false }
+        : null,
+      { afirmacao: `A história não apresenta nenhum personagem ou elemento principal.`,   correta: false },
+      { afirmacao: `A história foi escrita em outro idioma e traduzida.`,                 correta: false },
+    ].filter(p =>
+      p &&
+      p.afirmacao &&
+      !p.afirmacao.includes('undefined') &&
+      !p.afirmacao.includes('null') &&
+      p.afirmacao.trim().length > 10
+    );
+
+    item = pool[Math.floor(Math.random() * pool.length)]
+      || { afirmacao: `A palavra "${kw}" aparece na história.`, correta: true };
   }
+
 
   const wrap = document.createElement('div');
   wrap.innerHTML = `
@@ -2195,13 +2346,99 @@ function renderOrdenarPassos(h, corpo, spec) {
   if (spec && Array.isArray(spec.passos) && spec.passos.length >= 3) {
     passos = spec.passos.map((txt, i) => ({ id: i, texto: String(txt) }));
   } else {
-    const fasesUsadas = Array.isArray(h?.fases) && h.fases.length > 5 ? h.fases.slice(0, 5) : (Array.isArray(h?.fases) ? h.fases : []);
-    passos = fasesUsadas.map((f, i) => ({
-      id: i,
-      texto: extrairFraseCompleta(f, i)
-    }));
+    // ── Tenta extrair de h.fases ──────────────────────────────────────────
+    const fasesUsadas = Array.isArray(h?.fases) && h.fases.length > 0
+      ? (h.fases.length > 5 ? h.fases.slice(0, 5) : h.fases)
+      : [];
+
+    const passosDeFases = fasesUsadas
+      .map((f, i) => {
+        const txt = String(f.texto || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+        if (!txt) return null;
+        const frases = txt.match(/[^.!?]+[.!?]+/g) || [];
+        const ideal = frases.find(f => f.trim().length >= 20 && f.trim().length <= 150);
+        const maior = frases.slice().sort((a, b) => b.length - a.length)[0];
+        const resultado = (ideal || maior || txt).trim();
+        return resultado.length >= 10 ? { id: i, texto: resultado } : null;
+      })
+      .filter(Boolean);
+
+    if (passosDeFases.length >= 3) {
+      passos = passosDeFases;
+    } else {
+      // ── Fallback: extrai bloco CONTÍGUO de frases do texto completo ────────
+      const textoBase = obterTextoBaseHistoria(h)
+        .replace(/<[^>]+>/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      // Divide por . ! ? preservando a ordem original — frases com tamanho adequado
+      const todasFrases = (textoBase.match(/[^.!?]+[.!?]+/g) || [])
+        .map(s => s.trim())
+        .filter(s => s.length >= 15 && s.length <= 150);
+
+      let selecionadas = [];
+
+      const QTD_PASSOS = 4; // quantidade ideal de passos sequenciais
+
+      if (todasFrases.length >= 3) {
+        // Tenta pegar até QTD_PASSOS frases consecutivas
+        const qtd = Math.min(QTD_PASSOS, todasFrases.length);
+
+        // Escolhe ponto de início aleatório, garantindo qtd frases à frente
+        const maxInicio = todasFrases.length - qtd;
+        const inicio = maxInicio > 0
+          ? Math.floor(Math.random() * (maxInicio + 1))
+          : 0;
+
+        // Pega o bloco contíguo — juntas formam um trecho coeso
+        selecionadas = todasFrases
+          .slice(inicio, inicio + qtd)
+          .map((txt, pos) => ({ id: pos, texto: txt }));
+      }
+
+      // Fallback: divide por vírgula e pega bloco contíguo
+      if (selecionadas.length < 3) {
+        const clausulas = textoBase.split(/[,;]+/)
+          .map(s => s.trim())
+          .filter(s => s.length >= 15 && s.length <= 120);
+        const qtd = Math.min(QTD_PASSOS, clausulas.length);
+        const maxInicio = clausulas.length - qtd;
+        const inicio = maxInicio > 0 ? Math.floor(Math.random() * (maxInicio + 1)) : 0;
+        selecionadas = clausulas
+          .slice(inicio, inicio + qtd)
+          .map((txt, pos) => ({ id: pos, texto: txt }));
+      }
+
+      // Mínimo absoluto: preenche com marcadores genéricos se ainda faltar
+      if (selecionadas.length < 3) {
+        const qtdFaltando = 3 - selecionadas.length;
+        for (let i = 0; i < qtdFaltando; i++) {
+          selecionadas.push({ id: selecionadas.length, texto: `Evento ${selecionadas.length + 1} da história` });
+        }
+      }
+
+      passos = selecionadas;
+    }
   }
-  let ordem = embaralhar([...passos.map((_, i) => i)]);
+  // Embaralha garantindo que o resultado NUNCA seja igual à ordem correta
+  const embaralharGarantido = (arr) => {
+    if (arr.length <= 1) return [...arr];
+    let resultado;
+    let igual = true;
+    for (let t = 0; t < 20 && igual; t++) {
+      resultado = embaralhar([...arr]);
+      igual = resultado.every((v, i) => v === arr[i]);
+    }
+    // Se mesmo assim saiu igual (improvável), força rotação de 1 posição
+    if (igual) {
+      resultado = [...arr.slice(1), arr[0]];
+    }
+    return resultado;
+  };
+
+  const ordemCorreta = passos.map((_, i) => i);
+  let ordem = embaralharGarantido(ordemCorreta);
 
   const wrap = document.createElement('div');
   wrap.innerHTML = `
@@ -2221,15 +2458,15 @@ function renderOrdenarPassos(h, corpo, spec) {
       const ehCorreto = (stepId === i);
       const posicaoCorreta = stepId + 1;
       const classStatus = finalizado
-        ? (isDesistir || ehCorreto ? 'correta' : 'errada')
+        ? (ehCorreto ? 'correta' : 'errada')
         : '';
 
       let gabaritoHtml = '';
       if (finalizado) {
-        if (isDesistir || ehCorreto) {
+        if (ehCorreto) {
           gabaritoHtml = `<span class="op-gabarito ok">✓ Posição correta!</span>`;
         } else {
-          gabaritoHtml = `<span class="op-gabarito erro">➔ Posição correta: nº ${posicaoCorreta}</span>`;
+          gabaritoHtml = `<span class="op-gabarito erro">➔ Posição correta na história: nº ${posicaoCorreta}</span>`;
         }
       }
 
@@ -2267,17 +2504,13 @@ function renderOrdenarPassos(h, corpo, spec) {
   renderLista();
 
   const finalizarOP = (isDesistir = false) => {
-    const correta = passos.map((_, i) => i);
     let corretosCount = 0;
     ordem.forEach((stepId, i) => {
       if (stepId === i) corretosCount++;
     });
     const ok = isDesistir ? false : ((corretosCount / passos.length) > 0.5);
 
-    if (isDesistir) {
-      ordem = [...correta];
-    }
-
+    // Não reseta a ordem — mantém a do usuário para mostrar o gabarito real
     renderLista(true, isDesistir);
 
     const btnConf = document.getElementById('btnConfOP');

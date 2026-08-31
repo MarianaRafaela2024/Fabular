@@ -50,14 +50,14 @@ function resetarTamanhoFonte() {
 function aplicarModoNoturno() {
   document.documentElement.classList.toggle('alto-contraste', altoContraste);
   if (altoContraste) {
-    document.documentElement.style.backgroundColor = '#0D1117';
+    document.documentElement.style.backgroundColor = '#140A24';
   } else {
     document.documentElement.style.backgroundColor = '';
   }
   if (document.body) {
     document.body.classList.toggle('alto-contraste', altoContraste);
     if (altoContraste) {
-      document.body.style.backgroundColor = '#0D1117';
+      document.body.style.backgroundColor = '#140A24';
     } else {
       document.body.style.backgroundColor = '';
     }
@@ -88,16 +88,16 @@ function escurecerParaTransicao() {
   try {
     if (localStorage.getItem(CHAVE_MODO_NOTURNO) === '1') {
       document.documentElement.classList.add('alto-contraste');
-      document.documentElement.style.backgroundColor = '#0D1117';
+      document.documentElement.style.backgroundColor = '#140A24';
       if (document.body) {
         document.body.classList.add('alto-contraste');
-        document.body.style.backgroundColor = '#0D1117';
+        document.body.style.backgroundColor = '#140A24';
       }
       let overlay = document.getElementById('page-transition-overlay');
       if (!overlay) {
         overlay = document.createElement('div');
         overlay.id = 'page-transition-overlay';
-        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background-color:#0D1117;z-index:999999;pointer-events:none;';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background-color:#140A24;z-index:999999;pointer-events:none;';
         (document.body || document.documentElement).appendChild(overlay);
       } else {
         overlay.style.display = 'block';
