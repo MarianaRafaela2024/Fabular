@@ -147,8 +147,6 @@ function carregarEstado() {
       estado.perfil = normalizarPerfilCrianca(dados.perfil);
       precisaSalvarFaixa = estado.perfil.faixa !== faixaAnterior;
     }
-
-    aplicarDadosProgresso(dadosCrianca);
   }
 
   try {
@@ -188,27 +186,29 @@ function trocarPerfilCriancaEstado(perfilNovo) {
     salvarEstado();
   }
 
-  resetarProgressoEmMemoria();
+  limparProgressoMemoria();
 
   const perfilNorm = typeof normalizarPerfilCrianca === 'function' ? normalizarPerfilCrianca(perfilNovo) : perfilNovo;
   const childId = perfilNorm?.id || perfilNorm?.Id;
 
   estado.perfil = perfilNorm;
+  estado.progressoCriancaId = childId ? Number(childId) : null;
 
   if (childId) {
-    const chaveCrianca = obterChaveEstadoCrianca(childId);
-    const rawCrianca = localStorage.getItem(chaveCrianca);
-    if (rawCrianca) {
-      try {
-        const dadosCrianca = JSON.parse(rawCrianca);
-        if (dadosCrianca) {
-          aplicarDadosProgresso(dadosCrianca);
+    try {
+      const rawProg = localStorage.getItem(chaveProgressoLocal(childId));
+      if (rawProg) {
+        const dedicado = JSON.parse(rawProg);
+        const dono = Number(dedicado?.progressoCriancaId);
+        if (dedicado && (Number.isNaN(dono) || dono === Number(childId))) {
+          aplicarSnapshotProgresso(dedicado);
         }
-      } catch (_) { }
-    }
+      }
+    } catch (_) { }
   }
 
   estado.perfil = perfilNorm;
+  if (typeof recalcularTotalEstrelas === 'function') recalcularTotalEstrelas();
   salvarEstado();
 }
 

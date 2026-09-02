@@ -540,13 +540,21 @@
         }
       }
 
-    const estadoFinal = {
-      perfil: perfilNorm,
-      vidasPerdidasPorCrianca: vidasPerdidasPorCrianca,
-      progressoCriancaId: perfilNorm.id ? Number(perfilNorm.id) : null
-    };
+      let estadoExistente = {};
+      try {
+        const raw = localStorage.getItem(CHAVE_ESTADO);
+        if (raw) estadoExistente = JSON.parse(raw);
+      } catch (_) { }
 
-    window.location.href = "index.html";
+      const estadoFinal = {
+        perfil: perfilNorm,
+        vidasPerdidasPorCrianca: estadoExistente.vidasPerdidasPorCrianca || estadoCrianca.vidasPerdidasPorCrianca || {},
+        progressoCriancaId: childId ? Number(childId) : null
+      };
+      salvarJSON(CHAVE_ESTADO, estadoFinal);
+    }
+
+    window.location.href = 'index.html';
   }
 
   /* ─────────────────────────────────────────
