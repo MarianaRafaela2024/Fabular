@@ -46,6 +46,7 @@ async function executarGeracaoGroqESave({ promptEl, btn, errEl, genero, emptyMsg
   if (errEl) errEl.classList.add('oculto');
   btn.disabled = true;
 
+  
   try {
     const faixaSelecionada = parseInt(estado?.perfil?.faixa, 10) || 1;
     const generoSelecionado = genero || obterGeneroSelecionadoBotIa() || 'narrativo';

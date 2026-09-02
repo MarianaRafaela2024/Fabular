@@ -45,6 +45,7 @@ function chaveCacheHistoriasIa(criancaId) {
   return id ? `mundoHistorias_historias_ia_cache_${id}` : CHAVE_HISTORIAS_CACHE_LEGADO;
 }
 
+
 function ehHistoriaIa(h) {
   if (!h) return false;
   const origem = String(h.origem || '').toLowerCase();
