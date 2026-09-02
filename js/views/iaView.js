@@ -46,7 +46,7 @@ async function executarGeracaoGroqESave({ promptEl, btn, errEl, genero, emptyMsg
   if (errEl) errEl.classList.add('oculto');
   btn.disabled = true;
 
-  
+
   try {
     const faixaSelecionada = parseInt(estado?.perfil?.faixa, 10) || 1;
     const generoSelecionado = genero || obterGeneroSelecionadoBotIa() || 'narrativo';
@@ -172,7 +172,7 @@ Responda SEMPRE em JSON válido, sem nenhum texto fora do JSON:
 "titulo": "O Leão Corajoso",
 "genero": "narrativo",
 "emoji": "leao",
-"cena": "floresta noite",
+"cena": "FLORESTA NOITE",
 "duracao": "5 min",
 "palavrasChave": ["leão", "floresta", "noite", "medo", "amizade"],
 "texto": "O <strong class=\"palavra-chave\">leão</strong> vivia na <strong class=\"palavra-chave\">floresta</strong>...",
