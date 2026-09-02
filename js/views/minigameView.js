@@ -1041,6 +1041,7 @@ function extrairTextoCurto(texto) {
 }
 
 function renderMontaFrase(fase, corpo, spec) {
+  const h = estado.historiaAtual;
   const dadosSpec = spec ? extrairDadosMontaFrase(spec) : null;
   if (dadosSpec && dadosSpec.palavrasPool.length >= 2 && dadosSpec.palavrasCorretas.length >= 2) {
     const embaralhadas = embaralhar(dadosSpec.palavrasPool.map(String));
@@ -1119,26 +1120,52 @@ function renderMontaFrase(fase, corpo, spec) {
     return;
   }
 
-  // ── Extrai frase COMPLETA (terminada em . ! ?) do texto da fase/história ──
-  const textoFonte = String(fase?.texto || '')
-    .replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+  // ── Extrai frase COMPLETA (terminada em . ! ? ou verso de poema via <br>) ──
+  // Substitui <br> por ponto para capturar versos de poemas
+  const normalizarTextoParaFrases = (t) =>
+    String(t || '')
+      .replace(/<br\s*\/?>/gi, '. ')
+      .replace(/<[^>]+>/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
 
-  // Captura frases completas com pontuação final incluída
-  const extrairFrasesCompletas = (texto) =>
+  const contarPalavras = (s) => s.split(/\s+/).filter(Boolean).length;
+
+  // Extrai segmentos por pontuação final; filtra pela faixa de palavras desejada
+  const extrairPorPontuacao = (texto, min, max) =>
     (texto.match(/[^.!?]+[.!?]+/g) || [])
       .map(f => f.trim())
-      .filter(f => {
-        const palavras = f.split(/\s+/).filter(Boolean);
-        return palavras.length >= 3 && palavras.length <= 10;
-      });
+      .filter(f => { const n = contarPalavras(f); return n >= min && n <= max; });
 
-  let frasesValidas = extrairFrasesCompletas(textoFonte);
+  // Tenta combinar dois segmentos curtos adjacentes separados por vírgula/travessão
+  // para formar frases com sentido e tamanho adequado (5–10 palavras)
+  const combinarSegmentos = (texto, min, max) => {
+    const segmentos = (texto.match(/[^.!?]+[.!?]+/g) || []).map(f => f.trim());
+    const resultado = [];
+    for (let i = 0; i < segmentos.length - 1; i++) {
+      const a = segmentos[i].replace(/[.!?]+$/, '').trim();
+      const b = segmentos[i + 1].replace(/[.!?]+$/, '').trim();
+      const juntos = `${a} ${b}`;
+      const n = contarPalavras(juntos);
+      if (n >= min && n <= max) resultado.push(juntos + '.');
+    }
+    return resultado;
+  };
 
-  // Fallback: usa texto completo da história se a fase não tiver frases adequadas
+  const textoFonte = normalizarTextoParaFrases(fase?.texto || '');
+  const textoHistoria = normalizarTextoParaFrases(obterTextoBaseHistoria(h));
+
+  // Cascata: 5–10 palavras → combina segmentos → 4–10 palavras → VF
+  let frasesValidas =
+    extrairPorPontuacao(textoFonte, 5, 10).concat(extrairPorPontuacao(textoHistoria, 5, 10));
+
   if (frasesValidas.length === 0) {
-    const textoHistoria = obterTextoBaseHistoria(h)
-      .replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
-    frasesValidas = extrairFrasesCompletas(textoHistoria);
+    frasesValidas = combinarSegmentos(textoHistoria, 5, 10);
+  }
+
+  if (frasesValidas.length === 0) {
+    // Aceita frases com 4+ palavras antes de desistir
+    frasesValidas = extrairPorPontuacao(textoFonte, 4, 10).concat(extrairPorPontuacao(textoHistoria, 4, 10));
   }
 
   // Escolhe uma frase aleatória entre as válidas
@@ -1283,7 +1310,7 @@ function renderVerdadeiroFalso(fase, h, corpo, spec) {
 
     const todasPalavras = [...new Set([...palavrasValidas, ...palavrasPorFreq])].slice(0, 8);
 
-    const kw  = todasPalavras[0] || 'história';
+    const kw = todasPalavras[0] || 'história';
     const kw2 = todasPalavras[1] || kw;
     const kw3 = todasPalavras[2] || kw2;
 
@@ -1303,10 +1330,10 @@ function renderVerdadeiroFalso(fase, h, corpo, spec) {
     const titulo = String(h.titulo || '').trim();
 
     // ── Distratores contextuais — claramente errados ───────────────────────────
-    const lugaresErrados  = ['em outro planeta', 'no fundo do mar', 'no espaço sideral', 'no polo norte', 'numa nave espacial'];
-    const personErrados   = ['um robô gigante', 'um extraterrestre', 'um super-herói voador', 'um vampiro'];
-    const lugarDistrator  = lugaresErrados [Math.floor(Math.random() * lugaresErrados.length)];
-    const personDistrator = personErrados  [Math.floor(Math.random() * personErrados.length)];
+    const lugaresErrados = ['em outro planeta', 'no fundo do mar', 'no espaço sideral', 'no polo norte', 'numa nave espacial'];
+    const personErrados = ['um robô gigante', 'um extraterrestre', 'um super-herói voador', 'um vampiro'];
+    const lugarDistrator = lugaresErrados[Math.floor(Math.random() * lugaresErrados.length)];
+    const personDistrator = personErrados[Math.floor(Math.random() * personErrados.length)];
 
     // ── Pool variado de perguntas ──────────────────────────────────────────────
     const pool = [
@@ -1317,26 +1344,26 @@ function renderVerdadeiroFalso(fase, h, corpo, spec) {
       outraFrase.length >= 15 && outraFrase !== fraseReal
         ? { afirmacao: `"${outraFrase.length > 105 ? outraFrase.slice(0, 102) + '…' : outraFrase}" aparece no texto.`, correta: true }
         : null,
-      { afirmacao: `A palavra "${kw}" aparece no texto da história.`,                     correta: true  },
+      { afirmacao: `A palavra "${kw}" aparece no texto da história.`, correta: true },
       kw2 !== kw
-        ? { afirmacao: `Tanto "${kw}" quanto "${kw2}" fazem parte da história.`,          correta: true  }
+        ? { afirmacao: `Tanto "${kw}" quanto "${kw2}" fazem parte da história.`, correta: true }
         : null,
       kw3 !== kw2
-        ? { afirmacao: `O texto menciona "${kw}", "${kw2}" e "${kw3}".`,                  correta: true  }
+        ? { afirmacao: `O texto menciona "${kw}", "${kw2}" e "${kw3}".`, correta: true }
         : null,
       titulo
-        ? { afirmacao: `Esta história se chama "${titulo}".`,                             correta: true  }
+        ? { afirmacao: `Esta história se chama "${titulo}".`, correta: true }
         : null,
 
       // ─ Falsas: distratores contextuais e negações ─────────────────────────
-      { afirmacao: `A história se passa ${lugarDistrator}.`,                              correta: false },
-      { afirmacao: `O personagem principal da história é ${personDistrator}.`,            correta: false },
-      { afirmacao: `"${kw}" não aparece em nenhum momento da história.`,                  correta: false },
+      { afirmacao: `A história se passa ${lugarDistrator}.`, correta: false },
+      { afirmacao: `O personagem principal da história é ${personDistrator}.`, correta: false },
+      { afirmacao: `"${kw}" não aparece em nenhum momento da história.`, correta: false },
       kw2 !== kw
-        ? { afirmacao: `A palavra "${kw2}" nunca é mencionada no texto.`,                 correta: false }
+        ? { afirmacao: `A palavra "${kw2}" nunca é mencionada no texto.`, correta: false }
         : null,
-      { afirmacao: `A história não apresenta nenhum personagem ou elemento principal.`,   correta: false },
-      { afirmacao: `A história foi escrita em outro idioma e traduzida.`,                 correta: false },
+      { afirmacao: `A história não apresenta nenhum personagem ou elemento principal.`, correta: false },
+      { afirmacao: `A história foi escrita em outro idioma e traduzida.`, correta: false },
     ].filter(p =>
       p &&
       p.afirmacao &&
@@ -1750,7 +1777,7 @@ function renderLigarPontos(fase, h, corpo, spec) {
     livro: 'Objeto mágico cheio de páginas e histórias', livros: 'Páginas cheias de sabedoria e imaginação',
     brinquedo: 'Objeto feito para brincar e se divertir', bola: 'Objeto redondo usado em muitos jogos',
     lapis: 'Utensílio para desenhar e escrever', espelho: 'Superfície limpa que reflete a imagem',
-    chave: 'Objeto metálico que abre portas e baús', bau: 'Caixa de madeira para guardar segredos',
+    chave: 'Objeto metálico que abre portas e baús', bau: 'Caixa de madeira para guardar segredos', caixa: 'Objeto que se usa para guardar itens',
     barco: 'Embarcação para navegar nas águas', navio: 'Grande embarcação que cruza oceanos',
     aviao: 'Veículo potente que voa nos céus', ponte: 'Estrutura que conecta dois lados',
     cidade: 'Local grande com casas, ruas e prédios', aldeia: 'Pequeno povoado tranquilo de casas',

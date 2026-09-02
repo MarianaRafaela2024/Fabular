@@ -773,7 +773,7 @@ const EMOJI_POR_PALAVRA = {
   leao: '🦁', leoa: '🦁', leoes: '🦁',
   zebra: '🦓', elefante: '🐘', macaco: '🐒', macaca: '🐒',
   gato: '🐱', gata: '🐱', cachorro: '🐶', cachorra: '🐶', cao: '🐶',
-  coelho: '🐰', passaro: '🐦', borboleta: '🦋', peixe: '🐟', baleia: '🐋',
+  coelho: '🐰', passaro: '🐦', passarinho: '', borboleta: '🦋', peixe: '🐟', baleia: '🐋',
   dragao: '🐉', urso: '🐻', ursoa: '🐻', vaca: '🐄', porco: '🐷',
   cavalo: '🐴', ovelha: '🐑', galinha: '🐔', pato: '🦆', sapo: '🐸',
   tartaruga: '🐢', cobra: '🐍', lagarto: '🦎', crocodilo: '🐊',
@@ -826,13 +826,13 @@ const EMOJI_POR_PALAVRA = {
   oculos: '👓', relogio: '⌚', presente: '🎁',
   musica: '🎵', instrumento: '🎸', piano: '🎹', violao: '🎸',
   teatro: '🎭', cinema: '🎬', camera: '📷', televisao: '📺',
-  computador: '💻', tablet: '📱', robo: '🤖',
+  computador: '💻', tablet: '📱', robo: '🤖', pingo: '💧',
   magia: '✨', fada: '🧚', bruxa: '🧙', princesa: '👸', principe: '🤴',
   castelo: '🏰', rei: '👑', rainha: '👑', coroa: '👑',
-  cavaleiro: '🛡️', espada: '⚔️', escudo: '🛡️',
-  pirata: '🏴‍☠️', ilha: '🏝️', tesouro: '💰',
-  natal: '🎄', pascoa: '🐣', aniversario: '🎂',
-  primavera: '🌷', verao: '☀️', outono: '🍂', inverno: '❄️'
+  cavaleiro: '🛡️', espada: '⚔️', escudo: '🛡️', asas: '🪽', palavras: '✍️', papel: '📄',
+  pirata: '🏴‍☠️', ilha: '🏝️', tesouro: '💰', buraco: '', tinta: '🎨', caixa: '📦', palitos: '🥢',
+  natal: '🎄', pascoa: '🐣', aniversario: '🎂', colecionar: '🗃️',
+  primavera: '🌷', verao: '☀️', outono: '🍂', inverno: '❄️', vermelhas: '🔴', vovo: '👵', banco: '🪑', tranquilo: '🤙', gostoso: '😋'
 };
 
 const EMOJI_CHAVES_ORDENADAS = Object.keys(EMOJI_POR_PALAVRA)
