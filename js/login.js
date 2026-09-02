@@ -213,7 +213,11 @@
         ? normalizarPerfilCrianca(perfilFinal)
         : perfilFinal;
 
-      const estadoFinal = Object.assign({}, estadoExistente, { perfil: perfilNorm });
+      const estadoFinal = {
+        perfil: perfilNorm,
+        vidasPerdidasPorCrianca: estadoExistente.vidasPerdidasPorCrianca || {},
+        progressoCriancaId: childId ? Number(childId) : null
+      };
       salvarJSON(CHAVE_ESTADO, estadoFinal);
 
       const card = document.getElementById('crianca-card');
@@ -536,11 +540,11 @@
         }
       }
 
-      salvarJSON(CHAVE_ESTADO, estadoCrianca);
-      if (childId) {
-        salvarJSON(`mundoHistorias_estado_crianca_${childId}`, estadoCrianca);
-      }
-    }
+    const estadoFinal = {
+      perfil: perfilNorm,
+      vidasPerdidasPorCrianca: vidasPerdidasPorCrianca,
+      progressoCriancaId: perfilNorm.id ? Number(perfilNorm.id) : null
+    };
 
     window.location.href = "index.html";
   }

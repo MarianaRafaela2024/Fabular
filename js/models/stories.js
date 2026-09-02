@@ -25,25 +25,83 @@ function normalizarIdHistoria(id) {
 }
 
 const API_BASE = (window.API_BASE_URL || 'http://localhost:5275').replace(/\/$/, '');
-const CHAVE_HISTORIAS_CACHE = 'mundoHistorias_historias_ia_cache';
+const CHAVE_HISTORIAS_CACHE_LEGADO = 'mundoHistorias_historias_ia_cache';
 
-// ── Cache local de histórias geradas pela IA ─────────────────
+function obterIdCriancaHistorias() {
+  if (typeof obterVinculoCrianca === 'function') {
+    const v = obterVinculoCrianca();
+    if (v?.criancaId) return Number(v.criancaId);
+  }
+  if (typeof obterIdCriancaAtual === 'function') {
+    return obterIdCriancaAtual();
+  }
+  const id = estado?.perfil?.id || estado?.perfil?.Id;
+  const n = Number(id);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function chaveCacheHistoriasIa(criancaId) {
+  const id = criancaId || obterIdCriancaHistorias();
+  return id ? `mundoHistorias_historias_ia_cache_${id}` : CHAVE_HISTORIAS_CACHE_LEGADO;
+}
+
+function ehHistoriaIa(h) {
+  if (!h) return false;
+  const origem = String(h.origem || '').toLowerCase();
+  if (origem === 'ia') return true;
+  if (origem === 'manual') return false;
+  if (h.criancaId != null && h.criancaId !== '') return true;
+  return String(h.id || '').startsWith('local-');
+}
+
+function historiaVisivelParaCriancaAtual(h) {
+  if (!h) return false;
+  if (!ehHistoriaIa(h)) return true;
+  const atual = obterIdCriancaHistorias();
+  if (!atual) return false;
+  const dono = Number(h.criancaId);
+  return Number.isFinite(dono) && dono === Number(atual);
+}
+
+// ── Cache local de histórias geradas pela IA (por criança) ─────────────────
 function salvarHistoriaNoCache(historiaCompleta) {
   try {
+    if (!historiaCompleta) return;
+    const criancaId = obterIdCriancaHistorias();
+    if (ehHistoriaIa(historiaCompleta) && criancaId && (historiaCompleta.criancaId == null || historiaCompleta.criancaId === '')) {
+      historiaCompleta.criancaId = criancaId;
+      historiaCompleta.origem = 'ia';
+    }
+    if (!ehHistoriaIa(historiaCompleta) || !historiaVisivelParaCriancaAtual(historiaCompleta)) return;
     const cache = carregarCacheHistorias();
     const idx = cache.findIndex(h => h.id === historiaCompleta.id);
     if (idx >= 0) cache[idx] = historiaCompleta;
     else cache.unshift(historiaCompleta);
-    localStorage.setItem(CHAVE_HISTORIAS_CACHE, JSON.stringify(cache.slice(0, 50)));
+    localStorage.setItem(chaveCacheHistoriasIa(criancaId), JSON.stringify(cache.slice(0, 50)));
   } catch (_) { }
 }
 
 function carregarCacheHistorias() {
+  const criancaId = obterIdCriancaHistorias();
   try {
-    const raw = localStorage.getItem(CHAVE_HISTORIAS_CACHE);
-    if (!raw) return [];
-    const lista = JSON.parse(raw);
-    return Array.isArray(lista) ? lista : [];
+    const raw = localStorage.getItem(chaveCacheHistoriasIa(criancaId));
+    let lista = [];
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) lista = parsed;
+    }
+
+    if (criancaId && lista.length === 0) {
+      const legado = localStorage.getItem(CHAVE_HISTORIAS_CACHE_LEGADO);
+      if (legado) {
+        const parsedLegado = JSON.parse(legado);
+        if (Array.isArray(parsedLegado)) {
+          lista = parsedLegado.filter((h) => Number(h?.criancaId) === Number(criancaId));
+        }
+      }
+    }
+
+    return lista.filter(historiaVisivelParaCriancaAtual);
   } catch (_) {
     return [];
   }
@@ -53,7 +111,7 @@ function mesclarHistoriasCache() {
   const cache = carregarCacheHistorias();
   if (!cache.length) return;
   cache.forEach(h => {
-    if (!h || !h.id) return;
+    if (!h || !h.id || !historiaVisivelParaCriancaAtual(h)) return;
     const existe = HISTORIAS.find(x => x.id === h.id);
     if (!existe) HISTORIAS.unshift(h);
   });
@@ -76,16 +134,19 @@ async function apiPost(path, body) {
 }
 
 function mapStorySummaryToLegacy(story) {
+  const criancaId = story.criancaId ?? story.CriancaId ?? null;
+  const origem = String(story.origem || story.Origem || '').toLowerCase()
+    || (criancaId ? 'ia' : 'manual');
   return {
     id: `api-${story.id}`,
     genero: String(story.genero || 'narrativo').toLowerCase(),
-    faixa: story.faixaEtaria || 1,
-    titulo: story.titulo || 'História',
-    emoji: story.emoji || '📖',
-    cena: story.cena || '🌟',
-    duracao: story.duracao || '5 min',
-    origem: story.origem || (story.criancaId ? 'ia' : 'manual'),
-    criancaId: story.criancaId || null,
+    faixa: story.faixaEtaria || story.FaixaEtaria || 1,
+    titulo: story.titulo || story.Titulo || 'História',
+    emoji: story.emoji || story.Emoji || '📖',
+    cena: story.cena || story.Cena || '🌟',
+    duracao: story.duracao || story.Duracao || '5 min',
+    origem,
+    criancaId: criancaId != null ? Number(criancaId) : null,
     fases: [],
     palavrasChave: []
   };
@@ -93,12 +154,16 @@ function mapStorySummaryToLegacy(story) {
 
 function garantirHistoriaNaBiblioteca(historia) {
   if (!historia || !historia.id) return;
+  if (typeof historiaVisivelParaCriancaAtual === 'function' && !historiaVisivelParaCriancaAtual(historia)) return;
   const idx = HISTORIAS.findIndex((h) => h.id === historia.id);
   if (idx >= 0) HISTORIAS[idx] = historia;
   else HISTORIAS.unshift(historia);
 }
 
 function preservarDetalheHistoriaNaBiblioteca(id, detalhe) {
+  if (detalhe && typeof historiaVisivelParaCriancaAtual === 'function' && !historiaVisivelParaCriancaAtual(detalhe)) {
+    return;
+  }
   const idx = HISTORIAS.findIndex((h) => h.id === id);
   if (idx < 0) {
     garantirHistoriaNaBiblioteca(detalhe);
@@ -119,27 +184,39 @@ function historiaApiTemTextoCompleto(h) {
 }
 
 async function carregarHistoriasDaApi() {
+  HISTORIAS.splice(0, HISTORIAS.length);
   mesclarHistoriasCache();
   try {
     const vinculo = obterVinculoCrianca();
-    const responsavelId = obterResponsavelId();
     const query = new URLSearchParams();
     if (vinculo?.criancaId) query.set('criancaId', String(vinculo.criancaId));
-    else if (responsavelId) query.set('responsavelId', String(responsavelId));
 
     const list = await apiGet(`/api/v1/stories?${query.toString()}`);
-    if (!Array.isArray(list) || list.length === 0) return;
-    const mapped = list.map(mapStorySummaryToLegacy);
-    const detalhadasApi = HISTORIAS.filter((h) => String(h.id).startsWith('api-') && historiaApiTemTextoCompleto(h));
+    if (!Array.isArray(list) || list.length === 0) {
+      const soDestaCrianca = HISTORIAS.filter(historiaVisivelParaCriancaAtual);
+      HISTORIAS.splice(0, HISTORIAS.length, ...soDestaCrianca);
+      return;
+    }
+    const mapped = list.map(mapStorySummaryToLegacy).filter(historiaVisivelParaCriancaAtual);
+    const idsApi = new Set(mapped.map((h) => h.id));
+    const detalhadasApi = HISTORIAS.filter((h) =>
+      historiaVisivelParaCriancaAtual(h)
+      && String(h.id).startsWith('api-')
+      && historiaApiTemTextoCompleto(h)
+      && idsApi.has(h.id)
+    );
     const idsDetalhadas = new Set(detalhadasApi.map((h) => h.id));
     const resumosNovos = mapped.filter((h) => !idsDetalhadas.has(h.id));
     HISTORIAS.splice(0, HISTORIAS.length, ...detalhadasApi, ...resumosNovos);
     mapped.forEach(h => {
       const noCache = carregarCacheHistorias().find(c => c.id === h.id);
-      if (noCache) salvarHistoriaNoCache({ ...noCache, ...h });
+      if (noCache && historiaVisivelParaCriancaAtual(noCache)) {
+        salvarHistoriaNoCache({ ...noCache, ...h, criancaId: h.criancaId, origem: h.origem });
+      }
     });
   } catch (_) {
-    // Falha silenciosa
+    const soDestaCrianca = HISTORIAS.filter(historiaVisivelParaCriancaAtual);
+    HISTORIAS.splice(0, HISTORIAS.length, ...soDestaCrianca);
   }
 }
 
@@ -154,6 +231,9 @@ async function carregarDetalheHistoriaDaApi(id) {
     ? mgRaw.map(normalizarMinigamePreset).filter(Boolean)
     : [];
   const texto = data.texto || data.Texto || '';
+  const origem = String(data.origem || data.Origem || '').toLowerCase();
+  const criancaIdApi = data.criancaId ?? data.CriancaId;
+  const naBiblioteca = HISTORIAS.find((h) => h && String(h.id) === `api-${data.id}`);
   return {
     id: `api-${data.id}`,
     genero: String(data.genero || 'narrativo').toLowerCase(),
@@ -166,7 +246,9 @@ async function carregarDetalheHistoriaDaApi(id) {
     texto: texto,
     fases: texto ? [{ texto, cena: data.cena || '🌟' }] : [],
     palavrasChave: Array.isArray(data.palavrasChave) ? data.palavrasChave : [],
-    minigamesPreset
+    minigamesPreset,
+    origem: origem || naBiblioteca?.origem,
+    criancaId: criancaIdApi != null ? Number(criancaIdApi) : (naBiblioteca?.criancaId ?? (origem === 'ia' ? vinculo?.criancaId : null))
   };
 }
 
@@ -514,6 +596,7 @@ function mapStoryDetailToLegacy(story, serverId) {
   const idLocal = `local-${btoa(encodeURIComponent((story?.titulo || '') + (story?.genero || ''))).replace(/[^a-z0-9]/gi, '').slice(0, 16)}-${Date.now()}`;
   const idApi = serverId != null ? `api-${serverId}` : idLocal;
 
+  const criancaId = obterIdCriancaHistorias();
   return {
     id: idApi,
     genero: story?.genero || 'narrativo',
@@ -523,6 +606,8 @@ function mapStoryDetailToLegacy(story, serverId) {
     cena: story?.cena || '🌟',
     duracao: story?.duracao || '6 min',
     texto: story?.texto || 'Era uma vez...',
+    origem: 'ia',
+    criancaId: criancaId,
     fases: [
       {
         texto: story?.texto || 'Era uma vez...',

@@ -12,10 +12,14 @@ async function iniciarHistoria(id, opcoes) {
 
   if (!historia && typeof carregarCacheHistorias === 'function') {
     const cache = carregarCacheHistorias();
-    historia = cache.find((c) => c && c.id === id);
+    historia = cache.find((c) => c && c.id === id && (typeof historiaVisivelParaCriancaAtual !== 'function' || historiaVisivelParaCriancaAtual(c)));
     if (historia && typeof garantirHistoriaNaBiblioteca === 'function') {
       garantirHistoriaNaBiblioteca(historia);
     }
+  }
+
+  if (historia && typeof historiaVisivelParaCriancaAtual === 'function' && !historiaVisivelParaCriancaAtual(historia)) {
+    historia = null;
   }
 
   if (String(id).startsWith('api-') && (!historia || !historiaApiTemTextoCompleto(historia))) {
@@ -150,17 +154,34 @@ function registrarEstrelasHistoria(estrelasNovas) {
     estado.historiasLidas = [];
   }
 
-  // Registra cada leitura como um novo item no histórico completo
-  estado.historiasLidas.push({
-    id: idStr,
-    titulo: historia.titulo || '',
-    emoji: historia.emoji || '📖',
-    genero: historia.genero || 'narrativo',
-    estrelas: novas,
-    data,
-    dataIso,
-    timestamp: Date.now()
+  const idNorm = typeof normalizarIdHistoria === 'function' ? String(normalizarIdHistoria(idStr)) : idStr.replace(/^api-/i, '');
+  const idx = estado.historiasLidas.findIndex((r) => {
+    if (!r || r.id == null) return false;
+    const rNorm = typeof normalizarIdHistoria === 'function' ? String(normalizarIdHistoria(r.id)) : String(r.id).replace(/^api-/i, '');
+    return rNorm === idNorm;
   });
+
+  if (idx >= 0) {
+    const atual = estado.historiasLidas[idx];
+    atual.estrelas = Math.max(Number(atual.estrelas) || 0, novas);
+    atual.data = data;
+    atual.dataIso = dataIso;
+    atual.timestamp = Date.now();
+    if (historia.titulo) atual.titulo = historia.titulo;
+    if (historia.emoji) atual.emoji = historia.emoji;
+    if (historia.genero) atual.genero = historia.genero;
+  } else {
+    estado.historiasLidas.push({
+      id: idNorm ? `api-${idNorm}` : idStr,
+      titulo: historia.titulo || '',
+      emoji: historia.emoji || '📖',
+      genero: historia.genero || 'narrativo',
+      estrelas: novas,
+      data,
+      dataIso,
+      timestamp: Date.now()
+    });
+  }
 
   // Atualiza registro de atividade diária para o calendário
   if (!Array.isArray(estado.atividadeDiaria)) {

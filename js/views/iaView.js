@@ -4,71 +4,40 @@
 
 'use strict';
 
+// Formulário legado (#ia-prompt). A geração é sempre Groq no cliente + POST /stories/save.
 async function gerarHistoriaIa() {
   const ta = document.getElementById('ia-prompt');
   const errEl = document.getElementById('ia-gerar-erro');
   const btn = document.getElementById('btn-gerar-historia');
-  if (!ta || !btn) return;
-  const prompt = ta.value.trim();
-  if (!prompt) {
-    if (errEl) {
-      errEl.textContent = 'Escreva uma ideia ou tema para a história.';
-      errEl.classList.remove('oculto');
-    }
-    return;
+  if (ta && btn) {
+    return executarGeracaoGroqESave({
+      promptEl: ta,
+      btn,
+      errEl,
+      genero: estado.perfil?.genero || 'narrativo',
+      emptyMsg: 'Escreva uma ideia ou tema para a história.'
+    });
   }
-  if (errEl) errEl.classList.add('oculto');
-  btn.disabled = true;
-  try {
-    const vinculo = obterVinculoCrianca();
-    if (!vinculo?.criancaId) {
-      if (errEl) {
-        errEl.textContent = 'Vincule o perfil da criança ao responsável para gerar histórias.';
-        errEl.classList.remove('oculto');
-      }
-      return;
-    }
-    const responsavelId = obterResponsavelId();
-    const body = {
-      faixaEtaria: estado.perfil.faixa || 1,
-      generoTextual: estado.perfil.genero || 'narrativo',
-      promptCrianca: prompt,
-      criancaId: vinculo.criancaId,
-      tema: null,
-      responsavelId: responsavelId || null
-    };
-    const gerada = await apiPost('/api/v1/stories/generate', body);
-    ta.value = '';
-    await carregarHistoriasDaApi();
-    renderizarBiblioteca();
-    if (gerada && gerada.id) {
-      await iniciarHistoria(`api-${gerada.id}`, { irLeitura: true });
-      mostrarToast('História criada! Boa leitura 📖');
-    } else {
-      mostrarToast('História criada! Escolha na lista abaixo ✨');
-    }
-  } catch (e) {
-    if (errEl) {
-      errEl.textContent =
-        (e && e.message) ||
-        'Não foi possível gerar. Confira se a API está rodando (localhost) e o banco configurado.';
-      errEl.classList.remove('oculto');
-    }
-  } finally {
-    btn.disabled = false;
-  }
+  return gerarHistoriaBotIa();
 }
 
 async function gerarHistoriaBotIa() {
-  const promptEl = document.getElementById('bot-ia-prompt');
-  const btn = document.getElementById('btn-bot-ia-gerar');
-  const errEl = document.getElementById('bot-ia-erro');
+  return executarGeracaoGroqESave({
+    promptEl: document.getElementById('bot-ia-prompt'),
+    btn: document.getElementById('btn-bot-ia-gerar'),
+    errEl: document.getElementById('bot-ia-erro'),
+    genero: obterGeneroSelecionadoBotIa(),
+    emptyMsg: 'Escreva uma ideia para a IA criar a história.'
+  });
+}
+
+async function executarGeracaoGroqESave({ promptEl, btn, errEl, genero, emptyMsg }) {
   if (!promptEl || !btn) return;
 
   const prompt = promptEl.value.trim();
   if (!prompt) {
     if (errEl) {
-      errEl.textContent = 'Escreva uma ideia para a IA criar a história.';
+      errEl.textContent = emptyMsg || 'Escreva uma ideia para a IA criar a história.';
       errEl.classList.remove('oculto');
     }
     return;
@@ -79,7 +48,7 @@ async function gerarHistoriaBotIa() {
 
   try {
     const faixaSelecionada = parseInt(estado?.perfil?.faixa, 10) || 1;
-    const generoSelecionado = obterGeneroSelecionadoBotIa();
+    const generoSelecionado = genero || obterGeneroSelecionadoBotIa() || 'narrativo';
     const idade = faixaParaIdade(faixaSelecionada);
     const groqKey = '';
 

@@ -17,6 +17,8 @@ public class StoriesService
         _generator = generator;
     }
 
+    // DEPRECATED (etapa 3): o cliente gera com Groq e persiste via SaveAsync.
+    [Obsolete("Geração ocorre no JS (Groq). Persistência: POST /api/v1/stories/save.")]
     public async Task<ApplicationResult<StoryDetailDto>> GenerateAsync(StoryGenerateRequest request)
     {
         if (!request.CriancaId.HasValue || request.CriancaId.Value <= 0)
@@ -64,7 +66,7 @@ public class StoriesService
         }
 
         var faixa = Math.Clamp(request.Story.FaixaEtaria, 1, 3);
-        var genero = string.IsNullOrWhiteSpace(request.Story.Genero) ? "narrativo" : request.Story.Genero.ToLowerInvariant();
+        var genero = GeneroCatalog.NormalizarSlug(request.Story.Genero) ?? GeneroCatalog.Narrativo;
         var minigames = request.Story.Minigames ?? new List<MinigameDto>();
 
         var detail = new StoryDetailDto(
@@ -82,6 +84,8 @@ public class StoriesService
         var id = await PersistStoryAsync(conn, detail, "ia");
         var payloadJson = JsonSerializer.Serialize(detail with { Id = id });
         var modelo = string.IsNullOrWhiteSpace(request.Modelo) ? "groq" : request.Modelo.Trim();
+
+        // Etapa 13: PayloadRespostaJson continua com o JSON completo; resumo só na 13b.
 
         await LinkIaGeracaoAsync(
             conn,
@@ -104,14 +108,33 @@ public class StoriesService
         // Retorna histórias base de origem 'manual' (do banco de dados MySQL)
         // juntamente com as histórias geradas pela IA vinculadas à criança/responsável.
         var sql = """
-                  SELECT DISTINCT h.Id, h.Titulo, h.Genero,
+                  SELECT DISTINCT h.Id, h.Titulo,
+                         COALESCE(gen.Slug, h.Genero) AS Genero,
                          CAST(h.FaixaEtaria AS INT) AS FaixaEtaria,
                          h.Duracao, h.Emoji, h.Cena,
-                         CAST(g.Id_Crianca AS INT) AS CriancaId
+                         CAST(g.Id_Crianca AS INT) AS CriancaId,
+                         h.Origem
                   FROM Historia h
                   LEFT JOIN IA_Geracao g ON g.Id_Historia = h.Id
+                  LEFT JOIN Genero gen ON gen.Id = h.Id_Genero
                   WHERE (@Faixa IS NULL OR h.FaixaEtaria = @Faixa)
-                    AND (@Genero IS NULL OR h.Genero = @Genero)
+                    AND (
+                      @Genero IS NULL
+                      OR (@IdGenero IS NOT NULL AND (
+                            h.Id_Genero = @IdGenero
+                            OR (
+                              h.Id_Genero IS NULL
+                              AND (
+                                LOWER(h.Genero COLLATE Latin1_General_CI_AI) = @Genero
+                                OR (@Genero = N'instrucional' AND LOWER(h.Genero COLLATE Latin1_General_CI_AI) = N'cotidiano')
+                              )
+                            )
+                          ))
+                      OR (@IdGenero IS NULL AND (
+                            LOWER(h.Genero COLLATE Latin1_General_CI_AI) = @Genero
+                            OR (@Genero = N'instrucional' AND LOWER(h.Genero COLLATE Latin1_General_CI_AI) = N'cotidiano')
+                          ))
+                    )
                     AND (
                       h.Origem = 'manual'
                       OR (@CriancaId IS NOT NULL AND g.Id_Crianca = @CriancaId)
@@ -127,10 +150,20 @@ public class StoriesService
                   ORDER BY h.Id DESC
                   """;
 
+        var slug = GeneroCatalog.NormalizarSlug(genero);
+        int? idGenero = null;
+        if (slug is not null)
+        {
+            idGenero = await conn.QueryFirstOrDefaultAsync<int?>(
+                "SELECT Id FROM Genero WHERE Slug = @Slug",
+                new { Slug = slug });
+        }
+
         var result = await conn.QueryAsync<StorySummaryDto>(sql, new
         {
             Faixa = faixaEtaria,
-            Genero = string.IsNullOrWhiteSpace(genero) ? null : genero.ToLowerInvariant(),
+            Genero = slug,
+            IdGenero = idGenero,
             CriancaId = criancaId,
             ResponsavelId = responsavelId
         });
@@ -146,7 +179,13 @@ public class StoriesService
         }
 
         var row = await conn.QueryFirstOrDefaultAsync<(int Id, string Titulo, string Genero, int FaixaEtaria, string Duracao, string Emoji, string Cena, string TextoHtml, string PalavrasChaveJson, string PayloadJson)>(
-            "SELECT Id, Titulo, Genero, FaixaEtaria, Duracao, Emoji, Cena, TextoHtml, PalavrasChaveJson, PayloadJson FROM Historia WHERE Id = @Id",
+            """
+            SELECT h.Id, h.Titulo, COALESCE(gen.Slug, h.Genero) AS Genero, h.FaixaEtaria, h.Duracao, h.Emoji, h.Cena,
+                   h.TextoHtml, h.PalavrasChaveJson, h.PayloadJson
+            FROM Historia h
+            LEFT JOIN Genero gen ON gen.Id = h.Id_Genero
+            WHERE h.Id = @Id
+            """,
             new { Id = id });
 
         if (row.Id == 0)
@@ -154,58 +193,120 @@ public class StoriesService
             return ApplicationResult<StoryDetailDto>.NotFound("História não encontrada.");
         }
 
-        if (!string.IsNullOrWhiteSpace(row.PayloadJson))
-        {
-            try
-            {
-                var fromPayload = JsonSerializer.Deserialize<StoryDetailDto>(row.PayloadJson);
-                if (fromPayload is not null && !string.IsNullOrWhiteSpace(fromPayload.Texto))
-                {
-                    return ApplicationResult<StoryDetailDto>.Ok(fromPayload with { Id = row.Id });
-                }
-            }
-            catch
-            {
-                // Fallback para os campos individuais caso PayloadJson use esquema diferente
-            }
-        }
-
-        var words = string.IsNullOrWhiteSpace(row.PalavrasChaveJson)
-            ? new List<string>()
-            : JsonSerializer.Deserialize<List<string>>(row.PalavrasChaveJson) ?? new List<string>();
-
+        var palavrasTabela = await LoadPalavrasChaveAsync(conn, id);
         var minigames = await LoadMinigamesAsync(conn, id);
-        return ApplicationResult<StoryDetailDto>.Ok(new StoryDetailDto(
-            row.Id, row.Titulo, row.Genero, row.FaixaEtaria, row.Duracao, row.Emoji, row.Cena, row.TextoHtml, words, minigames));
+        var fases = await LoadFasesAsync(conn, id);
+        var detalhe = StoryDetailAssembler.Montar(
+            new StoryColumnSnapshot(
+                row.Id,
+                row.Titulo,
+                row.Genero,
+                row.FaixaEtaria,
+                row.Duracao,
+                row.Emoji,
+                row.Cena,
+                row.TextoHtml),
+            fases,
+            palavrasTabela,
+            row.PalavrasChaveJson,
+            minigames,
+            row.PayloadJson);
+        return ApplicationResult<StoryDetailDto>.Ok(detalhe);
     }
 
     private static async Task<int> PersistStoryAsync(IDbConnection conn, StoryDetailDto story, string origem)
     {
+        var (generoSlug, idGenero) = await GeneroCatalog.ResolverAsync(conn, story.Genero);
+        var generoTexto = generoSlug ?? story.Genero ?? GeneroCatalog.Narrativo;
         var wordsJson = JsonSerializer.Serialize(story.PalavrasChave);
-        var payloadJson = JsonSerializer.Serialize(story);
+        // PayloadJson permanece (rollback da etapa 13). Leitura já não depende dele.
+        var payloadJson = JsonSerializer.Serialize(story with { Genero = generoTexto });
 
         var id = await conn.QuerySingleAsync<int>(
             """
-            INSERT INTO Historia (Origem, Titulo, Genero, FaixaEtaria, Duracao, Emoji, Cena, TextoHtml, PalavrasChaveJson, PayloadJson)
+            INSERT INTO Historia (Origem, Titulo, Genero, FaixaEtaria, Duracao, Emoji, Cena, TextoHtml, PalavrasChaveJson, PayloadJson, Id_Genero)
             OUTPUT INSERTED.Id
-            VALUES (@Origem, @Titulo, @Genero, @FaixaEtaria, @Duracao, @Emoji, @Cena, @TextoHtml, @PalavrasChaveJson, @PayloadJson)
+            VALUES (@Origem, @Titulo, @Genero, @FaixaEtaria, @Duracao, @Emoji, @Cena, @TextoHtml, @PalavrasChaveJson, @PayloadJson, @IdGenero)
             """,
             new
             {
                 Origem = origem,
                 story.Titulo,
-                story.Genero,
+                Genero = generoTexto,
                 story.FaixaEtaria,
                 story.Duracao,
                 story.Emoji,
                 story.Cena,
                 TextoHtml = story.Texto,
                 PalavrasChaveJson = wordsJson,
-                PayloadJson = payloadJson
+                PayloadJson = payloadJson,
+                IdGenero = idGenero
             });
 
+        await SavePalavrasChaveAsync(conn, id, story.PalavrasChave);
+        await SaveFasesAsync(conn, id, HistoriaFaseAssembler.DeTextoUnico(story.Texto, story.Cena));
         await SaveMinigamesAsync(conn, id, story.Minigames);
         return id;
+    }
+
+    private static async Task SavePalavrasChaveAsync(IDbConnection conn, int historiaId, List<string>? palavras)
+    {
+        foreach (var (ordem, palavra) in PalavrasChaveNormalizer.DeLista(palavras))
+        {
+            await conn.ExecuteAsync(
+                """
+                INSERT INTO Historia_PalavraChave (Id_Historia, Palavra, Ordem)
+                VALUES (@Id_Historia, @Palavra, @Ordem)
+                """,
+                new { Id_Historia = historiaId, Palavra = palavra, Ordem = ordem });
+        }
+    }
+
+    private static async Task<List<string>> LoadPalavrasChaveAsync(IDbConnection conn, int historiaId)
+    {
+        var rows = await conn.QueryAsync<string>(
+            """
+            SELECT Palavra
+            FROM Historia_PalavraChave
+            WHERE Id_Historia = @Id
+            ORDER BY Ordem
+            """,
+            new { Id = historiaId });
+
+        return rows.AsList();
+    }
+
+    private static async Task SaveFasesAsync(IDbConnection conn, int historiaId, List<HistoriaFaseDto> fases)
+    {
+        foreach (var fase in fases)
+        {
+            await conn.ExecuteAsync(
+                """
+                INSERT INTO Historia_Fase (Id_Historia, Ordem, TextoHtml, Cena)
+                VALUES (@Id_Historia, @Ordem, @TextoHtml, @Cena)
+                """,
+                new
+                {
+                    Id_Historia = historiaId,
+                    fase.Ordem,
+                    fase.TextoHtml,
+                    fase.Cena
+                });
+        }
+    }
+
+    private static async Task<List<HistoriaFaseDto>> LoadFasesAsync(IDbConnection conn, int historiaId)
+    {
+        var rows = await conn.QueryAsync<HistoriaFaseDto>(
+            """
+            SELECT Ordem, TextoHtml, Cena
+            FROM Historia_Fase
+            WHERE Id_Historia = @Id
+            ORDER BY Ordem
+            """,
+            new { Id = historiaId });
+
+        return rows.AsList();
     }
 
     private static async Task SaveMinigamesAsync(IDbConnection conn, int historiaId, List<MinigameDto> minigames)

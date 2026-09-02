@@ -51,7 +51,8 @@ public record StorySummaryDto(
     string? Duracao,
     string? Emoji,
     string? Cena,
-    int? CriancaId = null
+    int? CriancaId = null,
+    string? Origem = null
 );
 
 public record StoryDetailDto(

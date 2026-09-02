@@ -49,8 +49,8 @@ Backend em `backend/API-Fabular` com rotas principais:
 - `POST /api/v1/parents/register`
 - `POST /api/v1/parents/login`
 - `POST /api/v1/children/link-local`
-- `POST /api/v1/stories/generate`
-- `POST /api/v1/stories/save` (histórias Groq já geradas no cliente)
+- `POST /api/v1/stories/save` — persiste história já gerada no cliente (Groq)
+- `POST /api/v1/stories/generate` — **deprecated**; a geração não ocorre mais no backend
 - `GET /api/v1/stories?criancaId=` (histórias IA só da criança vinculada)
 - `GET /api/v1/stories/{id}?criancaId=`
 - `POST /api/v1/sync/progress`
@@ -60,6 +60,7 @@ Backend em `backend/API-Fabular` com rotas principais:
 - Controllers focados em HTTP (request/response), sem regra de negócio.
 - Regras e fluxo de caso de uso em serviços de aplicação (`Services/*`).
 - Acesso a banco centralizado em `Infra/DbConnectionFactory` + Dapper.
+- Histórias de IA: o frontend gera (Groq) e a API só persiste em `POST /api/v1/stories/save`.
 - Próximo passo recomendado: separar formalmente camadas `Domain`, `Application` e `Infrastructure` com repositórios e testes unitários de domínio.
 
 ## Como rodar o sistema
@@ -93,6 +94,8 @@ dotnet run
 ```
 
 Configurar a connection string `DefaultConnection` em `backend/API-Fabular/appsettings.json`.
+
+Banco **novo:** `backend/CriarBanco.sql` (destrutivo). Banco **já existente:** `backend/migrations/` (ver README na pasta).
 
 ## Estrutura de arquivos (resumo)
 

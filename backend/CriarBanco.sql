@@ -1,4 +1,8 @@
+-- Install do zero (DROP + CREATE + seed). APAGA TODOS OS DADOS.
+-- Banco já existente: aplicar scripts em backend/migrations/ (nunca reexecute este arquivo).
+
 SET NOCOUNT ON;
+SET QUOTED_IDENTIFIER ON;
 
 USE Fabular;
 GO
@@ -7,8 +11,13 @@ IF OBJECT_ID('Evento_Minigame') IS NOT NULL DROP TABLE Evento_Minigame;
 IF OBJECT_ID('Relatorio_Crianca') IS NOT NULL DROP TABLE Relatorio_Crianca;
 IF OBJECT_ID('Sessao_Leitura') IS NOT NULL DROP TABLE Sessao_Leitura;
 IF OBJECT_ID('IA_Geracao') IS NOT NULL DROP TABLE IA_Geracao;
+IF OBJECT_ID('Historia_Fase') IS NOT NULL DROP TABLE Historia_Fase;
+IF OBJECT_ID('Historia_PalavraChave') IS NOT NULL DROP TABLE Historia_PalavraChave;
 IF OBJECT_ID('Historia_Minigame') IS NOT NULL DROP TABLE Historia_Minigame;
+IF OBJECT_ID('Progresso_Snapshot') IS NOT NULL DROP TABLE Progresso_Snapshot;
 IF OBJECT_ID('Sincronizacao_Progresso') IS NOT NULL DROP TABLE Sincronizacao_Progresso;
+IF OBJECT_ID('Atividade_Diaria_Backup_008') IS NOT NULL DROP TABLE Atividade_Diaria_Backup_008;
+IF OBJECT_ID('Atividade_Diaria') IS NOT NULL DROP TABLE Atividade_Diaria;
 IF OBJECT_ID('Responsavel_Crianca') IS NOT NULL DROP TABLE Responsavel_Crianca;
 IF OBJECT_ID('Historia') IS NOT NULL DROP TABLE Historia;
 IF OBJECT_ID('Crianca') IS NOT NULL DROP TABLE Crianca;
@@ -17,7 +26,9 @@ IF OBJECT_ID('Genero') IS NOT NULL DROP TABLE Genero;
 
 CREATE TABLE Genero (
     Id INT IDENTITY(1,1) PRIMARY KEY,
-    Nome NVARCHAR(50) NOT NULL UNIQUE
+    Nome NVARCHAR(50) NOT NULL UNIQUE,
+    Slug NVARCHAR(40) NOT NULL,
+    CONSTRAINT UQ_Genero_Slug UNIQUE (Slug)
 );
 
 CREATE TABLE Responsavel (
@@ -37,10 +48,12 @@ CREATE TABLE Crianca (
     DataNascimento DATE NULL,
     Avatar VARCHAR(32) NULL,
     GeneroFavorito VARCHAR(32) NULL,
+    Id_GeneroFavorito INT NULL,
     HorarioBrincar VARCHAR(10) NULL,
     Estrela SMALLINT NOT NULL DEFAULT 0,
     LocalChildKey VARCHAR(80) NULL,
-    CriadoEm DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+    CriadoEm DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    CONSTRAINT FK_Crianca_GeneroFavorito FOREIGN KEY (Id_GeneroFavorito) REFERENCES Genero(Id)
 );
 
 CREATE TABLE Responsavel_Crianca (
@@ -65,7 +78,9 @@ CREATE TABLE Historia (
     TextoHtml NVARCHAR(MAX) NOT NULL,
     PalavrasChaveJson NVARCHAR(MAX) NULL,
     PayloadJson NVARCHAR(MAX) NULL,
-    CriadoEm DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+    Id_Genero INT NULL,
+    CriadoEm DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    CONSTRAINT FK_Historia_Genero FOREIGN KEY (Id_Genero) REFERENCES Genero(Id)
 );
 
 CREATE TABLE Historia_Minigame (
@@ -76,6 +91,25 @@ CREATE TABLE Historia_Minigame (
     DadosJson NVARCHAR(MAX) NOT NULL,
     CONSTRAINT FK_HM_Historia FOREIGN KEY (Id_Historia) REFERENCES Historia(Id) ON DELETE CASCADE,
     CONSTRAINT UQ_HM UNIQUE (Id_Historia, Ordem)
+);
+
+CREATE TABLE Historia_PalavraChave (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    Id_Historia INT NOT NULL,
+    Palavra NVARCHAR(80) NOT NULL,
+    Ordem TINYINT NOT NULL,
+    CONSTRAINT FK_HPC_Historia FOREIGN KEY (Id_Historia) REFERENCES Historia(Id) ON DELETE CASCADE,
+    CONSTRAINT UQ_HPC UNIQUE (Id_Historia, Ordem)
+);
+
+CREATE TABLE Historia_Fase (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    Id_Historia INT NOT NULL,
+    Ordem TINYINT NOT NULL,
+    TextoHtml NVARCHAR(MAX) NOT NULL,
+    Cena NVARCHAR(40) NULL,
+    CONSTRAINT FK_HF_Historia FOREIGN KEY (Id_Historia) REFERENCES Historia(Id) ON DELETE CASCADE,
+    CONSTRAINT UQ_HF UNIQUE (Id_Historia, Ordem)
 );
 
 CREATE TABLE IA_Geracao (
@@ -96,13 +130,14 @@ CREATE TABLE Sessao_Leitura (
     Id_Crianca INT NOT NULL,
     Id_Historia INT NOT NULL,
     Estrelas TINYINT NOT NULL DEFAULT 1,
-    AcertosTotal INT NOT NULL DEFAULT 0,
-    ErrosTotal INT NOT NULL DEFAULT 0,
-    AjudasTotal INT NOT NULL DEFAULT 0,
+    AcertosTotal INT NOT NULL DEFAULT 0, -- deprecated: a API não grava
+    ErrosTotal INT NOT NULL DEFAULT 0,   -- deprecated: a API não grava
+    AjudasTotal INT NOT NULL DEFAULT 0,  -- deprecated: a API não grava
     Concluida BIT NOT NULL DEFAULT 0,
     CriadoEm DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
     CONSTRAINT FK_SL_Crianca FOREIGN KEY (Id_Crianca) REFERENCES Crianca(Id),
-    CONSTRAINT FK_SL_Historia FOREIGN KEY (Id_Historia) REFERENCES Historia(Id)
+    CONSTRAINT FK_SL_Historia FOREIGN KEY (Id_Historia) REFERENCES Historia(Id),
+    CONSTRAINT UQ_SL_CriancaHistoria UNIQUE (Id_Crianca, Id_Historia)
 );
 
 CREATE TABLE Relatorio_Crianca (
@@ -137,6 +172,16 @@ CREATE TABLE Sincronizacao_Progresso (
     CONSTRAINT FK_SP_Crianca FOREIGN KEY (Id_Crianca) REFERENCES Crianca(Id)
 );
 
+CREATE TABLE Progresso_Snapshot (
+    Id_Responsavel INT NOT NULL,
+    Id_Crianca INT NOT NULL,
+    PayloadJson NVARCHAR(MAX) NOT NULL,
+    UpdatedAt DATETIME2 NOT NULL,
+    CONSTRAINT PK_Progresso_Snapshot PRIMARY KEY (Id_Responsavel, Id_Crianca),
+    CONSTRAINT FK_PSnap_Responsavel FOREIGN KEY (Id_Responsavel) REFERENCES Responsavel(Id),
+    CONSTRAINT FK_PSnap_Crianca FOREIGN KEY (Id_Crianca) REFERENCES Crianca(Id)
+);
+
 CREATE TABLE Atividade_Diaria (
     Id INT IDENTITY(1,1) PRIMARY KEY,
     Id_Crianca INT NOT NULL,
@@ -154,8 +199,17 @@ CREATE INDEX IX_Historia_FaixaGenero ON Historia(FaixaEtaria, Genero);
 CREATE INDEX IX_SL_Crianca ON Sessao_Leitura(Id_Crianca, CriadoEm DESC);
 CREATE INDEX IX_SP_ResponsavelCrianca ON Sincronizacao_Progresso(Id_Responsavel, Id_Crianca, UpdatedAt DESC);
 CREATE INDEX IX_AD_CriancaData ON Atividade_Diaria(Id_Crianca, Data DESC);
+CREATE INDEX IX_IAG_Historia ON IA_Geracao(Id_Historia);
+CREATE INDEX IX_IAG_Crianca ON IA_Geracao(Id_Crianca, CriadoEm DESC);
+CREATE INDEX IX_EM_Sessao ON Evento_Minigame(Id_SessaoLeitura);
+CREATE UNIQUE INDEX UQ_AD_CriancaData_SemHistoria ON Atividade_Diaria (Id_Crianca, Data) WHERE Id_Historia IS NULL;
 
-INSERT INTO Genero (Nome) VALUES ('Narrativo'), ('Poetico'), ('Instrucional'), ('Descritivo'), ('Informativo');
+INSERT INTO Genero (Nome, Slug) VALUES
+    ('Narrativo', 'narrativo'),
+    ('Poetico', 'poetico'),
+    ('Instrucional', 'instrucional'),
+    ('Descritivo', 'descritivo'),
+    ('Informativo', 'informativo');
 -- ============================================================
 -- Seed de historias (conteudo estatico migrado do array JS)
 -- ============================================================
@@ -232,4 +286,98 @@ N'{"idOriginal": "inf2", "fases": [
 {"texto": "Preservar a Amazônia, portanto, não é gesto de caridade distante, mas ato de <strong class=\"palavra-chave\">cuidado</strong>. Cada escolha de consumo, cada apoio a projetos de reflorestamento, cada exigência por políticas mais rígidas contra a devastação ilegal é um fio a mais tecido de volta nessa teia. A floresta resiste, mas sua resiliência tem limites — e talvez o verdadeiro teste de nossa geração seja decidir se seremos lembrados como quem salvou esse pulmão, ou como quem o deixou, aos poucos, sufocar."}
 ]}');
 
+GO
+
+-- Backfill de FK de gênero (Cotidiano → instrucional; Poético → poetico via CI_AI)
+UPDATE h
+SET h.Id_Genero = g.Id
+FROM Historia AS h
+INNER JOIN Genero AS g
+    ON g.Slug = CASE
+        WHEN h.Genero COLLATE Latin1_General_CI_AI = N'cotidiano' THEN N'instrucional'
+        WHEN h.Genero COLLATE Latin1_General_CI_AI = N'narrativo' THEN N'narrativo'
+        WHEN h.Genero COLLATE Latin1_General_CI_AI = N'poetico' THEN N'poetico'
+        WHEN h.Genero COLLATE Latin1_General_CI_AI = N'instrucional' THEN N'instrucional'
+        WHEN h.Genero COLLATE Latin1_General_CI_AI = N'descritivo' THEN N'descritivo'
+        WHEN h.Genero COLLATE Latin1_General_CI_AI = N'informativo' THEN N'informativo'
+        ELSE NULL
+    END
+WHERE h.Id_Genero IS NULL;
+GO
+
+-- Backfill de palavras-chave (PalavrasChaveJson permanece)
+INSERT INTO Historia_PalavraChave (Id_Historia, Palavra, Ordem)
+SELECT
+    h.Id,
+    LEFT(LTRIM(RTRIM(j.value)), 80),
+    CAST(TRY_CAST(j.[key] AS INT) + 1 AS TINYINT)
+FROM Historia AS h
+CROSS APPLY OPENJSON(h.PalavrasChaveJson) AS j
+WHERE h.PalavrasChaveJson IS NOT NULL
+  AND LTRIM(RTRIM(h.PalavrasChaveJson)) <> N''
+  AND ISJSON(h.PalavrasChaveJson) = 1
+  AND LEFT(LTRIM(h.PalavrasChaveJson), 1) = N'['
+  AND j.type = 1
+  AND LTRIM(RTRIM(j.value)) <> N''
+  AND TRY_CAST(j.[key] AS INT) BETWEEN 0 AND 254
+  AND NOT EXISTS (
+        SELECT 1
+        FROM Historia_PalavraChave AS p
+        WHERE p.Id_Historia = h.Id
+          AND p.Ordem = CAST(TRY_CAST(j.[key] AS INT) + 1 AS TINYINT)
+  );
+GO
+
+-- Backfill de fases (PayloadJson permanece)
+INSERT INTO Historia_Fase (Id_Historia, Ordem, TextoHtml, Cena)
+SELECT
+    h.Id,
+    CAST(TRY_CAST(j.[key] AS INT) + 1 AS TINYINT),
+    LTRIM(RTRIM(CASE
+        WHEN j.type = 1 THEN j.value
+        WHEN j.type = 5 THEN COALESCE(
+            JSON_VALUE(j.value, N'$.texto'),
+            JSON_VALUE(j.value, N'$.Texto'),
+            JSON_VALUE(j.value, N'$.textoHtml'),
+            JSON_VALUE(j.value, N'$.TextoHtml')
+        )
+        ELSE NULL
+    END)),
+    LEFT(NULLIF(LTRIM(RTRIM(COALESCE(
+        CASE WHEN j.type = 5 THEN COALESCE(JSON_VALUE(j.value, N'$.cena'), JSON_VALUE(j.value, N'$.Cena')) END,
+        h.Cena
+    ))), N''), 40)
+FROM Historia AS h
+CROSS APPLY OPENJSON(
+    COALESCE(JSON_QUERY(h.PayloadJson, N'$.fases'), JSON_QUERY(h.PayloadJson, N'$.Fases'))
+) AS j
+WHERE h.PayloadJson IS NOT NULL
+  AND LTRIM(RTRIM(h.PayloadJson)) <> N''
+  AND ISJSON(h.PayloadJson) = 1
+  AND TRY_CAST(j.[key] AS INT) BETWEEN 0 AND 254
+  AND LTRIM(RTRIM(CASE
+        WHEN j.type = 1 THEN j.value
+        WHEN j.type = 5 THEN COALESCE(
+            JSON_VALUE(j.value, N'$.texto'),
+            JSON_VALUE(j.value, N'$.Texto'),
+            JSON_VALUE(j.value, N'$.textoHtml'),
+            JSON_VALUE(j.value, N'$.TextoHtml')
+        )
+        ELSE NULL
+    END)) <> N''
+  AND NOT EXISTS (
+        SELECT 1
+        FROM Historia_Fase AS f
+        WHERE f.Id_Historia = h.Id
+          AND f.Ordem = CAST(TRY_CAST(j.[key] AS INT) + 1 AS TINYINT)
+  );
+GO
+
+INSERT INTO Historia_Fase (Id_Historia, Ordem, TextoHtml, Cena)
+SELECT h.Id, CAST(1 AS TINYINT), h.TextoHtml, LEFT(NULLIF(LTRIM(RTRIM(h.Cena)), N''), 40)
+FROM Historia AS h
+WHERE LTRIM(RTRIM(h.TextoHtml)) <> N''
+  AND NOT EXISTS (
+        SELECT 1 FROM Historia_Fase AS f WHERE f.Id_Historia = h.Id
+  );
 GO
