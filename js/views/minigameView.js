@@ -1428,9 +1428,36 @@ function renderVerdadeiroFalso(fase, h, corpo, spec) {
 // ─── 5. CAÇA-PALAVRAS ────────────────────────────────────────────────────────
 function renderCacaPalavras(fase, h, corpo) {
   const normalize = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z]/g, '').substring(0, 15);
-  const palavrasAlvo = [...new Set(
-    (h.palavrasChave || []).map(normalize).filter(p => p.length >= 3 && p.length <= 15)
-  )].slice(0, 4);
+
+  // Só aceita palavras únicas (sem espaço) com 3–11 letras normalizadas
+  const filtrarPalavras = (lista) => [...new Set(
+    (lista || [])
+      .filter(p => typeof p === 'string' && !p.trim().includes(' '))
+      .map(normalize)
+      .filter(p => p.length >= 3 && p.length <= 11)
+  )];
+
+  let palavrasAlvo = filtrarPalavras(h.palavrasChave).slice(0, 4);
+
+  // Fallback: extrai palavras relevantes do texto da história
+  if (palavrasAlvo.length < 4) {
+    const STOPWORDS = new Set(['COM', 'UMA', 'UM', 'QUE', 'NAO', 'PAR', 'SER', 'SEUS', 'SUAS', 'ELE', 'ELA', 'ERA', 'FOI', 'TEM', 'VER', 'MAS', 'ATE', 'POR', 'SOB', 'TER', 'MIM', 'TU', 'NO', 'NA', 'DE', 'DO', 'DA', 'OS', 'AS', 'EM', 'SE', 'AO', 'OU', 'JA']);
+    const textoLimpo = obterTextoBaseHistoria(h)
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/[^a-záàâãéêíóôõúüçA-Z\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const extraidasTexto = filtrarPalavras(
+      textoLimpo.split(' ').filter(w => w.length >= 4)
+    ).filter(p => !STOPWORDS.has(p));
+    const jaPresentes = new Set(palavrasAlvo);
+    for (const p of extraidasTexto) {
+      if (!jaPresentes.has(p) && palavrasAlvo.length < 4) {
+        jaPresentes.add(p);
+        palavrasAlvo.push(p);
+      }
+    }
+  }
 
   if (palavrasAlvo.length === 0) { renderVerdadeiroFalso(fase, h, corpo, null); return; }
 
