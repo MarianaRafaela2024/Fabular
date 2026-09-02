@@ -133,8 +133,9 @@ function mostrarRespostaEsperada(texto, container) {
 function mostrarFeedbackMG(ok, mostrarProximo = true) {
   let zerouVidas = false;
   if (ok) {
-    estado.mgAcertos++;
+    estado.mgAcertos = (estado.mgAcertos || 0) + 1;
   } else {
+    estado.mgErros = (estado.mgErros || 0) + 1;
     estado.tentativasReprovadas++;
     if (typeof perderVida === 'function') {
       const statusVida = perderVida();
@@ -237,16 +238,22 @@ function finalizarMinigames() {
   const totalJogos = estado.minigamesLista.length || 5;
   estado.minigamesJogados += totalJogos;
 
-  const acertosSessao = Math.min(totalJogos, Math.max(0, Number(estado.mgAcertos) || 0));
-  const errosSessao = Math.max(0, totalJogos - acertosSessao);
+  const acertosSessao = Math.min(5, Math.min(totalJogos, Math.max(0, Number(estado.mgAcertos) || 0)));
+  const errosSessao = Math.min(5, Math.max(0, estado.mgErros != null ? Number(estado.mgErros) : (totalJogos - acertosSessao)));
 
   estado.acertosMG = (Number(estado.acertosMG) || 0) + acertosSessao;
   estado.errosMG = (Number(estado.errosMG) || 0) + errosSessao;
+
+  estado.mgAcertos = 0;
+  estado.mgErros = 0;
 
   const acertosTotal = acertosSessao;
   const estrelas = calcularEstrelasPorAcertos(acertosTotal, totalJogos);
 
   registrarEstrelasHistoria(estrelas);
+  if (typeof garantirContadoresRelatorio === 'function') {
+    garantirContadoresRelatorio();
+  }
 
   estado.nivel = calcularNivelPorXp(estado.totalEstrelas);
 
@@ -269,6 +276,9 @@ function embaralhar(arr) {
 }
 
 function prepararMinigamesPreset(h) {
+  estado.mgAcertos = 0;
+  estado.mgErros = 0;
+
   const faixa = h.faixa || (estado.perfil && estado.perfil.faixa) || 1;
   const genero = h.genero || (estado.perfil && estado.perfil.genero) || 'narrativo';
 
@@ -304,9 +314,7 @@ function registrarEventoMG(tipo, acao, dados) {
     historiaId: estado.historiaAtual ? estado.historiaAtual.id : null,
     em: new Date().toISOString()
   });
-  if (acao === 'acerto') estado.acertosMG = (Number(estado.acertosMG) || 0) + 1;
-  else if (acao === 'erro') estado.errosMG = (Number(estado.errosMG) || 0) + 1;
-  else if (acao === 'nao_consigo_ouvir') estado.naoConsigoOuvir = (Number(estado.naoConsigoOuvir) || 0) + 1;
+  if (acao === 'nao_consigo_ouvir') estado.naoConsigoOuvir = (Number(estado.naoConsigoOuvir) || 0) + 1;
   if (estado.relatorioEventos.length > 400) {
     estado.relatorioEventos = estado.relatorioEventos.slice(-400);
   }
