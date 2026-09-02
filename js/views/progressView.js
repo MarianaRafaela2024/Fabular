@@ -24,14 +24,12 @@ function atualizarTelaProgresso() {
   if (ppNome) ppNome.textContent = p.nome;
   if (ppNivelBadge) ppNivelBadge.textContent = labelNivel(estado.nivel);
   if (ppTotal) ppTotal.textContent = estado.totalEstrelas + ' ⭐';
+  if (typeof garantirContadoresRelatorio === 'function') {
+    garantirContadoresRelatorio();
+  }
   const minigamesJogados = Number(estado.minigamesJogados) || 0;
   let acertosMG = Number(estado.acertosMG) || 0;
   let errosMG = Number(estado.errosMG) || 0;
-
-  if (minigamesJogados > 0) {
-    if (acertosMG > minigamesJogados) acertosMG = minigamesJogados;
-    if (acertosMG + errosMG > minigamesJogados) errosMG = Math.max(0, minigamesJogados - acertosMG);
-  }
   const naoOuco = Number(estado.naoConsigoOuvir) || 0;
   if (progressoSub) {
     progressoSub.textContent =

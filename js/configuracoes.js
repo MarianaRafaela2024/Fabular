@@ -182,8 +182,13 @@
 
     let localDados = null;
     try {
-      const rawC = localStorage.getItem(`mundoHistorias_estado_crianca_${criancaId}`);
-      if (rawC) localDados = JSON.parse(rawC);
+      const rawDedicado = localStorage.getItem(`mundoHistorias_progresso_${criancaId}`);
+      if (rawDedicado) {
+        localDados = JSON.parse(rawDedicado);
+      } else {
+        const rawC = localStorage.getItem(`mundoHistorias_estado_crianca_${criancaId}`);
+        if (rawC) localDados = JSON.parse(rawC);
+      }
     } catch (_) { }
 
     const hlLocal = localDados?.historiasLidas || [];
@@ -194,8 +199,15 @@
     const tempo = Math.max(prog?.tempoTotal ?? prog?.TempoTotal ?? 0, localDados?.tempoTotal || 0);
     const minigames = Math.max(prog?.minigamesJogados ?? prog?.MinigamesJogados ?? 0, localDados?.minigamesJogados || 0);
     const reprovadas = Math.max(prog?.tentativasReprovadas ?? prog?.TentativasReprovadas ?? 0, localDados?.tentativasReprovadas || 0);
-    const acertos = Math.max(prog?.acertosMG ?? prog?.AcertosMG ?? 0, localDados?.acertosMG || 0);
-    const erros = Math.max(prog?.errosMG ?? prog?.ErrosMG ?? 0, localDados?.errosMG || 0);
+
+    const maxHistoriasBonus = Math.max(5, historias * 5);
+    const limiteMinigames = minigames > 0 ? Math.max(minigames, maxHistoriasBonus) : maxHistoriasBonus;
+
+    let acertos = Math.max(prog?.acertosMG ?? prog?.AcertosMG ?? 0, localDados?.acertosMG || 0);
+    let erros = Math.max(prog?.errosMG ?? prog?.ErrosMG ?? 0, localDados?.errosMG || 0);
+
+    if (acertos > limiteMinigames) acertos = limiteMinigames;
+    if (erros > limiteMinigames) erros = limiteMinigames;
 
     cont.innerHTML = `
       <div class="config-relatorio-card">

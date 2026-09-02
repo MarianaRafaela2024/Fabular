@@ -22,6 +22,7 @@ let estado = {
   minigamesLista: [],
   minigamesPreset: null,
   mgAcertos: 0,
+  mgErros: 0,
   iniciouEm: null,
   filtroGenero: 'todos',
   filtroFaixa: 'todos',
@@ -73,6 +74,8 @@ function limparProgressoMemoria() {
   estado.acertosMG = 0;
   estado.errosMG = 0;
   estado.naoConsigoOuvir = 0;
+  estado.mgAcertos = 0;
+  estado.mgErros = 0;
   estado.atividadeDiaria = [];
   estado.relatorioEventos = [];
 }
@@ -214,18 +217,18 @@ function trocarPerfilCriancaEstado(perfilNovo) {
 
 function garantirContadoresRelatorio() {
   const eventos = estado.relatorioEventos || [];
-  if (!eventos.length) return;
-  const naoOucoEventos = eventos.filter(e => e.acao === 'nao_consigo_ouvir').length;
-  estado.naoConsigoOuvir = Math.max(Number(estado.naoConsigoOuvir) || 0, naoOucoEventos);
-
-  if (estado.minigamesJogados > 0) {
-    if (estado.acertosMG > estado.minigamesJogados) {
-      estado.acertosMG = estado.minigamesJogados;
-    }
-    if (estado.acertosMG + estado.errosMG > estado.minigamesJogados) {
-      estado.errosMG = Math.max(0, estado.minigamesJogados - estado.acertosMG);
-    }
+  if (eventos.length > 0) {
+    const naoOucoEventos = eventos.filter(e => e.acao === 'nao_consigo_ouvir').length;
+    estado.naoConsigoOuvir = Math.max(Number(estado.naoConsigoOuvir) || 0, naoOucoEventos);
   }
+
+  const totalHistorias = (estado.historiasLidas || []).length;
+  const maxPorHistorias = Math.max(5, totalHistorias * 5);
+  const minigames = Number(estado.minigamesJogados) || 0;
+  const maxPermitido = minigames > 0 ? Math.max(minigames, maxPorHistorias) : maxPorHistorias;
+
+  if (estado.acertosMG > maxPermitido) estado.acertosMG = maxPermitido;
+  if (estado.errosMG > maxPermitido) estado.errosMG = maxPermitido;
 }
 
 function obterVinculoCrianca() {
