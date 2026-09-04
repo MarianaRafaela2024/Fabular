@@ -4853,29 +4853,41 @@ body.alto-contraste .cal-dia-futuro {
   opacity: 0.35 !important;
 }
 
-/* Níveis de atividade do calendário no escuro */
-body.alto-contraste .cal-dia-nivel-1 {
-  background: #0E4429 !important;
-  border-color: #0E4429 !important;
-  color: #7EE787 !important;
+/* Níveis de atividade do calendário no escuro (Laranja) */
+body.alto-contraste .cal-dia-nivel-1,
+html.alto-contraste .cal-dia-nivel-1,
+body.modo-noturno .cal-dia-nivel-1,
+html.modo-noturno .cal-dia-nivel-1 {
+  background: #3E1F07 !important;
+  border-color: #5C2B0B !important;
+  color: #FFB380 !important;
 }
 
-body.alto-contraste .cal-dia-nivel-2 {
-  background: #006D32 !important;
-  border-color: #006D32 !important;
+body.alto-contraste .cal-dia-nivel-2,
+html.alto-contraste .cal-dia-nivel-2,
+body.modo-noturno .cal-dia-nivel-2,
+html.modo-noturno .cal-dia-nivel-2 {
+  background: #7C2D12 !important;
+  border-color: #9A3412 !important;
   color: #FFFFFF !important;
 }
 
-body.alto-contraste .cal-dia-nivel-3 {
-  background: #26A641 !important;
-  border-color: #26A641 !important;
+body.alto-contraste .cal-dia-nivel-3,
+html.alto-contraste .cal-dia-nivel-3,
+body.modo-noturno .cal-dia-nivel-3,
+html.modo-noturno .cal-dia-nivel-3 {
+  background: #C2410C !important;
+  border-color: #EA580C !important;
   color: #FFFFFF !important;
 }
 
-body.alto-contraste .cal-dia-nivel-4 {
-  background: #39D353 !important;
-  border-color: #39D353 !important;
-  color: #0D1117 !important;
+body.alto-contraste .cal-dia-nivel-4,
+html.alto-contraste .cal-dia-nivel-4,
+body.modo-noturno .cal-dia-nivel-4,
+html.modo-noturno .cal-dia-nivel-4 {
+  background: #FF6B35 !important;
+  border-color: #FF8A5B !important;
+  color: #FFFFFF !important;
 }
 
 body.alto-contraste .calendario-legenda,
