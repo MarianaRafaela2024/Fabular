@@ -169,15 +169,10 @@ function renderizarPaginaAtualLivro(direcaoAnimacao = null) {
 
   const indicadorEl = document.getElementById('livro-pagina-indicador');
   if (indicadorEl) {
-    indicadorEl.textContent = `Página ${atual + 1} de ${total}`;
+    indicadorEl.textContent = `${atual + 1} / ${total}`;
   }
 
   const conteudoPagina = estadoLeitura.paginas[atual] || '';
-  const qtdPalavras = contarPalavras(conteudoPagina);
-  const palavrasEl = document.getElementById('livro-contagem-palavras');
-  if (palavrasEl) {
-    palavrasEl.textContent = `${qtdPalavras} palavra${qtdPalavras === 1 ? '' : 's'}`;
-  }
 
   const textoEl = document.getElementById('historia-texto');
   const cartaoEl = document.getElementById('cartao-livro-leitura');
