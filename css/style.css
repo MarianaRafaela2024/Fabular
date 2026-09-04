@@ -5940,3 +5940,338 @@ body.alto-contraste .config-stat strong {
   font-weight: 800 !important;
   font-size: 1.45rem !important;
 }
+
+/* =============================================
+   CARTÃO DO LIVRO DE LEITURA E PAGINAÇÃO POR 150 PALAVRAS
+   ============================================= */
+
+.cartao-livro-leitura {
+  position: relative;
+  background: linear-gradient(135deg, #FFFDF9 0%, #FAF5EA 100%);
+  border-radius: 20px;
+  padding: 24px 28px;
+  border: 2px solid #E2D7C3;
+  box-shadow: 
+    0 12px 32px rgba(0, 0, 0, 0.09),
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    inset 0 0 0 4px rgba(245, 235, 215, 0.6);
+  margin-bottom: 16px;
+  perspective: 1200px;
+  transform-style: preserve-3d;
+  overflow: hidden;
+  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Camada da Folha Embaixo (Underneath Page Effect) */
+.cartao-livro-leitura::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #F5EFE0 0%, #EBE1CB 100%);
+  border-radius: 20px;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.cartao-livro-leitura > * {
+  position: relative;
+  z-index: 1;
+}
+
+.livro-folha-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed rgba(180, 160, 120, 0.4);
+  font-family: 'Baloo 2', cursive, sans-serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--cor-primaria, #FF6B35);
+}
+
+.livro-contagem-palavras {
+  font-size: 0.82rem;
+  color: #8C7B6B;
+  font-weight: 600;
+  background: rgba(180, 160, 120, 0.14);
+  padding: 2px 10px;
+  border-radius: 12px;
+}
+
+.historia-texto {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  font-size: 1.1rem;
+  line-height: 1.95;
+  color: var(--texto, #2D3748);
+  min-height: 120px;
+}
+
+/* Animações Realistas 3D de Virar a Folha do Livro (Leaf Flip) */
+.cartao-livro-leitura.pagina-virando-avancar {
+  animation: animarVirarFolhaAvancar 0.52s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: left center;
+}
+
+.cartao-livro-leitura.pagina-virando-recuar {
+  animation: animarVirarFolhaRecuar 0.52s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: right center;
+}
+
+@keyframes animarVirarFolhaAvancar {
+  0% {
+    transform: rotateY(0deg) scale(1);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.09);
+    filter: brightness(1);
+  }
+  40% {
+    transform: rotateY(-45deg) skewY(-2deg) scale(0.97);
+    box-shadow: -22px 16px 30px rgba(0, 0, 0, 0.25);
+    filter: brightness(0.91);
+  }
+  75% {
+    transform: rotateY(-110deg) skewY(-1deg) scale(0.99);
+    box-shadow: -10px 8px 20px rgba(0, 0, 0, 0.15);
+    filter: brightness(0.96);
+  }
+  100% {
+    transform: rotateY(0deg) skewY(0deg) scale(1);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.09);
+    filter: brightness(1);
+  }
+}
+
+@keyframes animarVirarFolhaRecuar {
+  0% {
+    transform: rotateY(-110deg) skewY(1deg);
+    filter: brightness(0.91);
+  }
+  40% {
+    transform: rotateY(-45deg) skewY(2deg) scale(0.97);
+    box-shadow: 22px 16px 30px rgba(0, 0, 0, 0.25);
+    filter: brightness(0.93);
+  }
+  100% {
+    transform: rotateY(0deg) skewY(0deg) scale(1);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.09);
+    filter: brightness(1);
+  }
+}
+
+/* NAVEGAÇÃO POR PÁGINAS RESPONSIVA PARA CELULAR E COMPUTADOR */
+.livro-navegacao-paginas {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0 20px 0;
+  padding: 10px 16px;
+  background: var(--bg-card, #FFFFFF);
+  border-radius: 16px;
+  border: 1.5px solid rgba(78, 205, 196, 0.35);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+}
+
+.btn-virar-pagina {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-family: 'Baloo 2', cursive, sans-serif;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  background: linear-gradient(135deg, #4ECDC4, #36B5AC);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(78, 205, 196, 0.35);
+  transition: all var(--trans);
+  min-height: 44px;
+}
+
+.btn-virar-pagina:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(78, 205, 196, 0.45);
+  background: linear-gradient(135deg, #36B5AC, #299F96);
+}
+
+.btn-virar-pagina:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-virar-pagina .seta {
+  font-size: 1.15rem;
+  transition: transform 0.2s ease;
+}
+
+.btn-pagina-anterior:hover:not(:disabled) .seta {
+  transform: translateX(-4px);
+}
+
+.btn-proxima-pagina:hover:not(:disabled) .seta {
+  transform: translateX(4px);
+}
+
+.livro-paginacao-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pag-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(180, 160, 120, 0.35);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.pag-dot.ativa {
+  width: 22px;
+  border-radius: 10px;
+  background: var(--cor-primaria, #FF6B35);
+  box-shadow: 0 0 8px rgba(255, 107, 53, 0.4);
+}
+
+/* Responsivo para Celular */
+@media (max-width: 640px) {
+  .cartao-livro-leitura {
+    padding: 18px 16px;
+    border-radius: 16px;
+  }
+
+  .historia-texto {
+    font-size: 1rem;
+    line-height: 1.85;
+  }
+
+  .livro-navegacao-paginas {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    gap: 6px;
+  }
+
+  .btn-virar-pagina {
+    flex: 1 1 45%;
+    max-width: 48%;
+    padding: 8px 10px;
+    font-size: 0.88rem;
+    min-height: 44px;
+    border-radius: 10px;
+  }
+
+  .btn-virar-pagina .btn-texto-completo {
+    display: none;
+  }
+
+  .btn-virar-pagina .btn-texto-curto {
+    display: inline;
+  }
+
+  .livro-paginacao-dots {
+    gap: 4px;
+  }
+
+  .pag-dot {
+    width: 8px;
+    height: 8px;
+  }
+
+  .pag-dot.ativa {
+    width: 16px;
+  }
+}
+
+@media (min-width: 641px) {
+  .btn-virar-pagina .btn-texto-curto {
+    display: none;
+  }
+  .btn-virar-pagina .btn-texto-completo {
+    display: inline;
+  }
+}
+
+/* MODO ESCURO — Fundo da página cinza e letras do texto brancas */
+body.modo-noturno .cartao-livro-leitura,
+body.alto-contraste .cartao-livro-leitura,
+html.modo-noturno .cartao-livro-leitura,
+html.alto-contraste .cartao-livro-leitura {
+  background: #2D2D2D !important;
+  border-color: #444444 !important;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5), inset 0 0 0 4px #383838 !important;
+}
+
+body.modo-noturno .cartao-livro-leitura::before,
+body.alto-contraste .cartao-livro-leitura::before,
+html.modo-noturno .cartao-livro-leitura::before,
+html.alto-contraste .cartao-livro-leitura::before {
+  background: #242424 !important;
+  opacity: 0.8 !important;
+}
+
+body.modo-noturno .historia-texto,
+body.modo-noturno .historia-texto p,
+body.modo-noturno .historia-texto span,
+body.alto-contraste .historia-texto,
+body.alto-contraste .historia-texto p,
+body.alto-contraste .historia-texto span,
+html.modo-noturno .historia-texto,
+html.modo-noturno .historia-texto p,
+html.modo-noturno .historia-texto span,
+html.alto-contraste .historia-texto,
+html.alto-contraste .historia-texto p,
+html.alto-contraste .historia-texto span {
+  color: #FFFFFF !important;
+}
+
+body.modo-noturno .historia-texto .palavra-chave,
+body.alto-contraste .historia-texto .palavra-chave,
+html.modo-noturno .historia-texto .palavra-chave,
+html.alto-contraste .historia-texto .palavra-chave {
+  background: #E65100 !important;
+  color: #FFFFFF !important;
+}
+
+body.modo-noturno .livro-folha-topo,
+body.alto-contraste .livro-folha-topo,
+html.modo-noturno .livro-folha-topo,
+html.alto-contraste .livro-folha-topo {
+  border-bottom-color: rgba(255, 255, 255, 0.15) !important;
+  color: #FF8A65 !important;
+}
+
+body.modo-noturno .livro-contagem-palavras,
+body.alto-contraste .livro-contagem-palavras,
+html.modo-noturno .livro-contagem-palavras,
+html.alto-contraste .livro-contagem-palavras {
+  color: #E0E0E0 !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+body.modo-noturno .livro-pagina-indicador,
+body.alto-contraste .livro-pagina-indicador,
+html.modo-noturno .livro-pagina-indicador,
+html.alto-contraste .livro-pagina-indicador {
+  color: #FF8A65 !important;
+}
+
+body.modo-noturno .livro-navegacao-paginas,
+body.alto-contraste .livro-navegacao-paginas,
+html.modo-noturno .livro-navegacao-paginas,
+html.alto-contraste .livro-navegacao-paginas {
+  background: #25201D !important;
+  border-color: rgba(78, 205, 196, 0.25) !important;
+}
