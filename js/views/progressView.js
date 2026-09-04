@@ -86,6 +86,8 @@ function atualizarTelaProgresso() {
   if (progMinigames) progMinigames.textContent = estado.minigamesJogados || 0;
 
   renderizarAcessoRelatorioResponsavel({ acertosMG, errosMG, naoOuco });
+  verificarEAtualizarConquistas(true);
+  renderizarConquistas();
 }
 
 function renderizarAcessoRelatorioResponsavel(metricas) {
@@ -599,3 +601,221 @@ function atualizarEvolucaoRaposa() {
     }
   });
 }
+
+/* =============================================
+   CATÁLOGO DE CONQUISTAS E MEDALHAS (DUOLINGO STYLE)
+   ============================================= */
+
+const LISTA_CONQUISTAS = [
+  {
+    id: 'primeira_leitura',
+    titulo: 'Primeiro Passo',
+    descricao: 'Ler 1 história',
+    icone: '📖',
+    recompensa: 1,
+    cor: '#4CAF50',
+    eval: (st) => {
+      const atual = (st.historiasLidas || []).length;
+      return { progressoAtual: Math.min(1, atual), objetivo: 1, atingido: atual >= 1 };
+    }
+  },
+  {
+    id: 'sequencia_minigame_perfeito',
+    titulo: 'Mestre dos Jogos',
+    descricao: 'Completar uma sequência de minigames sem errar',
+    icone: '🎮',
+    recompensa: 2,
+    cor: '#FF9800',
+    eval: (st) => {
+      const perf = Number(st.sequenciasPerfeitasMG) || 0;
+      return { progressoAtual: Math.min(1, perf), objetivo: 1, atingido: perf >= 1 };
+    }
+  },
+  {
+    id: 'leitor_dedicado',
+    titulo: 'Leitor Dedicado',
+    descricao: 'Ler 5 histórias',
+    icone: '📚',
+    recompensa: 1,
+    cor: '#2196F3',
+    eval: (st) => {
+      const atual = (st.historiasLidas || []).length;
+      return { progressoAtual: Math.min(5, atual), objetivo: 5, atingido: atual >= 5 };
+    }
+  },
+  {
+    id: 'devorador_de_livros',
+    titulo: 'Devorador de Livros',
+    descricao: 'Ler 10 histórias',
+    icone: '🏰',
+    recompensa: 2,
+    cor: '#9C27B0',
+    eval: (st) => {
+      const atual = (st.historiasLidas || []).length;
+      return { progressoAtual: Math.min(10, atual), objetivo: 10, atingido: atual >= 10 };
+    }
+  },
+  {
+    id: 'explorador_generos',
+    titulo: 'Explorador de Gêneros',
+    descricao: 'Ler histórias de pelo menos 2 gêneros diferentes',
+    icone: '🎭',
+    recompensa: 1,
+    cor: '#00BCD4',
+    eval: (st) => {
+      const generos = new Set((st.historiasLidas || []).map(h => h.genero).filter(Boolean));
+      const atual = generos.size;
+      return { progressoAtual: Math.min(2, atual), objetivo: 2, atingido: atual >= 2 };
+    }
+  },
+  {
+    id: 'foco_leitura',
+    titulo: 'Maratona de Leitura',
+    descricao: 'Acumular 15 minutos de tempo total de leitura',
+    icone: '⏱️',
+    recompensa: 1,
+    cor: '#3F51B5',
+    eval: (st) => {
+      const atual = Number(st.tempoTotal) || 0;
+      return { progressoAtual: Math.min(15, atual), objetivo: 15, atingido: atual >= 15 };
+    }
+  },
+  {
+    id: 'minigamer_ativo',
+    titulo: 'Desafiante dos Jogos',
+    descricao: 'Jogar 5 minigames',
+    icone: '🕹️',
+    recompensa: 1,
+    cor: '#673AB7',
+    eval: (st) => {
+      const atual = Number(st.minigamesJogados) || 0;
+      return { progressoAtual: Math.min(5, atual), objetivo: 5, atingido: atual >= 5 };
+    }
+  },
+  {
+    id: 'sequencia_dias',
+    titulo: 'Hábito Mágico',
+    descricao: 'Ler em 3 dias seguidos',
+    icone: '🔥',
+    recompensa: 2,
+    cor: '#FF5722',
+    eval: (st) => {
+      const atividade = typeof agruparAtividadePorDia === 'function' ? agruparAtividadePorDia() : {};
+      const streak = typeof calcularSequenciaLeitura === 'function' ? calcularSequenciaLeitura(atividade) : 0;
+      return { progressoAtual: Math.min(3, streak), objetivo: 3, atingido: streak >= 3 };
+    }
+  }
+];
+
+function verificarEAtualizarConquistas(silencioso = false) {
+  if (!estado) return false;
+  if (!estado.conquistasDesbloqueadas || typeof estado.conquistasDesbloqueadas !== 'object') {
+    estado.conquistasDesbloqueadas = {};
+  }
+
+  let houveNovoDesbloqueio = false;
+
+  LISTA_CONQUISTAS.forEach((conquista) => {
+    const res = conquista.eval(estado);
+    const jaDesbloqueada = !!estado.conquistasDesbloqueadas[conquista.id];
+
+    if (res.atingido && !jaDesbloqueada) {
+      const agora = new Date();
+      const dataFormatada = agora.toLocaleDateString('pt-BR');
+      const horaFormatada = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+      estado.conquistasDesbloqueadas[conquista.id] = {
+        dataDesbloqueio: `${dataFormatada} às ${horaFormatada}`,
+        timestamp: agora.getTime()
+      };
+
+      houveNovoDesbloqueio = true;
+
+      // Recupera vidas correspondentes (limitado ao teto de 5 vidas)
+      if (conquista.recompensa > 0 && typeof recuperarVidas === 'function') {
+        recuperarVidas(conquista.recompensa);
+      }
+
+      if (!silencioso && typeof mostrarToast === 'function') {
+        const coracoesTexto = conquista.recompensa === 1 ? '1 coração' : `${conquista.recompensa} corações`;
+        mostrarToast(`🏆 Conquista Desbloqueada: ${conquista.titulo}! Você ganhou ${coracoesTexto}! ❤️`);
+      }
+    }
+  });
+
+  if (houveNovoDesbloqueio) {
+    if (typeof salvarEstado === 'function') salvarEstado();
+    if (typeof renderizarHeaderVidas === 'function') renderizarHeaderVidas();
+  }
+
+  return houveNovoDesbloqueio;
+}
+
+function renderizarConquistas() {
+  const grid = document.getElementById('conquistas-grid');
+  const contador = document.getElementById('conquistas-contador');
+  if (!grid) return;
+
+  verificarEAtualizarConquistas(true);
+
+  let totalDesbloqueadas = 0;
+
+  const listaProcessada = LISTA_CONQUISTAS.map((conquista) => {
+    const res = conquista.eval(estado);
+    const info = estado.conquistasDesbloqueadas ? estado.conquistasDesbloqueadas[conquista.id] : null;
+    const desbloqueada = !!info || res.atingido;
+    if (desbloqueada) totalDesbloqueadas++;
+
+    const porcentagem = Math.min(100, Math.round((res.progressoAtual / res.objetivo) * 100));
+
+    return {
+      ...conquista,
+      progressoAtual: res.progressoAtual,
+      objetivo: res.objetivo,
+      porcentagem,
+      desbloqueada,
+      info
+    };
+  });
+
+  if (contador) {
+    contador.textContent = `${totalDesbloqueadas} / ${listaProcessada.length} Conquistas`;
+  }
+
+  grid.innerHTML = '';
+
+  listaProcessada.forEach((conquista) => {
+    const card = document.createElement('div');
+    card.className = `conquista-card ${conquista.desbloqueada ? 'desbloqueada' : 'bloqueada'}`;
+
+    const dataTexto = conquista.desbloqueada && conquista.info?.dataDesbloqueio 
+      ? `<div class="conquista-rodape"><span class="conquista-data">Desbloqueada em ${conquista.info.dataDesbloqueio}</span></div>` 
+      : '';
+
+    card.innerHTML = `
+      <div class="conquista-medalha-wrapper">
+        <div class="conquista-medalha" style="--cor-medalha: ${conquista.cor};">
+          <span class="conquista-icone">${conquista.icone}</span>
+        </div>
+      </div>
+      <div class="conquista-conteudo">
+        <div class="conquista-topo">
+          <h4 class="conquista-titulo">${conquista.titulo}</h4>
+          <span class="conquista-status ${conquista.desbloqueada ? 'conquista-status-desbloqueada' : 'conquista-status-bloqueada'}">
+            ${conquista.desbloqueada ? 'Desbloqueada' : 'Bloqueada'}
+          </span>
+        </div>
+        <p class="conquista-descricao">${conquista.descricao}</p>
+        <div class="conquista-progresso-bar-wrap">
+          <div class="conquista-bar-track">
+            <div class="conquista-bar-fill" style="width: ${conquista.porcentagem}%; background-color: ${conquista.cor};"></div>
+          </div>
+          <span class="conquista-progresso-texto">${conquista.progressoAtual} / ${conquista.objetivo}</span>
+        </div>
+        ${dataTexto}
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+

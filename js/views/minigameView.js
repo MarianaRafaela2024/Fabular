@@ -242,6 +242,10 @@ function finalizarMinigames() {
   estado.acertosMG = (Number(estado.acertosMG) || 0) + acertosSessao;
   estado.errosMG = (Number(estado.errosMG) || 0) + errosSessao;
 
+  if (errosSessao === 0 && totalJogos > 0) {
+    estado.sequenciasPerfeitasMG = (Number(estado.sequenciasPerfeitasMG) || 0) + 1;
+  }
+
   estado.mgAcertos = 0;
   estado.mgErros = 0;
 
@@ -251,6 +255,10 @@ function finalizarMinigames() {
   registrarEstrelasHistoria(estrelas);
   if (typeof garantirContadoresRelatorio === 'function') {
     garantirContadoresRelatorio();
+  }
+
+  if (typeof verificarEAtualizarConquistas === 'function') {
+    verificarEAtualizarConquistas();
   }
 
   estado.nivel = calcularNivelPorXp(estado.totalEstrelas);
