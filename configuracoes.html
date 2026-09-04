@@ -54,12 +54,12 @@
 
     <div class="login-wrapper modo-config">
       <div class="login-card config-card-pagina" id="configuracoes-card" role="region" aria-label="Configurações do responsável">
-        <div class="config-topo-header">
+          <div class="config-topo-header">
           <div>
             <h2 class="login-card-titulo" style="margin: 0;">⚙️ Configurações</h2>
             <p class="tela-sub" style="margin: 4px 0 0 0;">Gerencie seus dados, perfis das crianças e relatórios.</p>
           </div>
-          <button class="btn-secundario btn-voltar-config-top" id="btn-voltar-perfis-config" type="button">← Voltar para troca de perfil</button>
+          <button class="btn-secundario btn-voltar-config-top" id="btn-voltar-config-top" type="button">← Voltar</button>
         </div>
 
         <div class="config-abas" role="tablist" aria-label="Seções de configuração">
@@ -162,5 +162,27 @@
   <script src="js/models/faixaEtaria.js"></script>
   <script src="js/utils/avatarUtils.js"></script>
   <script src="js/configuracoes.js"></script>
+  <script>
+    (function () {
+      const btnVoltar = document.getElementById('btn-voltar-config-top');
+      const veioDaBiblioteca = sessionStorage.getItem('configVoltarBiblioteca') === '1';
+
+      if (btnVoltar) {
+        if (veioDaBiblioteca) {
+          btnVoltar.textContent = '← Voltar à Biblioteca';
+          btnVoltar.addEventListener('click', function () {
+            sessionStorage.removeItem('configVoltarBiblioteca');
+            window.location.href = 'index.html';
+          });
+        } else {
+          // Veio do login: comportamento original (volta para troca de perfil)
+          btnVoltar.textContent = '← Voltar para troca de perfil';
+          btnVoltar.addEventListener('click', function () {
+            history.back();
+          });
+        }
+      }
+    })();
+  </script>
 </body>
 </html>

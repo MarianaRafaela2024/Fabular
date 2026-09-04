@@ -62,17 +62,34 @@
           <span aria-hidden="true" class="icone-vidas-header" id="icone-vidas-header">❤️</span>
           <span id="total-vidas">5/5</span>
         </div>
-        <button class="btn-icon" id="btn-contraste" title="Alternar alto contraste"
-          aria-label="Alternar alto contraste">
-          <img src="midia/contraste.png" alt="Alto contraste">
-        </button>
-        <button class="btn-icon" id="btn-fonte-mais" title="Aumentar fonte" aria-label="Aumentar fonte">A+
-        </button>
-        <button class="btn-icon" id="btn-fonte-menos" title="Diminuir fonte" aria-label="Diminuir fonte">A-
-        </button>
-        <button class="btn-icon btn-sair" id="btn-sair" title="Sair" aria-label="Sair e voltar ao login">
-          <img src="midia/sair.png" alt="Sair">
-        </button>
+        <div class="header-mais-wrap" id="header-mais-wrap">
+          <button class="btn-icon btn-header-mais" id="btn-header-mais" title="Mais opções" aria-label="Mais opções"
+            aria-expanded="false">
+            <img src="midia/menu/mais-opcoes.png" alt="Mais opções" class="menu-icon">
+          </button>
+          <div class="header-mais-menu" id="header-mais-menu" aria-hidden="true">
+            <button class="btn-icon" id="btn-contraste" title="Alternar alto contraste" aria-label="Alternar alto contraste">
+              <img src="midia/contraste.png" alt="" class="menu-icon">
+              <span class="menu-label">Contraste</span>
+            </button>
+            <button class="btn-icon" id="btn-fonte-mais" title="Aumentar fonte" aria-label="Aumentar fonte">
+              <img src="midia/menu/fonte-mais.png" alt="" class="menu-icon">
+              <span class="menu-label">Fonte +</span>
+            </button>
+            <button class="btn-icon" id="btn-fonte-menos" title="Diminuir fonte" aria-label="Diminuir fonte">
+              <img src="midia/menu/fonte-menos.png" alt="" class="menu-icon">
+              <span class="menu-label">Fonte -</span>
+            </button>
+            <button class="btn-icon btn-ir-config" id="btn-ir-configuracoes" title="Configurações" aria-label="Configurações">
+              <img src="midia/menu/configuracoes.png" alt="" class="menu-icon">
+              <span class="menu-label">Configurações</span>
+            </button>
+            <button class="btn-icon btn-sair" id="btn-sair" title="Sair" aria-label="Sair e voltar ao login">
+              <img src="midia/sair.png" alt="" class="menu-icon">
+              <span class="menu-label">Sair</span>
+            </button>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -109,7 +126,7 @@
         <!-- BIBLIOTECA -->
         <section id="tela-biblioteca" class="tela-app ativa">
           <div class="tela-header">
-            <h2>📚 Biblioteca de Histórias</h2>
+            <h2>Biblioteca</h2>
             <p class="tela-sub">Escolha uma aventura para começar!</p>
           </div>
           <div class="filtros-bar">
@@ -376,6 +393,23 @@
         </section>
 
       </main>
+    </div>
+  </div>
+
+  <!-- PORTÃO PARENTAL: verifica conta matemática antes de ir às configurações -->
+  <div class="portao-overlay oculto" id="portao-parental-overlay" role="dialog" aria-modal="true" aria-labelledby="portao-titulo">
+    <div class="portao-card" id="portao-card">
+      <div class="portao-icone">🔐</div>
+      <h2 class="portao-titulo" id="portao-titulo">Área dos Responsáveis</h2>
+      <p class="portao-desc">Para acessar as configurações, resolva a conta abaixo:</p>
+      <div class="portao-conta" id="portao-conta" aria-live="polite"></div>
+      <div class="portao-input-wrap">
+        <input class="portao-input" id="portao-resposta" type="number" inputmode="numeric"
+          placeholder="Sua resposta..." autocomplete="off" aria-label="Resposta da conta">
+        <button class="btn-principal portao-btn-confirmar" id="portao-btn-confirmar">Confirmar ✓</button>
+      </div>
+      <p class="portao-erro oculto" id="portao-erro" aria-live="assertive">❌ Resposta incorreta. Tente novamente!</p>
+      <button class="btn-secundario portao-btn-cancelar" id="portao-btn-cancelar">Cancelar</button>
     </div>
   </div>
 

@@ -167,6 +167,127 @@ async function inicializar() {
 
   bindSeExistir('btn-sair', 'click', mostrarModalSair);
 
+  // ── Menu de 3 pontinhos do header ──────────────────────────────────────────
+  const btnMais = document.getElementById('btn-header-mais');
+  const menuMais = document.getElementById('header-mais-menu');
+
+  if (btnMais && menuMais) {
+    btnMais.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const aberto = menuMais.classList.toggle('aberto');
+      btnMais.setAttribute('aria-expanded', String(aberto));
+      menuMais.setAttribute('aria-hidden', String(!aberto));
+    });
+
+    // Fecha ao clicar fora
+    document.addEventListener('click', (e) => {
+      if (!menuMais.contains(e.target) && e.target !== btnMais) {
+        menuMais.classList.remove('aberto');
+        btnMais.setAttribute('aria-expanded', 'false');
+        menuMais.setAttribute('aria-hidden', 'true');
+      }
+    });
+
+    // Fecha ao acionar botões internos — EXCETO os de fonte (mantêm menu aberto)
+    const IDS_NAO_FECHAM = new Set(['btn-fonte-mais', 'btn-fonte-menos']);
+    menuMais.querySelectorAll('button').forEach(btn => {
+      if (IDS_NAO_FECHAM.has(btn.id)) return; // fonte: não fecha
+      btn.addEventListener('click', () => {
+        setTimeout(() => {
+          menuMais.classList.remove('aberto');
+          btnMais.setAttribute('aria-expanded', 'false');
+          menuMais.setAttribute('aria-hidden', 'true');
+        }, 120);
+      });
+    });
+  }
+
+  // ───────────────────────────────────────────────────────────────────────────
+
+  // ── Portão Parental → Configurações ────────────────────────────────────────
+  const overlay   = document.getElementById('portao-parental-overlay');
+  const contaEl   = document.getElementById('portao-conta');
+  const inputResp = document.getElementById('portao-resposta');
+  const erroEl    = document.getElementById('portao-erro');
+  const btnConf   = document.getElementById('portao-btn-confirmar');
+  const btnCanc   = document.getElementById('portao-btn-cancelar');
+  const btnConfig = document.getElementById('btn-ir-configuracoes');
+
+  let _respostaCorreta = 0;
+
+  function _gerarContaParental() {
+    const tipo = Math.floor(Math.random() * 3); // 0=soma, 1=sub, 2=mult
+    let a, b, op, res;
+    if (tipo === 0) {
+      a = Math.floor(Math.random() * 50) + 10;
+      b = Math.floor(Math.random() * 50) + 10;
+      op = '+'; res = a + b;
+    } else if (tipo === 1) {
+      a = Math.floor(Math.random() * 50) + 30;
+      b = Math.floor(Math.random() * 20) + 5;
+      op = '−'; res = a - b;
+    } else {
+      a = Math.floor(Math.random() * 10) + 3;
+      b = Math.floor(Math.random() * 10) + 3;
+      op = '×'; res = a * b;
+    }
+    return { expr: `${a}  ${op}  ${b}  =  ?`, res };
+  }
+
+  function _abrirPortaoParental() {
+    if (!overlay) return;
+    const { expr, res } = _gerarContaParental();
+    _respostaCorreta = res;
+    if (contaEl) contaEl.textContent = expr;
+    if (inputResp) inputResp.value = '';
+    if (erroEl)   erroEl.classList.add('oculto');
+    overlay.classList.remove('oculto');
+    setTimeout(() => inputResp && inputResp.focus(), 80);
+  }
+
+  function _fecharPortaoParental() {
+    if (overlay) overlay.classList.add('oculto');
+  }
+
+  function _confirmarPortao() {
+    const val = parseInt(inputResp && inputResp.value, 10);
+    if (val === _respostaCorreta) {
+      _fecharPortaoParental();
+      sessionStorage.setItem('configVoltarBiblioteca', '1');
+      window.location.href = 'configuracoes.html';
+    } else {
+      if (erroEl) {
+        erroEl.classList.remove('oculto');
+        // Reinicia animação de shake
+        erroEl.style.animation = 'none';
+        void erroEl.offsetWidth;
+        erroEl.style.animation = '';
+      }
+      if (inputResp) { inputResp.value = ''; inputResp.focus(); }
+      const { expr, res } = _gerarContaParental();
+      _respostaCorreta = res;
+      if (contaEl) contaEl.textContent = expr;
+    }
+  }
+
+  if (btnConfig) {
+    btnConfig.addEventListener('click', _abrirPortaoParental);
+  }
+  if (btnConf) {
+    btnConf.addEventListener('click', _confirmarPortao);
+  }
+  if (inputResp) {
+    inputResp.addEventListener('keydown', (e) => { if (e.key === 'Enter') _confirmarPortao(); });
+  }
+  if (btnCanc) {
+    btnCanc.addEventListener('click', _fecharPortaoParental);
+  }
+  // Fecha ao clicar no overlay fora do card
+  if (overlay) {
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) _fecharPortaoParental(); });
+  }
+  // ───────────────────────────────────────────────────────────────────────────
+
   document.querySelectorAll('.nav-item').forEach(btn => {
     btn.addEventListener('click', () => {
       const tela = btn.dataset.tela;
