@@ -17,7 +17,7 @@
     }
   </style>
   <script>
-    (function() {
+    (function () {
       try {
         if (localStorage.getItem('mundoHistorias_modoNoturno') === '1') {
           document.documentElement.classList.add('alto-contraste');
@@ -28,7 +28,7 @@
           document.documentElement.style.fontSize = f + 'px';
           document.documentElement.style.setProperty('--fonte-base', f + 'px');
         }
-      } catch(e) {}
+      } catch (e) { }
     })();
   </script>
   <meta charset="UTF-8" />
@@ -133,7 +133,8 @@
         <section id="tela-leitura" class="tela-app">
           <div class="leitura-container">
             <div class="leitura-header">
-              <button class="btn-voltar" id="btn-voltar-biblioteca" aria-label="Voltar à biblioteca">← Biblioteca</button>
+              <button class="btn-voltar" id="btn-voltar-biblioteca" aria-label="Voltar à biblioteca">←
+                Biblioteca</button>
               <div class="leitura-info">
                 <span class="leitura-titulo-badge" id="leitura-titulo-badge">Título</span>
                 <div class="fase-indicador">
@@ -155,22 +156,21 @@
 
             <!-- CARTÃO DO LIVRO -->
             <div class="cartao-livro-leitura" id="cartao-livro-leitura">
-              <div class="livro-folha-topo">
-                <span class="livro-pagina-indicador" id="livro-pagina-indicador">Página 1 de 1</span>
-                <span class="livro-contagem-palavras" id="livro-contagem-palavras">150 palavras</span>
-              </div>
               <div class="historia-texto" id="historia-texto"></div>
-            </div>
-
-            <!-- NAVEGAÇÃO DE PÁGINAS (Se passar de 150 palavras) -->
-            <div class="livro-navegacao-paginas" id="livro-navegacao-paginas" style="display:none">
-              <button class="btn-virar-pagina btn-pagina-anterior" id="btn-pagina-anterior" disabled aria-label="Página anterior">
-                <span class="seta">←</span> <span class="btn-texto-completo">Página Anterior</span><span class="btn-texto-curto">Anterior</span>
-              </button>
-              <div class="livro-paginacao-dots" id="livro-paginacao-dots"></div>
-              <button class="btn-virar-pagina btn-proxima-pagina" id="btn-proxima-pagina" aria-label="Próxima página">
-                <span class="btn-texto-completo">Próxima Página</span><span class="btn-texto-curto">Próxima</span> <span class="seta">→</span>
-              </button>
+              <!-- NAVEGAÇÃO DE PÁGINAS (rodapé interno do card) -->
+              <div class="livro-navegacao-paginas" id="livro-navegacao-paginas" style="display:none">
+                <button class="btn-virar-pagina btn-pagina-anterior" id="btn-pagina-anterior" disabled
+                  aria-label="Página anterior">
+                  <span class="seta">←</span> <span class="btn-texto-completo">Anterior</span>
+                </button>
+                <div class="livro-nav-centro">
+                  <div class="livro-paginacao-dots" id="livro-paginacao-dots"></div>
+                  <span class="livro-pagina-indicador" id="livro-pagina-indicador">1 / 1</span>
+                </div>
+                <button class="btn-virar-pagina btn-proxima-pagina" id="btn-proxima-pagina" aria-label="Próxima página">
+                  <span class="btn-texto-completo">Próxima</span> <span class="seta">→</span>
+                </button>
+              </div>
             </div>
 
             <div class="interacao-area oculto" id="interacao-area" style="display:none"></div>
@@ -183,7 +183,8 @@
 
             <div class="leitura-rodape">
               <button class="btn-secundario" id="btn-pular-fase" style="display:none">Pular fase →</button>
-              <button class="btn-principal" id="btn-continuar" style="display:none">Vamos Jogar! 🚀 (5 minigames)</button>
+              <button class="btn-principal" id="btn-continuar" style="display:none">Vamos Jogar! 🚀 (5
+                minigames)</button>
             </div>
           </div>
         </section>
@@ -342,7 +343,7 @@
                     <img src="midia/IconeRaposa.png" alt="Lumi — Assistente de IA">
                   </span>
                   <div class="bot-chat-bubble">
-                    Oi! Sou a Lumi! 🦊 Me conte sua ideia e eu crio uma história completa para você.
+                    Oi! Sou a Lumi! Me conte sua ideia e eu crio uma história completa para você.
                   </div>
                 </div>
                 <div class="bot-chat-msg bot-chat-msg-ai">
