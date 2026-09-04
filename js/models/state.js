@@ -31,6 +31,8 @@ let estado = {
   relatorioEventos: [], // eventos locais por minigame
   vidasPerdidas: [],   // fallback legado
   vidasPerdidasPorCrianca: {}, // mapa { [childKey]: [timestamps (ms)] } por perfil infantil
+  conquistasDesbloqueadas: {}, // mapa { [conquistaId]: { dataDesbloqueio, timestamp } }
+  sequenciasPerfeitasMG: 0,    // contagem de minigames sem errar
   progressoCriancaId: null,
   syncPermitido: false
 };
@@ -61,7 +63,8 @@ function snapshotProgresso() {
     acertosMG: estado.acertosMG || 0,
     errosMG: estado.errosMG || 0,
     naoConsigoOuvir: estado.naoConsigoOuvir || 0,
-    relatorioEventos: estado.relatorioEventos || []
+    conquistasDesbloqueadas: estado.conquistasDesbloqueadas || {},
+    sequenciasPerfeitasMG: estado.sequenciasPerfeitasMG || 0
   };
 }
 
@@ -78,6 +81,8 @@ function limparProgressoMemoria() {
   estado.mgErros = 0;
   estado.atividadeDiaria = [];
   estado.relatorioEventos = [];
+  estado.conquistasDesbloqueadas = {};
+  estado.sequenciasPerfeitasMG = 0;
 }
 
 function aplicarSnapshotProgresso(dados) {
@@ -92,6 +97,12 @@ function aplicarSnapshotProgresso(dados) {
   if (dados.acertosMG != null) estado.acertosMG = Number(dados.acertosMG) || 0;
   if (dados.errosMG != null) estado.errosMG = Number(dados.errosMG) || 0;
   if (dados.naoConsigoOuvir != null) estado.naoConsigoOuvir = Number(dados.naoConsigoOuvir) || 0;
+  if (dados.conquistasDesbloqueadas && typeof dados.conquistasDesbloqueadas === 'object') {
+    estado.conquistasDesbloqueadas = dados.conquistasDesbloqueadas;
+  }
+  if (dados.sequenciasPerfeitasMG != null) {
+    estado.sequenciasPerfeitasMG = Number(dados.sequenciasPerfeitasMG) || 0;
+  }
 }
 
 function salvarEstado() {

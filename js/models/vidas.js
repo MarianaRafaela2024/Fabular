@@ -123,6 +123,28 @@ function perderVida() {
   return { vidasRestantes, zerou };
 }
 
+//Recupera corações de vida para a criança ativa (máximo de 5 corações).
+function recuperarVidas(quantidade = 1) {
+  if (!estado) return obterVidasAtuais();
+  if (!estado.vidasPerdidasPorCrianca || typeof estado.vidasPerdidasPorCrianca !== 'object') {
+    estado.vidasPerdidasPorCrianca = {};
+  }
+
+  const chave = obterChaveCriancaAtual();
+  const perdas = obterHistoricoVidasPerdidas();
+
+  if (perdas.length > 0 && quantidade > 0) {
+    const remover = Math.min(quantidade, perdas.length);
+    perdas.splice(0, remover);
+    estado.vidasPerdidasPorCrianca[chave] = perdas;
+    if (typeof salvarEstado === 'function') salvarEstado();
+  }
+
+  renderizarHeaderVidas(false);
+  return obterVidasAtuais();
+}
+
+
 //Verifica se a criança possui mais de 0 vidas no sistema.
 function verificarPodeJogarMinigame() {
   return obterVidasAtuais() > 0;

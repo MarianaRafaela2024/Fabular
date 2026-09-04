@@ -387,6 +387,9 @@ function registrarEstrelasHistoria(estrelasNovas) {
   }
 
   salvarEstado();
+  if (typeof verificarEAtualizarConquistas === 'function') {
+    verificarEAtualizarConquistas();
+  }
   if (typeof enviarSyncProgresso === 'function') enviarSyncProgresso().catch(() => {});
   atualizarHeader();
   renderizarBiblioteca();
