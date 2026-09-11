@@ -1805,10 +1805,15 @@ html.alto-contraste .portao-input {
 }
 
 .mg-desc {
-  font-size: clamp(0.95rem, 2.6vw, 1.1rem);
-  color: var(--texto-sub);
+  font-family: 'Baloo 2', cursive;
+  font-size: clamp(1rem, 2.8vw, 1.15rem);
+  font-weight: 700;
+  color: var(--texto);
   margin-bottom: 14px;
-  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: -.01em;
 }
 
 .mg-icone {
