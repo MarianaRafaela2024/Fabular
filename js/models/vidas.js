@@ -197,35 +197,15 @@ function renderizarHeaderVidas(animarPerda = false) {
 }
 
 /**
- * Exibe um toast/notificação breve e amigável informando a perda de um coração.
+ * Aciona a animação de tremor do coração no header ao perder vida, sem exibir texto/frase.
  */
 function mostrarAvisoPerdaVida(vidasRestantes) {
-  let toast = document.getElementById('toast-perda-vida');
-  if (!toast) {
-    toast = document.createElement('div');
-    toast.id = 'toast-perda-vida';
-    toast.className = 'toast-perda-vida-container';
-    document.body.appendChild(toast);
+  const badge = document.getElementById('badge-vidas');
+  if (badge) {
+    badge.classList.remove('perdeu-vida-anim');
+    void badge.offsetWidth;
+    badge.classList.add('perdeu-vida-anim');
   }
-
-  const msgCoracao = vidasRestantes === 1 ? 'Resta 1 coração! ❤️' : `Restam ${vidasRestantes} corações! ❤️`;
-
-  toast.innerHTML = `
-    <div class="toast-perda-conteudo">
-      <span class="toast-perda-icone">💔</span>
-      <div class="toast-perda-texto">
-        <strong>Ops! Você perdeu 1 coração</strong>
-        <span>${msgCoracao} Concentre-se e tente o seu melhor! ✨</span>
-      </div>
-    </div>
-  `;
-
-  toast.classList.add('visivel');
-
-  clearTimeout(toast._timer);
-  toast._timer = setTimeout(() => {
-    toast.classList.remove('visivel');
-  }, 4000);
 }
 
 /**

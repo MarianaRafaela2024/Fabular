@@ -106,7 +106,6 @@ function toggleContraste() {
   try {
     localStorage.setItem(CHAVE_MODO_NOTURNO, altoContraste ? '1' : '0');
   } catch (_) { /* ignora */ }
-  mostrarToast(altoContraste ? 'Modo noturno ativado 🌙' : 'Modo claro ativado ☀️');
 }
 
 function escurecerParaTransicao() {

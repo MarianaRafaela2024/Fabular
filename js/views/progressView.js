@@ -788,10 +788,6 @@ function renderizarConquistas() {
     const card = document.createElement('div');
     card.className = `conquista-card ${conquista.desbloqueada ? 'desbloqueada' : 'bloqueada'}`;
 
-    const dataTexto = conquista.desbloqueada && conquista.info?.dataDesbloqueio 
-      ? `<div class="conquista-rodape"><span class="conquista-data">Desbloqueada em ${conquista.info.dataDesbloqueio}</span></div>` 
-      : '';
-
     card.innerHTML = `
       <div class="conquista-medalha-wrapper">
         <div class="conquista-medalha" style="--cor-medalha: ${conquista.cor};">
@@ -812,7 +808,6 @@ function renderizarConquistas() {
           </div>
           <span class="conquista-progresso-texto">${conquista.progressoAtual} / ${conquista.objetivo}</span>
         </div>
-        ${dataTexto}
       </div>
     `;
     grid.appendChild(card);
