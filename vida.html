@@ -62,17 +62,36 @@
           <span aria-hidden="true" class="icone-vidas-header" id="icone-vidas-header">❤️</span>
           <span id="total-vidas">5/5</span>
         </div>
-        <button class="btn-icon" id="btn-contraste" title="Alternar alto contraste"
-          aria-label="Alternar alto contraste">
-          <img src="midia/contraste.png" alt="Alto contraste">
-        </button>
-        <button class="btn-icon" id="btn-fonte-mais" title="Aumentar fonte" aria-label="Aumentar fonte">A+
-        </button>
-        <button class="btn-icon" id="btn-fonte-menos" title="Diminuir fonte" aria-label="Diminuir fonte">A-
-        </button>
-        <button class="btn-icon btn-sair" id="btn-sair" title="Sair" aria-label="Sair e voltar ao login">
-          <img src="midia/sair.png" alt="Sair">
-        </button>
+        <div class="header-mais-wrap" id="header-mais-wrap">
+          <button class="btn-icon btn-header-mais" id="btn-header-mais" title="Mais opções" aria-label="Mais opções"
+            aria-expanded="false">
+            <img src="midia/menu/menu.png" alt="Mais opções" class="menu-icon">
+          </button>
+          <div class="header-mais-menu" id="header-mais-menu" aria-hidden="true">
+            <button class="btn-icon" id="btn-contraste" title="Alternar alto contraste"
+              aria-label="Alternar alto contraste">
+              <img src="midia/menu/half.png" alt="" class="menu-icon">
+              <span class="menu-label">Contraste</span>
+            </button>
+            <button class="btn-icon" id="btn-fonte-mais" title="Aumentar fonte" aria-label="Aumentar fonte">
+              <img src="midia/menu/plus.png" alt="" class="menu-icon">
+              <span class="menu-label">Fonte +</span>
+            </button>
+            <button class="btn-icon" id="btn-fonte-menos" title="Diminuir fonte" aria-label="Diminuir fonte">
+              <img src="midia/menu/minus.png" alt="" class="menu-icon">
+              <span class="menu-label">Fonte -</span>
+            </button>
+            <button class="btn-icon btn-ir-config" id="btn-ir-configuracoes" title="Configurações"
+              aria-label="Configurações">
+              <img src="midia/menu/settings.png" alt="" class="menu-icon">
+              <span class="menu-label">Configurações</span>
+            </button>
+            <button class="btn-icon btn-sair" id="btn-sair" title="Sair" aria-label="Sair e voltar ao login">
+              <img src="midia/menu/log-out.png" alt="" class="menu-icon">
+              <span class="menu-label">Sair</span>
+            </button>
+          </div>
+        </div>
       </div>
     </header>
 
