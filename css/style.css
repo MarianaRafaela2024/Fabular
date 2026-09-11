@@ -1805,10 +1805,26 @@ html.alto-contraste .portao-input {
 }
 
 .mg-desc {
+<<<<<<< HEAD
   font-size: clamp(0.95rem, 2.6vw, 1.1rem);
   color: var(--texto-sub);
   margin-bottom: 14px;
   line-height: 1.5;
+=======
+  /*font-size: 1.25rem;
+  color: var(--texto-sub);
+  margin-bottom: 16px;
+  line-height: 1.6;*/
+  font-family: 'Baloo 2', cursive;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--texto);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: -.01em;
+>>>>>>> 0f170ef8b706d15489d55f2ee2e654d9b4d64c3b
 }
 
 .mg-icone {
