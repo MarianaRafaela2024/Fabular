@@ -251,13 +251,13 @@
 
 .mem-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-  gap: 10px;
-  margin: 16px 0;
+  grid-template-columns: repeat(auto-fill, minmax(clamp(52px, 12vw, 70px), 1fr));
+  gap: 6px;
+  margin: 12px 0;
 }
 
 .mem-card {
-  height: 90px;
+  height: clamp(52px, 12vw, 70px);
   perspective: 700px;
   cursor: pointer;
 }
@@ -460,4 +460,109 @@
   color: #fff !important;
   text-decoration: line-through;
   opacity: .8;
+}
+
+/* Responsividade Legível para Celulares */
+@media (max-width: 768px) {
+  .bot-ia-card,
+  .ia-gerar-wrap,
+  .minigame-card,
+  .minigame-pergunta-box {
+    padding: 12px 14px !important;
+    border-radius: 14px !important;
+    margin: 10px 0 !important;
+  }
+
+  .bot-chat-avatar {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 0.85rem !important;
+    flex: 0 0 28px !important;
+  }
+
+  .bot-chat-bubble {
+    padding: 8px 12px !important;
+    font-size: 0.85rem !important;
+    border-radius: 12px 12px 12px 4px !important;
+  }
+
+  .bot-ia-label,
+  .ia-gerar-label {
+    font-size: 0.88rem !important;
+    margin-top: 6px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .bot-ia-textarea,
+  .ia-gerar-textarea {
+    padding: 8px 10px !important;
+    font-size: 0.88rem !important;
+    min-height: 56px !important;
+    border-radius: 10px !important;
+  }
+
+  .resumo-cena {
+    font-size: 2.5rem !important;
+    margin-bottom: 6px !important;
+  }
+
+  .resumo-titulo {
+    font-size: 1.05rem !important;
+    margin-bottom: 10px !important;
+  }
+
+  .resumo-texto {
+    padding: 12px 14px !important;
+    font-size: 0.88rem !important;
+    line-height: 1.5 !important;
+    border-radius: 12px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .resumo-aviso {
+    padding: 8px 12px !important;
+    font-size: 0.82rem !important;
+    border-radius: 10px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .resumo-btn-iniciar {
+    font-size: 0.92rem !important;
+    padding: 10px 24px !important;
+    font-weight: 700 !important;
+  }
+
+  .mem-grid {
+    grid-template-columns: repeat(auto-fill, minmax(clamp(44px, 12vw, 60px), 1fr)) !important;
+    gap: 6px !important;
+    margin: 10px 0 !important;
+  }
+
+  .mem-card {
+    height: clamp(44px, 12vw, 60px) !important;
+  }
+
+  .mem-frente {
+    font-size: 1.3rem !important;
+    border-width: 2px !important;
+    border-radius: 10px !important;
+  }
+
+  .mem-verso {
+    font-size: 0.72rem !important;
+    border-width: 2px !important;
+    padding: 4px !important;
+    border-radius: 10px !important;
+  }
+
+  .cp-cel {
+    font-size: 0.78rem !important;
+    border-radius: 5px !important;
+  }
+
+  .cp-alvo {
+    padding: 3px 10px !important;
+    font-size: 0.78rem !important;
+    margin: 3px !important;
+  }
 }

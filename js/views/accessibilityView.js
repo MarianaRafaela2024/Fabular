@@ -47,6 +47,29 @@ function resetarTamanhoFonte() {
   } catch (_) {}
 }
 
+function atualizarImagensMenuContraste() {
+  const imagensMenu = document.querySelectorAll('img[src*="midia/menu/"]');
+  imagensMenu.forEach(img => {
+    let src = img.getAttribute('src');
+    if (!src) return;
+    if (src.includes('half') || img.closest('#btn-contraste')) {
+      if (src.endsWith('halfL.png')) {
+        img.setAttribute('src', src.replace(/halfL\.png$/, 'half.png'));
+      }
+      return;
+    }
+    if (altoContraste) {
+      if (src.endsWith('.png') && !src.endsWith('L.png')) {
+        img.setAttribute('src', src.replace(/\.png$/, 'L.png'));
+      }
+    } else {
+      if (src.endsWith('L.png')) {
+        img.setAttribute('src', src.replace(/L\.png$/, '.png'));
+      }
+    }
+  });
+}
+
 function aplicarModoNoturno() {
   document.documentElement.classList.toggle('alto-contraste', altoContraste);
   if (altoContraste) {
@@ -64,6 +87,8 @@ function aplicarModoNoturno() {
   }
   const btn = document.getElementById('btn-contraste');
   if (btn) btn.classList.toggle('ativo', altoContraste);
+
+  atualizarImagensMenuContraste();
 }
 
 function carregarModoNoturno() {

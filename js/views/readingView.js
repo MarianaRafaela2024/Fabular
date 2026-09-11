@@ -78,7 +78,17 @@ function contarPalavras(textoHtmlOuPuro) {
   return textOnly.split(/\s+/).filter(Boolean).length;
 }
 
-function dividirTextoEmPaginasPorPalavras(textoCompleto, limitePalavras = 150) {
+function obterLimitePalavrasPorTela() {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  if (w <= 480 || h <= 620) return 32;
+  if (w <= 768 || h <= 760) return 45;
+  if (w <= 1024 || h <= 900) return 70;
+  return 90;
+}
+
+function dividirTextoEmPaginasPorPalavras(textoCompleto, limitePalavras) {
+  if (!limitePalavras) limitePalavras = obterLimitePalavrasPorTela();
   if (!textoCompleto || !textoCompleto.trim()) return [''];
 
   let blocos = [];
@@ -274,10 +284,15 @@ function lerTextoCompletoHistoria(opcoes) {
   setUiLeituraModoCompleto(true);
 
   let paginas = [];
+  const limiteTela = obterLimitePalavrasPorTela();
   if (Array.isArray(h.fases) && h.fases.length > 1) {
-    paginas = h.fases.map(f => `<p>${f.texto || ''}</p>`);
+    paginas = [];
+    h.fases.forEach(f => {
+      const sub = dividirTextoEmPaginasPorPalavras(f.texto || '', limiteTela);
+      paginas.push(...sub);
+    });
   } else {
-    paginas = dividirTextoEmPaginasPorPalavras(textoCompleto, 150);
+    paginas = dividirTextoEmPaginasPorPalavras(textoCompleto, limiteTela);
   }
 
   estadoLeitura.paginas = paginas;
@@ -389,6 +404,17 @@ function registrarEstrelasHistoria(estrelasNovas) {
   atualizarHeader();
   renderizarBiblioteca();
 }
+
+let debounceResizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(debounceResizeTimer);
+  debounceResizeTimer = setTimeout(() => {
+    const telaLeitura = document.getElementById('tela-leitura');
+    if (telaLeitura && telaLeitura.classList.contains('ativa') && estado.historiaAtual) {
+      lerTextoCompletoHistoria();
+    }
+  }, 250);
+});
 
 function atualizarEstrelasAposMinigame() {
   if (!estado.historiaAtual) return;
