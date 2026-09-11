@@ -1769,10 +1769,19 @@ html.alto-contraste .portao-input {
 }
 
 .mg-desc {
-  font-size: .95rem;
+  /*font-size: 1.25rem;
   color: var(--texto-sub);
   margin-bottom: 16px;
-  line-height: 1.6;
+  line-height: 1.6;*/
+  font-family: 'Baloo 2', cursive;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--texto);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: -.01em;
 }
 
 .mg-icone {
