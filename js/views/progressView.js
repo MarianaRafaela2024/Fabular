@@ -756,16 +756,17 @@ function renderizarConquistas() {
   const contador = document.getElementById('conquistas-contador');
   if (!grid) return;
 
-  verificarEAtualizarConquistas(true);
+  if (contador) contador.style.display = 'none';
 
-  let totalDesbloqueadas = 0;
+  const subtitulo = document.querySelector('.conquistas-subtitulo');
+  if (subtitulo) subtitulo.style.display = 'none';
+
+  verificarEAtualizarConquistas(true);
 
   const listaProcessada = LISTA_CONQUISTAS.map((conquista) => {
     const res = conquista.eval(estado);
     const info = estado.conquistasDesbloqueadas ? estado.conquistasDesbloqueadas[conquista.id] : null;
     const desbloqueada = !!info || res.atingido;
-    if (desbloqueada) totalDesbloqueadas++;
-
     const porcentagem = Math.min(100, Math.round((res.progressoAtual / res.objetivo) * 100));
 
     return {
@@ -778,39 +779,110 @@ function renderizarConquistas() {
     };
   });
 
-  if (contador) {
-    contador.textContent = `${totalDesbloqueadas} / ${listaProcessada.length} Conquistas`;
-  }
-
   grid.innerHTML = '';
 
-  listaProcessada.forEach((conquista) => {
-    const card = document.createElement('div');
-    card.className = `conquista-card ${conquista.desbloqueada ? 'desbloqueada' : 'bloqueada'}`;
+  // Container principal com layout lado a lado
+  const layoutWrap = document.createElement('div');
+  layoutWrap.className = 'conquistas-layout-side';
 
-    card.innerHTML = `
-      <div class="conquista-medalha-wrapper">
-        <div class="conquista-medalha" style="--cor-medalha: ${conquista.cor};">
-          <span class="conquista-icone">${conquista.icone}</span>
-        </div>
-      </div>
-      <div class="conquista-conteudo">
-        <div class="conquista-topo">
-          <h4 class="conquista-titulo">${conquista.titulo}</h4>
-          <span class="conquista-status ${conquista.desbloqueada ? 'conquista-status-desbloqueada' : 'conquista-status-bloqueada'}">
-            ${conquista.desbloqueada ? 'Desbloqueada' : 'Bloqueada'}
-          </span>
-        </div>
-        <p class="conquista-descricao">${conquista.descricao}</p>
-        <div class="conquista-progresso-bar-wrap">
-          <div class="conquista-bar-track">
-            <div class="conquista-bar-fill" style="width: ${conquista.porcentagem}%; background-color: ${conquista.cor};"></div>
+  // Coluna esquerda: Esferas de conquista
+  const circlesCol = document.createElement('div');
+  circlesCol.className = 'conquistas-col-circulos';
+
+  const hintEl = document.createElement('div');
+  hintEl.className = 'conquistas-dica-click';
+  hintEl.innerHTML = '👆 Clique em uma conquista para ver sua descrição ao lado:';
+  circlesCol.appendChild(hintEl);
+
+  const roundGrid = document.createElement('div');
+  roundGrid.className = 'conquistas-grid-round-wrap';
+  circlesCol.appendChild(roundGrid);
+
+  // Coluna direita (Ao lado): Painel de detalhes da conquista selecionada
+  const detailsCol = document.createElement('div');
+  detailsCol.className = 'conquistas-col-detalhes';
+
+  const detalhesContainer = document.createElement('div');
+  detalhesContainer.id = 'conquista-detalhes-container';
+  detalhesContainer.className = 'conquista-detalhes-container';
+  detailsCol.appendChild(detalhesContainer);
+
+  let conquistaAtivaId = null;
+
+  function mostrarDetalhes(conquista) {
+    conquistaAtivaId = conquista.id;
+
+    // Destacar esfera selecionada
+    const allRounds = roundGrid.querySelectorAll('.conquista-card-round');
+    allRounds.forEach((btn) => {
+      if (btn.dataset.id === conquista.id) {
+        btn.classList.add('ativa');
+      } else {
+        btn.classList.remove('ativa');
+      }
+    });
+
+    const recText = conquista.recompensa > 0 ? (conquista.recompensa === 1 ? '1 coração' : `${conquista.recompensa} corações`) : null;
+
+    detalhesContainer.innerHTML = `
+      <div class="conquista-detalhes-card ${conquista.desbloqueada ? 'card-desbloqueado' : 'card-bloqueado'}">
+        <div class="conquista-detalhes-header">
+          <div class="conquista-detalhes-badge ${conquista.desbloqueada ? 'desbloqueada' : 'bloqueada'}">
+            <span>${conquista.desbloqueada ? '🔓' : '🔒'}</span>
           </div>
-          <span class="conquista-progresso-texto">${conquista.progressoAtual} / ${conquista.objetivo}</span>
+          <div class="conquista-detalhes-titulo-wrap">
+            <h4 class="conquista-detalhes-titulo">${conquista.titulo}</h4>
+          </div>
         </div>
+
+        <p class="conquista-detalhes-descricao">${conquista.descricao}</p>
+
+        <div class="conquista-detalhes-progresso">
+          <div class="conquista-detalhes-bar-track">
+            <div class="conquista-detalhes-bar-fill ${conquista.desbloqueada ? 'fill-desbloqueado' : 'fill-bloqueado'}" style="width: ${conquista.porcentagem}%;"></div>
+          </div>
+          <div class="conquista-detalhes-progresso-info">
+            <span>Progresso: <strong>${conquista.progressoAtual} / ${conquista.objetivo}</strong></span>
+          </div>
+        </div>
+
+        ${recText ? `<div class="conquista-detalhes-meta"><span class="conquista-detalhes-tag recompensa">🎁 Recompensa: +${recText} ❤️</span></div>` : ''}
       </div>
     `;
-    grid.appendChild(card);
+
+    detalhesContainer.style.display = 'block';
+  }
+
+  listaProcessada.forEach((conquista) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'conquista-item-wrap';
+
+    wrap.innerHTML = `
+      <button type="button" class="conquista-card-round ${conquista.desbloqueada ? 'desbloqueada' : 'bloqueada'}" data-id="${conquista.id}" title="${conquista.titulo}">
+        <div class="conquista-padlock-badge ${conquista.desbloqueada ? 'desbloqueada' : 'bloqueada'}">
+          <span>${conquista.desbloqueada ? '🔓' : '🔒'}</span>
+        </div>
+        <div class="conquista-round-icon-wrap">
+          <span class="conquista-round-icone">${conquista.icone}</span>
+        </div>
+      </button>
+      <div class="conquista-round-titulo">${conquista.titulo}</div>
+    `;
+
+    wrap.addEventListener('click', () => {
+      mostrarDetalhes(conquista);
+    });
+
+    roundGrid.appendChild(wrap);
   });
+
+  layoutWrap.appendChild(circlesCol);
+  layoutWrap.appendChild(detailsCol);
+  grid.appendChild(layoutWrap);
+
+  // Seleciona automaticamente a primeira conquista para exibir a descrição ao lado imediatamente
+  if (listaProcessada.length > 0) {
+    mostrarDetalhes(listaProcessada[0]);
+  }
 }
 
