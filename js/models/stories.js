@@ -826,7 +826,7 @@ const EMOJI_POR_PALAVRA = {
   tesouro: '💎', mapa: '🗺️', chave: '🔑', porta: '🚪',
   janela: '🪟', cama: '🛏️', travesseiro: '🛏️', cobertor: '🛏️',
   chapeu: '🎩', sapato: '👟', roupa: '👕', vestido: '👗',
-  oculos: '👓', relogio: '⌚', presente: '🎁',
+  oculos: '👓', relogio: '⌚', presente: '🎁', avermelhadas: '🔴', corais: '🪸', vibrantes: '📳', tentáculos: '🐙',
   musica: '🎵', instrumento: '🎸', piano: '🎹', violao: '🎸',
   teatro: '🎭', cinema: '🎬', camera: '📷', televisao: '📺',
   computador: '💻', tablet: '📱', robo: '🤖', pingo: '💧',
