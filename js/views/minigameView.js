@@ -89,13 +89,14 @@ function renderizarMinigame() {
   const corpo = document.getElementById('minigame-corpo');
   corpo.innerHTML = '';
 
-  const tiposSemEnunciadoDuplicado = ['completar', 'palavras_perdidas', 'escolha', 'verdadeiro_falso', 'som_palavra', 'rima', 'quem_disse', 'memoria', 'jogo_memoria'];
-  if (!tiposSemEnunciadoDuplicado.includes(tipo)) {
-    const header = document.createElement('div');
-    header.className = 'mg-enunciado';
-    header.textContent = nomeMinigame(tipo);
-    corpo.appendChild(header);
-  }
+  // Título e contador exibidos exclusivamente DENTRO do card do minigame
+  const header = document.createElement('div');
+  header.className = 'mg-enunciado';
+  header.innerHTML = `
+    <span class="mg-titulo-texto">${nomeMinigame(tipo)}</span>
+    <span class="mg-contador-card">${estado.minigameAtual + 1} / ${total}</span>
+  `;
+  corpo.appendChild(header);
 
   switch (tipo) {
     case 'memoria':

@@ -774,7 +774,7 @@ const EMOJI_POR_PALAVRA = {
   leao: '🦁', leoa: '🦁', leoes: '🦁',
   zebra: '🦓', elefante: '🐘', macaco: '🐒', macaca: '🐒',
   gato: '🐱', gata: '🐱', cachorro: '🐶', cachorra: '🐶', cao: '🐶',
-  coelho: '🐰', passaro: '🐦', passarinho: '', borboleta: '🦋', peixe: '🐟', baleia: '🐋',
+  coelho: '🐰', passaro: '🐦', passarinho: '🐦', borboleta: '🦋', peixe: '🐟', baleia: '🐋',
   dragao: '🐉', urso: '🐻', ursoa: '🐻', vaca: '🐄', porco: '🐷',
   cavalo: '🐴', ovelha: '🐑', galinha: '🐔', pato: '🦆', sapo: '🐸',
   tartaruga: '🐢', cobra: '🐍', lagarto: '🦎', crocodilo: '🐊',
