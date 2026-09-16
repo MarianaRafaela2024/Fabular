@@ -35,7 +35,15 @@ function renderizarBiblioteca() {
     card.setAttribute('aria-label', `${h.titulo}, gênero ${h.genero}, faixa ${h.faixa}`);
 
     card.innerHTML = `
-      <div class="hc-emoji">${h.emoji}</div>
+      <div class="hc-emoji">
+        <img
+          src="${resolverImagemCapa(h.emoji)}"
+          alt="${h.titulo}"
+          class="hc-capa-img"
+          onerror="this.parentElement.classList.add('hc-emoji--fallback'); this.style.display='none';"
+        >
+        <span class="hc-emoji-fallback" aria-hidden="true">${h.emoji}</span>
+      </div>
       <div class="hc-titulo">${h.titulo}</div>
       <div class="hc-tags">
         <span class="hc-tag genero">${labelGenero(h.genero)}</span>

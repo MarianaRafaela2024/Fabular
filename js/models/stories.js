@@ -871,3 +871,162 @@ function normalizarChavePalavra(palavra) {
     .replace(/[^a-z0-9\s-]/g, '')
     .trim();
 }
+
+/* =========================================================================
+   SISTEMA DE RESOLUÇÃO DE IMAGENS PARA HISTÓRIAS
+   =========================================================================
+   Converte os valores dos campos `emoji` (capa) e `cena` (fundo de leitura)
+   vindos do banco de dados em caminhos de imagem em midia/cena/.
+
+   Para adicionar suporte a novos emojis, basta adicionar entradas nos
+   mapas MAPA_CAPA_IMAGEM e MAPA_CENA_IMAGEM abaixo.
+   ========================================================================= */
+
+/** Caminho base das imagens de cena/capa */
+const CAMINHO_BASE_CENA = 'midia/cena/';
+
+/**
+ * Mapeamento de emoji único (capa do card) → nome do arquivo de imagem.
+ * Chave: o emoji exato salvo no campo `Emoji` do banco.
+ * Valor: nome do arquivo sem extensão (extensão .png adicionada automaticamente).
+ */
+const MAPA_CAPA_IMAGEM = {
+  '🦁': 'leao',
+  '☁️': 'nuvem',
+  '📚': 'livros',
+  '🌧️': 'chuva',
+  '🦋': 'borboleta',
+  '🏡': 'casa',
+  '🌊': 'mar',
+  '🌻': 'girassol',
+  '🔵': 'ceu_azul',
+  '🌿': 'floresta',
+  '🟢': 'laboratorio',
+  '📖': 'livro',
+  '⭐': 'estrela',
+  '🌟': 'estrela',
+  '🐉': 'dragao',
+  '🐢': 'tartaruga',
+  '🐸': 'sapo',
+  '🦊': 'raposa',
+  '🐼': 'panda',
+  '🐧': 'pinguim',
+  '🦁': 'leao',
+  '🐻': 'urso',
+  '🐯': 'tigre',
+  '🦉': 'coruja',
+  '🏰': 'castelo',
+  '🚀': 'foguete',
+  '🎵': 'musica',
+  '🌈': 'arcoiris',
+  '🌙': 'lua',
+  '☀️': 'sol',
+  '🌸': 'flores',
+  '🏖️': 'praia',
+  '⛰️': 'montanha',
+  '🌴': 'palmeira'
+};
+
+/**
+ * Mapeamento de combinação de emojis de cena → nome do arquivo de imagem.
+ * Chave: a string EXATA salvo no campo `Cena` do banco (em uppercase conforme
+ *        aplicado em mapStorySummaryToLegacy).
+ * Valor: nome do arquivo sem extensão.
+ *
+ * IMPORTANTE: as chaves devem bater com o valor em uppercase que o backend retorna.
+ */
+const MAPA_CENA_IMAGEM = {
+  // Histórias manuais do banco
+  '🌙🦁🌳': 'cena_noite_floresta',
+  '☁️👧🌈': 'cena_nuvem_arcoiris',
+  '📚🔑🏛️': 'cena_biblioteca',
+  '🌧️🌈☂️': 'cena_chuva_arcoiris',
+  '🦋🌸📜': 'cena_borboleta_flores',
+  '🐦🏠🔨': 'cena_passaro_casa',
+  '🧪🟢✋': 'cena_laboratorio',
+  '🐠🌊🐙': 'cena_fundo_mar',
+  '🌻🌹🦋': 'cena_jardim',
+  '☀️🔵🌍': 'cena_ceu_azul',
+  '🌳🦜🌊': 'cena_floresta_amazonia',
+  // Cenas comuns geradas pela IA
+  '🌲🏡🌸': 'cena_floresta_casa',
+  '🏰🌟✨': 'cena_castelo',
+  '🚀🌙⭐': 'cena_espaco',
+  '🌊🐬🏖️': 'cena_praia',
+  '🌋🏔️❄️': 'cena_montanha',
+  '🎪🎭🎨': 'cena_festival',
+  '📚✏️🎒': 'cena_escola',
+  '🌺🦜🌴': 'cena_selva',
+  '🏙️🌆🌃': 'cena_cidade',
+  '🌅🌄🌇': 'cena_por_do_sol',
+  '⛄❄️🎿': 'cena_neve',
+  '🎠🎡🎢': 'cena_parque',
+  '🌻🌼🌷': 'cena_jardim_flores',
+  '🐘🦒🦁': 'cena_savana',
+  '🐋🐬🦈': 'cena_oceano',
+  '🍄🌿🦋': 'cena_campo'
+};
+
+/**
+ * Resolve o caminho da imagem de CENA (fundo exibido durante a leitura).
+ * Tenta lookup exato, depois emoji por emoji, e por fim retorna imagem padrão.
+ *
+ * @param {string} valorCena - Valor do campo `cena` da história (string de emojis).
+ * @returns {string} Caminho relativo da imagem (ex: "midia/cena/cena_noite_floresta.png").
+ */
+function resolverImagemCena(valorCena) {
+  const val = String(valorCena || '').trim();
+  if (!val) return `${CAMINHO_BASE_CENA}padrao.png`;
+
+  // 1. Lookup exato na tabela de cenas
+  if (MAPA_CENA_IMAGEM[val]) {
+    return `${CAMINHO_BASE_CENA}${MAPA_CENA_IMAGEM[val]}.png`;
+  }
+
+  // 2. Tenta mapear pelo primeiro emoji individualmente (capa como fallback de cena)
+  const emojisIndividuais = [...val]; // itera por code points Unicode
+  for (const emoji of emojisIndividuais) {
+    if (emoji.trim() && MAPA_CAPA_IMAGEM[emoji]) {
+      return `${CAMINHO_BASE_CENA}${MAPA_CAPA_IMAGEM[emoji]}.png`;
+    }
+  }
+
+  // 3. Fallback: imagem padrão
+  return `${CAMINHO_BASE_CENA}padrao.png`;
+}
+
+/**
+ * Resolve o caminho da imagem de CAPA (exibida nos cards da biblioteca).
+ * Tenta lookup exato do emoji único, depois fallback para imagem padrão.
+ *
+ * @param {string} valorEmoji - Valor do campo `emoji` da história.
+ * @returns {string} Caminho relativo da imagem (ex: "midia/cena/leao.png").
+ */
+function resolverImagemCapa(valorEmoji) {
+  const val = String(valorEmoji || '').trim();
+  if (!val) return `${CAMINHO_BASE_CENA}padrao.png`;
+
+  // 1. Lookup direto
+  if (MAPA_CAPA_IMAGEM[val]) {
+    return `${CAMINHO_BASE_CENA}${MAPA_CAPA_IMAGEM[val]}.png`;
+  }
+
+  // 2. Tenta cada code point individualmente (para emojis compostos)
+  const emojisIndividuais = [...val];
+  for (const emoji of emojisIndividuais) {
+    if (emoji.trim() && MAPA_CAPA_IMAGEM[emoji]) {
+      return `${CAMINHO_BASE_CENA}${MAPA_CAPA_IMAGEM[emoji]}.png`;
+    }
+  }
+
+  // 3. Fallback: imagem padrão
+  return `${CAMINHO_BASE_CENA}padrao.png`;
+}
+
+// Expõe as funções globalmente para uso nas views
+if (typeof window !== 'undefined') {
+  window.resolverImagemCena = resolverImagemCena;
+  window.resolverImagemCapa = resolverImagemCapa;
+  window.MAPA_CENA_IMAGEM = MAPA_CENA_IMAGEM;
+  window.MAPA_CAPA_IMAGEM = MAPA_CAPA_IMAGEM;
+}

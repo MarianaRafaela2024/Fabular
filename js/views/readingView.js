@@ -290,7 +290,19 @@ function renderizarPaginaAtualLivro(direcaoAnimacao = null) {
   if (labelEl) labelEl.textContent = 'História Completa';
 
   const cenaEl = document.getElementById('historia-emoji-cena');
-  if (cenaEl) cenaEl.textContent = h.cena || (h.fases && h.fases[0] && h.fases[0].cena) || '📖';
+  if (cenaEl) {
+    const valorCena = h.cena || (h.fases && h.fases[0] && h.fases[0].cena) || '📖';
+    const srcImagem = resolverImagemCena(valorCena);
+    cenaEl.innerHTML = `
+      <img
+        src="${srcImagem}"
+        alt="Cena da história"
+        class="cena-img"
+        onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"
+      >
+      <span class="cena-emoji-fallback" style="display:none;" aria-hidden="true">${valorCena}</span>
+    `;
+  }
 
   const indicadorEl = document.getElementById('livro-pagina-indicador');
   if (indicadorEl) {
