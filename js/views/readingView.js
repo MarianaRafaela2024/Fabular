@@ -78,17 +78,7 @@ function contarPalavras(textoHtmlOuPuro) {
   return textOnly.split(/\s+/).filter(Boolean).length;
 }
 
-function obterLimitePalavrasPorTela() {
-  const w = window.innerWidth;
-  const h = window.innerHeight;
-  if (w <= 480 || h <= 620) return 32;
-  if (w <= 768 || h <= 760) return 45;
-  if (w <= 1024 || h <= 900) return 70;
-  return 90;
-}
-
-function dividirTextoEmPaginasPorPalavras(textoCompleto, limitePalavras) {
-  if (!limitePalavras) limitePalavras = obterLimitePalavrasPorTela();
+function obterBlocosHistoria(textoCompleto) {
   if (!textoCompleto || !textoCompleto.trim()) return [''];
 
   let blocos = [];
@@ -112,6 +102,131 @@ function dividirTextoEmPaginasPorPalavras(textoCompleto, limitePalavras) {
   if (!blocos.length) {
     blocos = [`<p>${textoCompleto.trim()}</p>`];
   }
+
+  return blocos;
+}
+
+function normalizarHtmlHistoria(textoCompleto) {
+  return obterBlocosHistoria(textoCompleto).join('');
+}
+
+function obterLimitePalavrasPorTela() {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  if (w <= 480 || h <= 620) return 32;
+  if (w <= 768 || h <= 760) return 45;
+  if (w <= 1024 || h <= 900) return 70;
+  return 90;
+}
+
+function paginaLeituraPrecisaRolar() {
+  const main = document.getElementById('app-main');
+  if (!main) return false;
+  return main.scrollHeight > main.clientHeight + 8;
+}
+
+function medirAlturaMaximaPaginaHistoria() {
+  const main = document.getElementById('app-main');
+  const textoEl = document.getElementById('historia-texto');
+  if (!main || !textoEl) return 240;
+  const top = textoEl.getBoundingClientRect().top;
+  const bottom = main.getBoundingClientRect().bottom;
+  return Math.max(120, Math.floor(bottom - top - 120));
+}
+
+function alturaConteudoHistoria(html) {
+  const textoEl = document.getElementById('historia-texto');
+  if (!textoEl) return 0;
+  const probe = textoEl.cloneNode(false);
+  probe.removeAttribute('id');
+  probe.style.cssText = 'position:absolute;left:0;top:0;visibility:hidden;height:auto;max-height:none;overflow:visible;pointer-events:none;';
+  probe.style.width = Math.max(120, textoEl.clientWidth) + 'px';
+  probe.innerHTML = html || '';
+  const pai = textoEl.parentNode || document.body;
+  pai.appendChild(probe);
+  const h = probe.scrollHeight;
+  probe.remove();
+  return h;
+}
+
+function dividirHistoriaPorAltura(textoCompleto, alturaMax) {
+  const blocos = obterBlocosHistoria(textoCompleto);
+  const completo = blocos.join('');
+  if (!blocos.length) return [completo || textoCompleto];
+  if (alturaConteudoHistoria(completo) <= alturaMax) return [completo];
+
+  const cabe = (html) => alturaConteudoHistoria(html) <= alturaMax;
+
+  function quebrarBlocoGrande(bloco) {
+    const palavras = bloco.replace(/<[^>]+>/g, ' ').trim().split(/\s+/).filter(Boolean);
+    if (!palavras.length) return [bloco];
+    const partes = [];
+    let trecho = [];
+    palavras.forEach((p) => {
+      trecho.push(p);
+      const html = `<p>${trecho.join(' ')}</p>`;
+      if (!cabe(html) && trecho.length > 1) {
+        trecho.pop();
+        partes.push(`<p>${trecho.join(' ')}</p>`);
+        trecho = [p];
+      }
+    });
+    if (trecho.length) partes.push(`<p>${trecho.join(' ')}</p>`);
+    return partes.length ? partes : [bloco];
+  }
+
+  const paginas = [];
+  let atual = '';
+
+  blocos.forEach((bloco) => {
+    if (!atual) {
+      if (cabe(bloco)) {
+        atual = bloco;
+      } else {
+        paginas.push(...quebrarBlocoGrande(bloco));
+      }
+      return;
+    }
+
+    const tentativa = atual + bloco;
+    if (cabe(tentativa)) {
+      atual = tentativa;
+      return;
+    }
+
+    paginas.push(atual);
+    if (cabe(bloco)) {
+      atual = bloco;
+    } else {
+      paginas.push(...quebrarBlocoGrande(bloco));
+      atual = '';
+    }
+  });
+
+  if (atual) paginas.push(atual);
+  return paginas.length ? paginas : [completo];
+}
+
+function aplicarPaginacaoSeNecessario(htmlCompleto) {
+  const tela = document.getElementById('tela-leitura');
+  if (!tela || !tela.classList.contains('ativa')) return;
+  if (!paginaLeituraPrecisaRolar()) return;
+
+  const alturaMax = medirAlturaMaximaPaginaHistoria();
+  const paginas = dividirHistoriaPorAltura(htmlCompleto, alturaMax);
+  if (!paginas.length || (paginas.length === 1 && estadoLeitura.totalPaginas === 1)) return;
+
+  estadoLeitura.paginas = paginas;
+  estadoLeitura.totalPaginas = paginas.length;
+  estadoLeitura.paginaAtual = 0;
+  renderizarPaginaAtualLivro(null);
+}
+
+function dividirTextoEmPaginasPorPalavras(textoCompleto, limitePalavras) {
+  if (!limitePalavras) limitePalavras = obterLimitePalavrasPorTela();
+  if (!textoCompleto || !textoCompleto.trim()) return [''];
+
+  const blocos = obterBlocosHistoria(textoCompleto);
 
   const paginas = [];
   let paginaAtualHtml = '';
@@ -283,23 +398,19 @@ function lerTextoCompletoHistoria(opcoes) {
   irParaTela('leitura');
   setUiLeituraModoCompleto(true);
 
-  let paginas = [];
-  const limiteTela = obterLimitePalavrasPorTela();
-  if (Array.isArray(h.fases) && h.fases.length > 1) {
-    paginas = [];
-    h.fases.forEach(f => {
-      const sub = dividirTextoEmPaginasPorPalavras(f.texto || '', limiteTela);
-      paginas.push(...sub);
-    });
-  } else {
-    paginas = dividirTextoEmPaginasPorPalavras(textoCompleto, limiteTela);
-  }
-
-  estadoLeitura.paginas = paginas;
-  estadoLeitura.totalPaginas = paginas.length;
+  const htmlCompleto = normalizarHtmlHistoria(textoCompleto);
+  estadoLeitura.paginas = [htmlCompleto];
+  estadoLeitura.totalPaginas = 1;
   estadoLeitura.paginaAtual = 0;
-
   renderizarPaginaAtualLivro(null);
+
+  const main = document.getElementById('app-main');
+  if (main) main.scrollTop = 0;
+
+  requestAnimationFrame(() => {
+    aplicarPaginacaoSeNecessario(htmlCompleto);
+    setTimeout(() => aplicarPaginacaoSeNecessario(htmlCompleto), 80);
+  });
 }
 
 function setUiLeituraModoCompleto(completo) {

@@ -67,6 +67,18 @@ function nomeMinigame(tipo) {
   return nomes[tipo] || tipo;
 }
 
+function definirVisibilidadeBotao(el, visivel) {
+  if (!el) return;
+  el.classList.toggle('oculto', !visivel);
+  if (visivel) {
+    el.removeAttribute('hidden');
+    el.style.removeProperty('display');
+  } else {
+    el.setAttribute('hidden', '');
+    el.style.display = 'none';
+  }
+}
+
 function renderizarMinigame() {
   const spec =
     estado.minigamesPreset && estado.minigamesPreset[estado.minigameAtual]
@@ -83,20 +95,19 @@ function renderizarMinigame() {
   document.getElementById('mg-contador').textContent = `${estado.minigameAtual + 1} / ${total}`;
 
   document.getElementById('mg-feedback').classList.add('oculto');
-  document.getElementById('btn-proximo-mg').classList.add('oculto');
-  document.getElementById('btn-finalizar-mg').classList.add('oculto');
+  definirVisibilidadeBotao(document.getElementById('btn-proximo-mg'), false);
+  definirVisibilidadeBotao(document.getElementById('btn-finalizar-mg'), false);
 
   const corpo = document.getElementById('minigame-corpo');
   corpo.innerHTML = '';
 
-  // Título e contador exibidos exclusivamente DENTRO do card do minigame
-  const header = document.createElement('div');
-  header.className = 'mg-enunciado';
-  header.innerHTML = `
-    <span class="mg-titulo-texto">${nomeMinigame(tipo)}</span>
-    <span class="mg-contador-card">${estado.minigameAtual + 1} / ${total}</span>
-  `;
-  corpo.appendChild(header);
+  const tiposSemEnunciadoDuplicado = ['completar', 'palavras_perdidas', 'escolha', 'verdadeiro_falso', 'som_palavra', 'rima', 'quem_disse', 'memoria', 'jogo_memoria'];
+  if (!tiposSemEnunciadoDuplicado.includes(tipo)) {
+    const header = document.createElement('div');
+    header.className = 'mg-enunciado';
+    header.textContent = nomeMinigame(tipo);
+    corpo.appendChild(header);
+  }
 
   switch (tipo) {
     case 'memoria':
@@ -177,15 +188,13 @@ function mostrarFeedbackMG(ok, mostrarProximo = true) {
     const isUltimo = estado.minigameAtual >= estado.minigamesLista.length - 1;
     const btnProx = document.getElementById('btn-proximo-mg');
     const btnFin = document.getElementById('btn-finalizar-mg');
-    btnProx.classList.toggle('oculto', isUltimo);
-    btnFin.classList.toggle('oculto', !isUltimo);
-    if (isUltimo) btnFin.textContent = 'Ver Resultado 🏆';
-    else btnProx.textContent = 'Próximo Jogo →';
+    definirVisibilidadeBotao(btnProx, !isUltimo);
+    definirVisibilidadeBotao(btnFin, isUltimo);
+    if (isUltimo && btnFin) btnFin.textContent = 'Ver Resultado 🏆';
+    else if (btnProx) btnProx.textContent = 'Próximo Jogo →';
   } else if (zerouVidas) {
-    const btnProx = document.getElementById('btn-proximo-mg');
-    const btnFin = document.getElementById('btn-finalizar-mg');
-    if (btnProx) btnProx.classList.add('oculto');
-    if (btnFin) btnFin.classList.add('oculto');
+    definirVisibilidadeBotao(document.getElementById('btn-proximo-mg'), false);
+    definirVisibilidadeBotao(document.getElementById('btn-finalizar-mg'), false);
   }
 
   area.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -328,43 +337,13 @@ function registrarEventoMG(tipo, acao, dados) {
   salvarEstado();
 }
 
-function converterTextoParaPalavrasMF(textoFrase) {
-  if (!textoFrase) return [];
-  const textoComLinhas = String(textoFrase)
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/p>\s*<p>/gi, '\n')
-    .replace(/<\/em>\s*<em>/gi, '\n')
-    .replace(/<[^>]+>/g, ' ')
-    .trim();
-
-  const linhas = textoComLinhas.split('\n').map(l => l.replace(/\s+/g, ' ').trim()).filter(Boolean);
-  const resultado = [];
-
-  linhas.forEach((linha, idxLinha) => {
-    const palavrasLinha = linha.split(/\s+/).filter(Boolean);
-    const isUltimaLinha = idxLinha === linhas.length - 1;
-
-    palavrasLinha.forEach((p, idxPalavra) => {
-      const isUltimaPalavraDaLinha = idxPalavra === palavrasLinha.length - 1;
-      resultado.push({
-        palavra: p,
-        quebraLinha: isUltimaPalavraDaLinha && !isUltimaLinha
-      });
-    });
-  });
-
-  return resultado;
-}
-
 function revelarMontaFraseCorreta(palavrasCorretas) {
   const espaco = document.getElementById('mfEspaco');
   const pool = document.getElementById('mfPool');
   if (espaco) {
-    espaco.innerHTML = palavrasCorretas.map(it => {
-      const p = typeof it === 'object' ? it.palavra : String(it);
-      const q = typeof it === 'object' && it.quebraLinha;
-      return `<span class="mf-colocada mf-resposta-correta">${p}</span>${q ? '<div class="mf-line-break"></div>' : ''}`;
-    }).join(' ');
+    espaco.innerHTML = palavrasCorretas.map(p =>
+      `<span class="mf-colocada mf-resposta-correta">${p}</span>`
+    ).join(' ');
   }
   if (pool) pool.querySelectorAll('.mf-chip, .mf-colocada').forEach(b => { b.disabled = true; });
 }
@@ -517,7 +496,7 @@ function renderMemoria(fase, h, corpo, spec) {
 
   const wrap = document.createElement('div');
   wrap.innerHTML = `
-    <p class="mg-desc">Encontre os pares! Clique nos cards para virá-los e encontrar a palavra com seu emoji!</p>
+    <p class="mg-desc">Encontre os pares! Clique nos cards para virá-los e encontrar a palavra com seu emoji! 🃏</p>
     <div class="mem-grid" id="memGrid"></div>
     <div class="mem-status" id="memStatus">Pares encontrados: <strong id="memPares">0</strong> / ${pares.length}</div>
     <div style="text-align:center;margin-top:12px;">
@@ -1004,53 +983,15 @@ function renderCompletarMG(fase, corpo, spec) {
   btnDesistir?.addEventListener('click', () => validar(true));
 }
 
-const PALAVRAS_DISTRATORAS_COLORIR_PADRAO = [
-  'castelo', 'peixe', 'janela', 'foguete', 'estrada', 'girafa', 'relógio',
-  'vassoura', 'tambor', 'sorvete', 'abacaxi', 'mochila', 'bicicleta', 'espelho',
-  'computador', 'sapo', 'tesouro', 'telefone', 'jardim', 'piano', 'pirata',
-  'planeta', 'borboleta', 'sino', 'trenzinho', 'vulcão', 'fantasma', 'dragão',
-  'melancia', 'caderno', 'luneta', 'escada', 'tartaruga', 'capacete', 'pipoca',
-  'trampolim', 'submarino', 'chocolate', 'lanterna', 'dinossauro', 'astronauta',
-  'carrossel', 'guarda-chuva', 'pirulito', 'palhaço', 'balão', 'ventilador',
-  'girassol', 'espada', 'sereia', 'cometa', 'moeda', 'escultura', 'martelo',
-  'pincel', 'chapéu', 'apito', 'almofada', 'violão', 'pipa', 'barco', 'esquilo',
-  'sol', 'nuvem', 'lápis', 'coruja', 'formiga', 'mosaico', 'planície'
-];
-
 function renderColorirMG(h, corpo, spec) {
   const alvo = (spec && Array.isArray(spec.palavrasAlvo) && spec.palavrasAlvo.length
     ? spec.palavrasAlvo
     : (h.palavrasChave || []).slice(0, 5));
-
-  const textoStoryBruto = obterTextoBaseHistoria(h);
-  const textoStoryLimpo = textoStoryBruto.replace(/<[^>]+>/g, ' ').toLowerCase();
-  const textoStorySemAcento = textoStoryLimpo.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-
-  const alvoNormalizados = alvo.map((p) => String(p).toLowerCase().trim());
-  const alvoSemAcento = alvoNormalizados.map((p) => p.normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
-
-  const distratorasSpec = (spec && Array.isArray(spec.distratoras)) ? spec.distratoras : [];
-  const poolDistratoras = [...new Set([...distratorasSpec, ...PALAVRAS_DISTRATORAS_COLORIR_PADRAO])];
-
-  const distratorasValidas = poolDistratoras.filter((p) => {
-    const pLow = String(p).toLowerCase().trim();
-    if (!pLow) return false;
-    const pSemAcento = pLow.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-
-    // 1. Não pode estar entre as palavras-alvo (corretas)
-    if (alvoNormalizados.includes(pLow) || alvoSemAcento.includes(pSemAcento)) {
-      return false;
-    }
-
-    // 2. Não pode aparecer em NENHUM lugar do texto da história que o usuário lê
-    if (textoStoryLimpo.includes(pLow) || textoStorySemAcento.includes(pSemAcento)) {
-      return false;
-    }
-
-    return true;
-  });
-
-  const distratoras = embaralhar(distratorasValidas).slice(0, 3);
+  const distratoras = (spec && Array.isArray(spec.distratoras) && spec.distratoras.length
+    ? spec.distratoras
+    : ['castelo', 'peixe', 'janela', 'foguete', 'estrada'])
+    .filter((p) => !alvo.includes(p))
+    .slice(0, 3);
   const itens = embaralhar([...alvo.map((p) => ({ p, correta: true })), ...distratoras.map((p) => ({ p, correta: false }))]);
   const wrap = document.createElement('div');
   wrap.innerHTML = `
@@ -1116,11 +1057,7 @@ function renderColorirMG(h, corpo, spec) {
 // ─── 3. MONTA-FRASE ──────────────────────────────────────────────────────────
 function extrairTextoCurto(texto) {
   if (!texto) return '';
-  const limpo = String(texto)
-    .replace(/<br\s*\/?>/gi, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  const limpo = String(texto).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
   if (!limpo) return '';
   const frases = limpo.split(/[.!?]/).map((f) => f.trim()).filter(Boolean);
   const fraseCurta = frases.find((f) => f.length >= 8 && f.length <= 140) || frases[0] || limpo;
@@ -1130,77 +1067,158 @@ function extrairTextoCurto(texto) {
 function renderMontaFrase(fase, corpo, spec) {
   const h = estado.historiaAtual;
   const dadosSpec = spec ? extrairDadosMontaFrase(spec) : null;
-  let palavrasCorretas = [];
-  let palavrasPoolStr = [];
-  let perguntaTexto = 'Monte a frase clicando nas palavras. Clique em uma palavra já colocada para removê-la.';
-
   if (dadosSpec && dadosSpec.palavrasPool.length >= 2 && dadosSpec.palavrasCorretas.length >= 2) {
-    palavrasCorretas = converterTextoParaPalavrasMF(dadosSpec.fraseCorretaRaw || dadosSpec.palavrasCorretas.join(' '));
-    palavrasPoolStr = dadosSpec.palavrasPool.map(String);
-    if (dadosSpec.pergunta) perguntaTexto = dadosSpec.pergunta;
-  } else {
-    // ── Extrai frase COMPLETA da história (preservando versos de poema) ──
-    const extrairFrasesDaHistoria = (t) => {
-      if (!t) return [];
-      const textoComLinhas = String(t)
-        .replace(/<br\s*\/?>/gi, '\n')
-        .replace(/<\/p>\s*<p>/gi, '\n')
-        .replace(/<\/em>\s*<em>/gi, '\n')
-        .replace(/<[^>]+>/g, ' ');
+    const embaralhadas = embaralhar(dadosSpec.palavrasPool.map(String));
+    const palavrasCorretas = dadosSpec.palavrasCorretas.map(String);
+    let colocadosIdx = [];
+    const wrap = document.createElement('div');
+    wrap.className = 'mf-wrap';
+    wrap.innerHTML = `
+      <p class="mg-desc">${dadosSpec.pergunta}</p>
+      <p class="mg-desc">Monte a frase clicando nas palavras. Clique em uma palavra já colocada para removê-la.</p>
+      <div class="mf-espaco" id="mfEspaco"><span class="mf-placeholder">Clique nas palavras abaixo…</span></div>
+      <div class="mf-pool" id="mfPool"></div>
+      <div class="mg-acoes-row">
+        <button class="btn-confirmar" id="btnConfMF" style="flex:1;">✔ Verificar</button>
+        <button class="btn-desistir-mg" id="btnDesistirMF">🏳️ Solução</button>
+      </div>
+    `;
+    corpo.appendChild(wrap);
+    function atualizarPreset() {
+      const pool = document.getElementById('mfPool');
+      const espaco = document.getElementById('mfEspaco');
+      pool.innerHTML = embaralhadas.map((p, i) =>
+        `<button class="mf-chip ${colocadosIdx.includes(i) ? 'mf-usada' : ''}" data-idx="${i}">${p}</button>`
+      ).join('');
+      if (colocadosIdx.length === 0) {
+        espaco.innerHTML = '<span class="mf-placeholder">Clique nas palavras abaixo…</span>';
+      } else {
+        espaco.innerHTML = colocadosIdx.map((i, pos) =>
+          `<button class="mf-colocada" data-pos="${pos}">${embaralhadas[i]}</button>`
+        ).join(' ');
+      }
+      pool.querySelectorAll('.mf-chip:not(.mf-usada)').forEach(btn => {
+        btn.addEventListener('click', () => {
+          colocadosIdx.push(parseInt(btn.dataset.idx, 10));
+          atualizarPreset();
+        });
+      });
+      espaco.querySelectorAll('.mf-colocada').forEach(btn => {
+        btn.addEventListener('click', () => {
+          colocadosIdx.splice(parseInt(btn.dataset.pos, 10), 1);
+          atualizarPreset();
+        });
+      });
+    }
+    atualizarPreset();
+    const norm = (s) => String(s || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-      const linhas = textoComLinhas
-        .split('\n')
-        .map(l => l.replace(/\s+/g, ' ').trim())
-        .filter(Boolean);
+    const verificarMF = (isDesistir = false) => {
+      document.getElementById('btnConfMF').disabled = true;
+      document.getElementById('btnDesistirMF').disabled = true;
 
-      const frasesPoema = [];
-      if (linhas.length >= 2) {
-        for (let i = 0; i < linhas.length; i++) {
-          let bloco = [];
-          let numPalavras = 0;
-          for (let j = i; j < Math.min(i + 3, linhas.length); j++) {
-            bloco.push(linhas[j]);
-            numPalavras += linhas[j].split(/\s+/).filter(Boolean).length;
-            if (numPalavras >= 5 && numPalavras <= 12) {
-              frasesPoema.push(bloco.join('\n'));
-              break;
-            }
-          }
-        }
+      if (isDesistir) {
+        revelarMontaFraseCorreta(palavrasCorretas);
+        registrarEventoMG('monta_frase', 'erro');
+        mostrarFeedbackMG(false);
+        return;
       }
 
-      const textoProsa = textoComLinhas.replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim();
-      const frasesProsa = (textoProsa.match(/[^.!?]+[.!?]+/g) || [])
-        .map(f => f.trim())
-        .filter(f => {
-          const n = f.split(/\s+/).filter(Boolean).length;
-          return n >= 4 && n <= 12;
-        });
+      if (colocadosIdx.length < 2) {
+        document.getElementById('btnConfMF').disabled = false;
+        document.getElementById('btnDesistirMF').disabled = false;
+        mostrarToast('Monte a frase primeiro! 😊');
+        return;
+      }
 
-      return [...frasesPoema, ...frasesProsa];
+      const tentativa = norm(colocadosIdx.map(i => embaralhadas[i]).join(' '));
+      const correta = norm(palavrasCorretas.join(' '));
+      const ok = tentativa === correta;
+      revelarMontaFraseCorreta(palavrasCorretas);
+      registrarEventoMG('monta_frase', ok ? 'acerto' : 'erro');
+      mostrarFeedbackMG(ok);
     };
 
-    const frasesValidas = extrairFrasesDaHistoria(fase?.texto || '').concat(extrairFrasesDaHistoria(obterTextoBaseHistoria(h)));
-    const fraseSelecionada = frasesValidas.length > 0
-      ? frasesValidas[Math.floor(Math.random() * frasesValidas.length)]
-      : null;
-
-    if (!fraseSelecionada) {
-      renderVerdadeiroFalso(fase, h, corpo, null);
-      return;
-    }
-
-    palavrasCorretas = converterTextoParaPalavrasMF(fraseSelecionada);
-    palavrasPoolStr = palavrasCorretas.map(it => it.palavra);
+    document.getElementById('btnConfMF').addEventListener('click', () => verificarMF(false));
+    document.getElementById('btnDesistirMF')?.addEventListener('click', () => verificarMF(true));
+    return;
   }
 
+  // ── Extrai frase COMPLETA (terminada em . ! ? ou verso de poema via <br>) ──
+  // Substitui <br> por ponto para capturar versos de poemas
+  const normalizarTextoParaFrases = (t) =>
+    String(t || '')
+      .replace(/<br\s*\/?>/gi, '. ')
+      .replace(/<[^>]+>/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  const contarPalavras = (s) => s.split(/\s+/).filter(Boolean).length;
+
+  // Extrai segmentos por pontuação final; filtra pela faixa de palavras desejada
+  const extrairPorPontuacao = (texto, min, max) =>
+    (texto.match(/[^.!?]+[.!?]+/g) || [])
+      .map(f => f.trim())
+      .filter(f => { const n = contarPalavras(f); return n >= min && n <= max; });
+
+  // Tenta combinar dois segmentos curtos adjacentes separados por vírgula/travessão
+  // para formar frases com sentido e tamanho adequado (5–10 palavras)
+  const combinarSegmentos = (texto, min, max) => {
+    const segmentos = (texto.match(/[^.!?]+[.!?]+/g) || []).map(f => f.trim());
+    const resultado = [];
+    for (let i = 0; i < segmentos.length - 1; i++) {
+      const a = segmentos[i].replace(/[.!?]+$/, '').trim();
+      const b = segmentos[i + 1].replace(/[.!?]+$/, '').trim();
+      const juntos = `${a} ${b}`;
+      const n = contarPalavras(juntos);
+      if (n >= min && n <= max) resultado.push(juntos + '.');
+    }
+    return resultado;
+  };
+
+  const textoFonte = normalizarTextoParaFrases(fase?.texto || '');
+  const textoHistoria = normalizarTextoParaFrases(obterTextoBaseHistoria(h));
+
+  // Cascata: 5–10 palavras → combina segmentos → 4–10 palavras → VF
+  let frasesValidas =
+    extrairPorPontuacao(textoFonte, 5, 10).concat(extrairPorPontuacao(textoHistoria, 5, 10));
+
+  if (frasesValidas.length === 0) {
+    frasesValidas = combinarSegmentos(textoHistoria, 5, 10);
+  }
+
+  if (frasesValidas.length === 0) {
+    // Aceita frases com 4+ palavras antes de desistir
+    frasesValidas = extrairPorPontuacao(textoFonte, 4, 10).concat(extrairPorPontuacao(textoHistoria, 4, 10));
+  }
+
+  // Escolhe uma frase aleatória entre as válidas
+  const fraseSelecionada = frasesValidas.length > 0
+    ? frasesValidas[Math.floor(Math.random() * frasesValidas.length)]
+    : null;
+
+  // Remove pontuação final para não aparecer como palavra separada
+  const frase = fraseSelecionada
+    ? fraseSelecionada.replace(/[.!?]+$/, '').trim()
+    : null;
+
+  if (!frase) {
+    // Sem nenhuma frase válida — usa VF como fallback seguro
+    renderVerdadeiroFalso(fase, h, corpo, null);
+    return;
+  }
+
+  const palavrasCorretas = frase.split(/\s+/).filter(Boolean);
   const embaralhadas = embaralhar([...palavrasCorretas]);
+
+
   let colocadosIdx = [];
 
   const wrap = document.createElement('div');
   wrap.className = 'mf-wrap';
   wrap.innerHTML = `
-    <p class="mg-desc">${perguntaTexto}</p>
+   
+    <p class="mg-desc">Monte a frase clicando nas palavras. Clique em uma palavra já colocada para removê-la.</p>
     <div class="mf-espaco" id="mfEspaco"><span class="mf-placeholder">Clique nas palavras abaixo…</span></div>
     <div class="mf-pool" id="mfPool"></div>
     <div class="mg-acoes-row">
@@ -1210,44 +1228,37 @@ function renderMontaFrase(fase, corpo, spec) {
   `;
   corpo.appendChild(wrap);
 
-  function atualizarUI() {
+  function atualizar() {
     const pool = document.getElementById('mfPool');
     const espaco = document.getElementById('mfEspaco');
 
-    pool.innerHTML = embaralhadas.map((item, i) => {
-      const p = typeof item === 'object' ? item.palavra : String(item);
-      return `<button class="mf-chip ${colocadosIdx.includes(i) ? 'mf-usada' : ''}" data-idx="${i}">${p}</button>`;
-    }).join('');
+    pool.innerHTML = embaralhadas.map((p, i) =>
+      `<button class="mf-chip ${colocadosIdx.includes(i) ? 'mf-usada' : ''}" data-idx="${i}">${p}</button>`
+    ).join('');
 
     if (colocadosIdx.length === 0) {
       espaco.innerHTML = '<span class="mf-placeholder">Clique nas palavras abaixo…</span>';
     } else {
-      espaco.innerHTML = colocadosIdx.map((i, pos) => {
-        const item = embaralhadas[i];
-        const p = typeof item === 'object' ? item.palavra : String(item);
-        const q = typeof item === 'object' && item.quebraLinha;
-        return `<button class="mf-colocada" data-pos="${pos}">${p}</button>${q ? '<div class="mf-line-break"></div>' : ''}`;
-      }).join(' ');
+      espaco.innerHTML = colocadosIdx.map((i, pos) =>
+        `<button class="mf-colocada" data-pos="${pos}">${embaralhadas[i]}</button>`
+      ).join(' ');
     }
 
     pool.querySelectorAll('.mf-chip:not(.mf-usada)').forEach(btn => {
       btn.addEventListener('click', () => {
-        colocadosIdx.push(parseInt(btn.dataset.idx, 10));
-        atualizarUI();
+        colocadosIdx.push(parseInt(btn.dataset.idx));
+        atualizar();
       });
     });
 
     espaco.querySelectorAll('.mf-colocada').forEach(btn => {
       btn.addEventListener('click', () => {
-        colocadosIdx.splice(parseInt(btn.dataset.pos, 10), 1);
-        atualizarUI();
+        colocadosIdx.splice(parseInt(btn.dataset.pos), 1);
+        atualizar();
       });
     });
   }
-
-  atualizarUI();
-
-  const norm = (s) => String(s || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  atualizar();
 
   const verificarMF = (isDesistir = false) => {
     document.getElementById('btnConfMF').disabled = true;
@@ -1267,10 +1278,9 @@ function renderMontaFrase(fase, corpo, spec) {
       return;
     }
 
-    const tentativa = norm(colocadosIdx.map(i => (typeof embaralhadas[i] === 'object' ? embaralhadas[i].palavra : embaralhadas[i])).join(' '));
-    const correta = norm(palavrasCorretas.map(it => (typeof it === 'object' ? it.palavra : String(it))).join(' '));
+    const tentativa = colocadosIdx.map(i => embaralhadas[i]).join(' ').toLowerCase().trim();
+    const correta = palavrasCorretas.join(' ').toLowerCase().trim();
     const ok = tentativa === correta;
-
     revelarMontaFraseCorreta(palavrasCorretas);
     registrarEventoMG('monta_frase', ok ? 'acerto' : 'erro');
     mostrarFeedbackMG(ok);

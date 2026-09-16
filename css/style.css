@@ -43,6 +43,15 @@
   /* fonte controlada via JS */
   --fonte-base: 16px;
 
+  /* proporção estável de botões em qualquer resolução */
+  --btn-min-h: 40px;
+  --btn-pad-y: 8px;
+  --btn-pad-x: 18px;
+  --btn-font: 0.92rem;
+  --btn-radius: 12px;
+  --btn-icon-size: 38px;
+  --btn-icon-img: 20px;
+
   /* glassmorphism */
   --glass-bg: rgba(255, 255, 255, 0.75);
   --glass-border: rgba(255, 255, 255, 0.5);
@@ -119,22 +128,22 @@ body.alto-contraste {
 }
 
 
+@media (max-width: 768px) {
+  :root {
+    --btn-min-h: 34px;
+    --btn-pad-y: 5px;
+    --btn-pad-x: 12px;
+    --btn-font: 0.8rem;
+    --btn-radius: 10px;
+    --btn-icon-size: 32px;
+    --btn-icon-img: 16px;
+  }
+}
+
 html {
-  font-size: var(--fonte-base, 15px);
+  font-size: var(--fonte-base, 16px);
   background-color: var(--bg, #F0F4FF);
   scroll-behavior: smooth;
-}
-
-@media (max-width: 768px) {
-  html {
-    font-size: 14px !important;
-  }
-}
-
-@media (max-width: 480px) {
-  html {
-    font-size: 13.5px !important;
-  }
 }
 
 body {
@@ -145,6 +154,7 @@ body {
   color: var(--texto);
   min-height: 100vh;
   line-height: 1.6;
+  overflow-x: hidden;
 }
 
 *:focus-visible {
@@ -487,6 +497,15 @@ input:-webkit-autofill:active {
   position: relative;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  flex: 0 1 auto;
+  width: auto;
+  max-width: 100%;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  white-space: nowrap;
 }
 
 .chip:hover {
@@ -516,6 +535,14 @@ input:-webkit-autofill:active {
 
 .btn-entrar {
   margin-top: 4px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.login-card > .btn-principal,
+.login-card > .btn-secundario {
+  width: 100%;
+  max-width: 100%;
 }
 
 /*IMG BOT*/
@@ -542,11 +569,11 @@ input:-webkit-autofill:active {
   background: var(--grad-btn);
   color: #fff;
   border: none;
-  border-radius: 12px;
-  padding: 8px 18px;
+  border-radius: var(--btn-radius, 12px);
+  padding: var(--btn-pad-y, 8px) var(--btn-pad-x, 18px);
   margin: 6px 0;
   font-family: 'Baloo 2', cursive;
-  font-size: 0.92rem;
+  font-size: var(--btn-font, 0.92rem);
   font-weight: 700;
   cursor: pointer;
   transition: all var(--trans);
@@ -560,6 +587,11 @@ input:-webkit-autofill:active {
   position: relative;
   overflow: hidden;
   box-sizing: border-box;
+  min-height: var(--btn-min-h, 40px);
+  width: auto;
+  max-width: 100%;
+  flex: 0 1 auto;
+  line-height: 1.2;
 }
 
 .btn-principal::after {
@@ -593,8 +625,8 @@ input:-webkit-autofill:active {
   background: rgba(78, 205, 196, 0.08);
   color: var(--cor-btn-sec);
   border: 2px solid var(--cor-secundaria);
-  border-radius: 12px;
-  padding: 8px 16px;
+  border-radius: var(--btn-radius, 12px);
+  padding: var(--btn-pad-y, 8px) 16px;
   margin: 6px 0;
   font-family: 'Baloo 2', cursive;
   font-size: 0.88rem;
@@ -611,6 +643,11 @@ input:-webkit-autofill:active {
   z-index: 1;
   box-shadow: 0 2px 8px rgba(78, 205, 196, 0.15);
   box-sizing: border-box;
+  min-height: var(--btn-min-h, 40px);
+  width: auto;
+  max-width: 100%;
+  flex: 0 1 auto;
+  line-height: 1.2;
 }
 
 .btn-secundario::before {
@@ -670,6 +707,12 @@ input:-webkit-autofill:active {
   white-space: nowrap;
   line-height: 1.3;
   backdrop-filter: blur(4px);
+  min-width: var(--btn-icon-size, 38px);
+  min-height: var(--btn-icon-size, 38px);
+  width: auto;
+  max-width: 100%;
+  flex: 0 0 auto;
+  box-sizing: border-box;
 }
 
 .btn-icon img {
@@ -1349,15 +1392,25 @@ html.alto-contraste .portao-input {
   border-color: rgba(255, 193, 7, .5);
 }
 
+.historia-card {
+  container-type: inline-size;
+  container-name: historia-card;
+}
+
 .hc-rodape {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   margin-top: auto;
+  width: 100%;
 }
 
 .hc-estrelas {
   font-size: 1rem;
+  flex: 1 1 9rem;
+  min-width: 0;
 }
 
 .hc-estrelas .estrela-preenchida {
@@ -1394,7 +1447,7 @@ html.alto-contraste .portao-input {
   color: #fff;
   border: none;
   border-radius: 999px;
-  padding: 8px 20px;
+  padding: 8px 16px;
   font-family: 'Baloo 2', cursive;
   font-size: .9rem;
   font-weight: 700;
@@ -1402,6 +1455,30 @@ html.alto-contraste .portao-input {
   transition: all var(--trans);
   box-shadow: 0 3px 10px rgba(255, 107, 53, .35), inset 0 1px 0 rgba(255, 255, 255, .2);
   letter-spacing: .01em;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+@container historia-card (max-width: 250px) {
+  .hc-rodape {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .hc-estrelas {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+
+  .hc-jogar {
+    width: 100%;
+  }
 }
 
 .hc-jogar:hover {
@@ -1571,12 +1648,16 @@ html.alto-contraste .portao-input {
   border-radius: 12px;
   padding: 9px 14px;
   font-family: 'Nunito', sans-serif;
-  font-size: clamp(0.88rem, 2.3vw, 0.98rem);
+  font-size: 0.92rem;
   font-weight: 700;
   cursor: pointer;
   transition: all var(--trans);
   text-align: left;
   color: var(--texto);
+  min-height: var(--btn-min-h, 40px);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .opcao-btn:hover:not(:disabled) {
@@ -1736,9 +1817,10 @@ html.alto-contraste .portao-input {
 
 .leitura-rodape .btn-principal,
 .leitura-rodape .btn-secundario {
-  flex: 1 1 140px;
+  flex: 0 1 auto;
   margin: 0;
   width: auto;
+  max-width: 100%;
 }
 
 /* ==============================================
@@ -1759,7 +1841,8 @@ html.alto-contraste .portao-input {
 }
 
 .minigame-info {
-  display: none !important;
+  flex: 1;
+  text-align: center;
 }
 
 .minigame-titulo-label {
@@ -1793,40 +1876,6 @@ html.alto-contraste .portao-input {
 
 .mg-enunciado {
   font-family: 'Baloo 2', cursive;
-  margin-bottom: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  gap: 8px;
-  letter-spacing: -.01em;
-  border-bottom: 2px dashed rgba(255, 107, 53, 0.2);
-  padding-bottom: 10px;
-  box-sizing: border-box;
-}
-
-.mg-titulo-texto {
-  font-size: clamp(1.15rem, 3.2vw, 1.35rem);
-  font-weight: 800;
-  color: var(--cor-primaria);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.mg-contador-card {
-  font-size: clamp(0.85rem, 2.5vw, 0.95rem);
-  font-weight: 800;
-  color: var(--cor-primaria);
-  background: rgba(255, 107, 53, 0.1);
-  padding: 4px 12px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 107, 53, 0.25);
-  white-space: nowrap;
-}
-
-.mg-desc {
-  font-family: 'Baloo 2', cursive;
   font-size: clamp(1rem, 2.8vw, 1.15rem);
   font-weight: 700;
   color: var(--texto);
@@ -1835,6 +1884,13 @@ html.alto-contraste .portao-input {
   align-items: center;
   gap: 8px;
   letter-spacing: -.01em;
+}
+
+.mg-desc {
+  font-size: clamp(0.95rem, 2.6vw, 1.1rem);
+  color: var(--texto-sub);
+  margin-bottom: 14px;
+  line-height: 1.5;
 }
 
 .mg-icone {
@@ -1852,15 +1908,23 @@ html.alto-contraste .portao-input {
 
 .vf-btn,
 .tf-btn {
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 100%;
   border-radius: 12px;
   padding: 10px 14px;
   font-family: 'Baloo 2', cursive;
-  font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+  font-size: 1rem;
   font-weight: 800;
   cursor: pointer;
   transition: all var(--trans);
   text-align: center;
+  min-height: var(--btn-min-h, 40px);
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.2;
 }
 
 .vf-verdadeiro,
@@ -1912,12 +1976,16 @@ html.alto-contraste .portao-input {
   border-radius: 12px;
   padding: 9px 14px;
   font-family: 'Nunito', sans-serif;
-  font-size: clamp(0.88rem, 2.3vw, 0.95rem);
+  font-size: 0.92rem;
   font-weight: 700;
   cursor: pointer;
   transition: all var(--trans);
   text-align: left;
   color: var(--texto);
+  min-height: var(--btn-min-h, 40px);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .mc-btn:hover:not(:disabled) {
@@ -1963,13 +2031,6 @@ html.alto-contraste .portao-input {
   gap: 6px;
   padding: 10px 14px;
   transition: border-color var(--trans), background var(--trans);
-}
-
-.mf-line-break {
-  flex-basis: 100%;
-  height: 0;
-  margin: 0;
-  padding: 0;
 }
 
 .mf-placeholder {
@@ -2214,9 +2275,10 @@ html.alto-contraste .portao-input {
 
 .minigame-rodape .btn-principal,
 .minigame-rodape .btn-secundario {
-  flex: 1 1 130px;
+  flex: 0 1 auto;
   margin: 0;
   width: auto;
+  max-width: 100%;
 }
 
 /* ==============================================
@@ -2337,9 +2399,10 @@ html.alto-contraste .portao-input {
 .resultado-botoes .btn-principal,
 .resultado-botoes .btn-secundario,
 .resultado-botoes .btn-refazer {
-  flex: 1 1 130px;
+  flex: 0 1 auto;
   margin: 0;
   width: auto;
+  max-width: 100%;
 }
 
 /* Botão Refazer Atividade */
@@ -2351,8 +2414,8 @@ html.alto-contraste .portao-input {
   background: linear-gradient(135deg, #f97316, #ea580c);
   color: #fff;
   border: none;
-  border-radius: 12px;
-  padding: 8px 16px;
+  border-radius: var(--btn-radius, 12px);
+  padding: var(--btn-pad-y, 8px) 16px;
   font-family: 'Baloo 2', cursive;
   font-size: 0.88rem;
   font-weight: 800;
@@ -2362,6 +2425,11 @@ html.alto-contraste .portao-input {
   letter-spacing: .02em;
   animation: pulseRefazer 2s ease-in-out infinite;
   box-sizing: border-box;
+  min-height: var(--btn-min-h, 40px);
+  width: auto;
+  max-width: 100%;
+  flex: 0 1 auto;
+  line-height: 1.2;
 }
 
 .btn-refazer:hover {
@@ -2752,7 +2820,7 @@ html.alto-contraste .portao-input {
 .conquistas-header-info h3 {
   margin: 0 0 2px 0;
   font-family: 'Baloo 2', cursive;
-  font-size: clamp(1.05rem, 3vw, 1.25rem);
+  font-size: clamp(1.2rem, 3vw, 1.45rem);
   font-weight: 800;
   color: var(--texto);
 }
@@ -2791,12 +2859,14 @@ html.alto-contraste .portao-input {
   align-items: center;
   gap: 10px;
   background: #FFFFFF;
-  border-radius: 14px;
-  padding: 10px 14px;
+  border-radius: 12px;
+  padding: 7px 12px;
   border: 1.5px solid #E5E7EB;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   width: 100%;
   box-sizing: border-box;
+  container-type: inline-size;
+  container-name: conquista-card;
 }
 
 .conquista-card.desbloqueada {
@@ -2827,8 +2897,8 @@ html.alto-contraste .portao-input {
 }
 
 .conquista-medalha {
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: radial-gradient(circle at 35% 35%, #FFFFFF, var(--cor-medalha, #FF6B35));
   display: flex;
@@ -2846,7 +2916,7 @@ html.alto-contraste .portao-input {
 }
 
 .conquista-icone {
-  font-size: 1.7rem;
+  font-size: 1.35rem;
   line-height: 1;
   user-select: none;
 }
@@ -2857,26 +2927,41 @@ html.alto-contraste .portao-input {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .conquista-topo {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 6px 12px;
+}
+
+@container conquista-card (max-width: 280px) {
+  .conquista-topo {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .conquista-status {
+    align-self: flex-start;
+  }
 }
 
 /* TÍTULO COMPLETO — Sem corte de texto, permite múltiplas linhas se necessário */
 .conquista-titulo {
   margin: 0;
   font-family: 'Baloo 2', cursive;
-  font-size: 1.05rem;
+  font-size: 1.22rem;
   font-weight: 800;
   color: var(--texto);
-  line-height: 1.25;
-  white-space: normal;
-  word-break: break-word;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .conquista-status {
@@ -2903,21 +2988,25 @@ html.alto-contraste .portao-input {
 
 .conquista-descricao {
   margin: 0;
-  font-size: 0.84rem;
+  font-size: 0.78rem;
   color: var(--texto-sub);
   font-weight: 600;
-  line-height: 1.35;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .conquista-progresso-bar-wrap {
-  margin-top: 6px;
+  margin-top: 2px;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
 }
 
 .conquista-bar-track {
-  height: 8px;
+  height: 6px;
   width: 100%;
   background: #E5E7EB;
   border-radius: 999px;
@@ -2932,10 +3021,11 @@ html.alto-contraste .portao-input {
 }
 
 .conquista-progresso-texto {
-  font-size: 0.76rem;
+  font-size: 0.7rem;
   font-weight: 700;
   color: var(--texto-sub);
   text-align: right;
+  line-height: 1.1;
 }
 
 .conquista-rodape {
@@ -3227,6 +3317,9 @@ body.alto-contraste .conquista-bar-track {
 .calendario-nav-btn {
   width: 36px;
   height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  flex: 0 0 auto;
   border: 2px solid #DDD6FE;
   border-radius: 12px;
   background: #F5F3FF;
@@ -3239,6 +3332,7 @@ body.alto-contraste .conquista-bar-track {
   align-items: center;
   justify-content: center;
   user-select: none;
+  box-sizing: border-box;
 }
 
 .calendario-nav-btn:hover {
@@ -4654,10 +4748,10 @@ body.alto-contraste .conquista-bar-track {
 
   .tf-btn,
   .vf-btn {
-    font-size: 0.88rem !important;
-    padding: 8px 12px !important;
-    min-height: 38px !important;
-    font-weight: 700 !important;
+    font-size: 0.8rem !important;
+    padding: 6px 10px !important;
+    min-height: 34px !important;
+    font-weight: 800 !important;
   }
 
   .rima-opcoes-grid {
@@ -5557,15 +5651,16 @@ body.alto-contraste .link-inline {
   }
 
   .nav-item {
-    flex: 0 0 56px;
-    min-width: 56px;
-    width: 56px;
-    height: 56px;
+    flex: 0 0 42px;
+    min-width: 42px;
+    max-width: 42px;
+    width: 42px;
+    height: 42px;
     justify-content: center;
     padding: 0;
     gap: 0;
     text-align: center;
-    border-radius: 999px;
+    border-radius: 12px;
   }
 
   .nav-item .nav-label {
@@ -5608,12 +5703,12 @@ body.alto-contraste .link-inline {
 
 @media (max-width: 768px) {
   .app-main {
-    padding-bottom: calc(62px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
   .app-header {
-    padding: 6px 10px !important;
-    min-height: 48px !important;
+    padding: 4px 8px !important;
+    min-height: 42px !important;
   }
 
   .header-wrap {
@@ -5633,11 +5728,17 @@ body.alto-contraste .link-inline {
   }
 
   .header-avatar {
-    width: 32px !important;
-    height: 32px !important;
-    min-width: 32px !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
     font-size: 0.95rem !important;
     border-width: 2px !important;
+  }
+
+  .header-avatar img,
+  .header-avatar-img {
+    width: 32px !important;
+    height: 32px !important;
   }
 
   .header-nome {
@@ -5682,15 +5783,18 @@ body.alto-contraste .link-inline {
   .btn-icon,
   .header-mais-btn,
   .header-som-btn {
-    padding: 5px 9px !important;
-    font-size: 0.82rem !important;
-    font-weight: 600 !important;
+    padding: 4px 8px !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    min-width: 32px !important;
     min-height: 32px !important;
+    width: auto !important;
     border-radius: 8px !important;
-    gap: 4px !important;
+    gap: 3px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
+    flex: 0 0 auto !important;
   }
 
   .btn-icon img,
@@ -5706,7 +5810,7 @@ body.alto-contraste .link-inline {
   }
 
   .sidebar {
-    height: 52px !important;
+    height: 50px !important;
     padding: 3px 6px !important;
     gap: 4px !important;
     justify-content: space-around !important;
@@ -5714,17 +5818,18 @@ body.alto-contraste .link-inline {
   }
 
   .nav-item {
-    flex: 0 0 44px !important;
-    min-width: 44px !important;
-    width: 44px !important;
-    height: 44px !important;
+    flex: 0 0 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+    width: 42px !important;
+    height: 42px !important;
     border-radius: 10px !important;
     padding: 0 !important;
   }
 
   .nav-item .icon {
-    width: 20px !important;
-    height: 20px !important;
+    width: 18px !important;
+    height: 18px !important;
   }
 
   .nav-rotulo {
@@ -5735,7 +5840,7 @@ body.alto-contraste .link-inline {
 
   /* Content & Grids Readable */
   .historias-grid {
-    grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)) !important;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
     gap: 10px !important;
   }
 
@@ -5764,63 +5869,107 @@ body.alto-contraste .link-inline {
   }
 
   .conquistas-grid {
-    grid-template-columns: repeat(auto-fill, minmax(115px, 1fr)) !important;
-    gap: 8px !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
   }
 
   .conquista-card {
-    padding: 6px 8px !important;
-    border-radius: 10px !important;
-    gap: 4px !important;
+    padding: 7px 10px !important;
+    border-radius: 12px !important;
+    gap: 8px !important;
+    align-items: center !important;
+  }
+
+  .conquista-topo {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 8px !important;
   }
 
   .conquista-icone {
-    width: 30px !important;
-    height: 30px !important;
-    min-width: 30px !important;
-    font-size: 1.1rem !important;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    font-size: 1.2rem !important;
   }
 
   .medalha-svg {
-    width: 30px !important;
-    height: 30px !important;
+    width: 28px !important;
+    height: 28px !important;
   }
 
   .conquista-titulo {
-    font-size: 0.75rem !important;
-    font-weight: 700 !important;
+    font-size: 0.95rem !important;
+    font-weight: 800 !important;
     line-height: 1.15 !important;
   }
 
+  .conquista-descricao,
   .conquista-desc {
-    font-size: 0.65rem !important;
-    line-height: 1.15 !important;
+    font-size: 0.7rem !important;
+    line-height: 1.2 !important;
   }
 
-  .btn-principal,
-  .btn-secundario,
-  .btn-refazer,
-  .btn-virar-pagina,
-  .opcao-btn,
-  .mc-btn {
-    padding: 6px 12px !important;
-    font-size: 0.85rem !important;
+  .btn-principal:not(.oculto),
+  .btn-secundario:not(.oculto),
+  .btn-refazer:not(.oculto),
+  .btn-virar-pagina:not(.oculto),
+  .btn-confirmar:not(.oculto),
+  .btn-desistir-mg:not(.oculto),
+  .rima-btn:not(.oculto),
+  .chip:not(.oculto),
+  .hc-jogar:not(.oculto) {
+    padding: 5px 12px !important;
+    font-size: 0.78rem !important;
     font-weight: 700 !important;
     min-height: 34px !important;
-    border-radius: 8px !important;
-    display: inline-flex !important;
+    border-radius: 10px !important;
     align-items: center !important;
     justify-content: center !important;
     text-align: center !important;
+    width: auto !important;
+    max-width: 100% !important;
+    flex: 0 1 auto !important;
+    box-sizing: border-box !important;
+  }
+
+  .opcao-btn,
+  .mc-btn,
+  .qd-btn,
+  .sp-btn,
+  .rima-btn,
+  .rima-opc,
+  .color-item {
+    padding: 5px 8px !important;
+    font-size: 0.74rem !important;
+    font-weight: 700 !important;
+    min-height: 32px !important;
+    border-radius: 8px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+    justify-content: center !important;
+    line-height: 1.2 !important;
   }
 
   .leitura-header,
   .minigame-header,
-  .leitura-rodape,
-  .resultado-stats,
-  .resultado-botoes {
+  .resultado-stats {
     flex-direction: column;
     align-items: stretch;
+    gap: 8px !important;
+  }
+
+  .leitura-rodape,
+  .minigame-rodape,
+  .resultado-botoes,
+  .mg-acoes-row {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: center !important;
     gap: 8px !important;
   }
 
@@ -5829,20 +5978,57 @@ body.alto-contraste .link-inline {
     text-align: center;
   }
 
-  .interacao-input-area,
-  .vf-opcoes,
-  .tf-opcoes,
+  .interacao-input-area {
+    flex-wrap: wrap;
+    gap: 8px !important;
+  }
+
+  .interacao-input-area .btn-confirmar,
+  .interacao-input-area .btn-principal {
+    flex: 0 0 auto !important;
+    width: auto !important;
+  }
+
   .sp-grid,
   .rima-opcoes-grid,
-  .qd-opcoes,
+  .qd-opcoes {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+  }
+
   .stats-grid {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: 1fr 1fr !important;
     gap: 8px !important;
   }
 
   .vf-opcoes,
   .tf-opcoes {
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  .vf-btn,
+  .tf-btn {
+    flex: 1 1 0 !important;
+    min-height: 34px !important;
+    padding: 6px 10px !important;
+    font-size: 0.8rem !important;
+    width: auto !important;
+  }
+
+  .login-card > .btn-principal,
+  .login-card > .btn-secundario,
+  .login-card .btn-entrar,
+  .modal-vidas-acoes .btn-principal,
+  .modal-vidas-acoes button {
+    width: 100% !important;
+  }
+
+  .header-mais-menu .btn-icon {
+    width: 100% !important;
+    min-width: 0 !important;
+    justify-content: flex-start !important;
   }
 }
 
@@ -5857,19 +6043,29 @@ body.alto-contraste .link-inline {
   }
 
   .header-avatar {
-    width: 28px !important;
-    height: 28px !important;
-    min-width: 28px !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+  }
+
+  .header-avatar img,
+  .header-avatar-img {
+    width: 32px !important;
+    height: 32px !important;
   }
 
   .historias-grid {
-    grid-template-columns: repeat(auto-fill, minmax(125px, 1fr)) !important;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
     gap: 8px !important;
   }
 
   .conquistas-grid {
-    grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)) !important;
-    gap: 6px !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .conquista-titulo {
+    font-size: 0.9rem !important;
   }
 }
 
@@ -6541,18 +6737,25 @@ body.alto-contraste .btn-config-engrenagem:hover {
 }
 
 .config-aba {
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 120px;
+  width: auto;
+  max-width: 100%;
   border: 2px solid var(--borda, #e5e7eb);
   background: rgba(255, 255, 255, .7);
   border-radius: 14px;
-  padding: 12px 16px;
+  padding: 10px 16px;
   font-family: 'Nunito', sans-serif;
   font-size: .9rem;
   font-weight: 700;
   cursor: pointer;
   transition: all .2s ease;
   text-align: center;
+  min-height: var(--btn-min-h, 40px);
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .config-aba:hover {
@@ -6916,10 +7119,11 @@ body.alto-contraste .config-stat strong {
 
   .btn-virar-pagina {
     flex: 0 0 auto;
-    padding: 6px 12px;
-    font-size: 0.82rem;
-    min-height: 34px;
+    padding: 5px 12px;
+    font-size: 0.75rem;
+    min-height: 32px;
     border-radius: 999px;
+    width: auto;
   }
 
   .btn-virar-pagina .btn-texto-completo {
@@ -7024,4 +7228,553 @@ html.modo-noturno .livro-navegacao-paginas,
 html.alto-contraste .livro-navegacao-paginas {
   background: #25201D !important;
   border-color: rgba(78, 205, 196, 0.25) !important;
+}
+
+/* ==============================================
+   RESPONSIVIDADE GLOBAL — PROPORÇÃO DE BOTÕES
+   ============================================== */
+
+button,
+.btn-principal,
+.btn-secundario,
+.btn-icon,
+.btn-refazer,
+.btn-voltar,
+.btn-virar-pagina,
+.btn-confirmar,
+.btn-desistir-mg,
+.btn-cta,
+.chip {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.avatar-btn {
+  aspect-ratio: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+}
+
+.btn-confirmar {
+  min-height: var(--btn-min-h, 40px);
+  flex: 0 0 auto;
+  width: auto;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.rima-btn {
+  flex: 0 0 auto;
+  width: auto;
+  min-height: 36px;
+  box-sizing: border-box;
+}
+
+.btn-header-mais {
+  min-width: var(--btn-icon-size, 38px);
+  min-height: var(--btn-icon-size, 38px);
+  flex: 0 0 auto;
+}
+
+/* Login e formulários: CTA ocupa a largura do card, não da tela */
+@media (min-width: 641px) {
+  .config-card-pagina {
+    width: min(94vw, 1000px);
+  }
+}
+
+@media (max-width: 1024px) {
+  .tela-header,
+  .filtros-bar,
+  .historias-grid,
+  .leitura-container,
+  .minigame-container,
+  .resultado-container,
+  .bot-ia-wrap {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .login-logo-icon {
+    width: 110px;
+    height: 110px;
+  }
+
+  .login-card,
+  .config-card-pagina {
+    padding: 22px 16px;
+    border-radius: 22px;
+  }
+
+  .config-card-pagina {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .config-abas {
+    justify-content: flex-start;
+  }
+
+  .config-aba {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+
+  .avatar-grid {
+    gap: 8px;
+  }
+
+  .avatar-btn img,
+  .avatar-img,
+  .avatar-img-render {
+    width: 42px;
+    height: 42px;
+  }
+
+  .portao-input-wrap {
+    flex-wrap: wrap;
+  }
+
+  .portao-btn-confirmar {
+    flex: 0 0 auto;
+    width: auto;
+    min-height: 34px;
+    font-size: 0.8rem;
+    padding: 6px 12px;
+  }
+
+  .portao-input {
+    min-width: 0;
+    flex: 1 1 140px;
+  }
+
+  .chip-grupo,
+  .filtro-grupo {
+    gap: 6px;
+  }
+
+  .chip.chip-sm {
+    min-height: 28px;
+    padding: 4px 10px;
+    font-size: 0.72rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-bg {
+    padding: 16px 12px 32px;
+    align-items: flex-start;
+  }
+
+  .login-logo-icon {
+    width: 88px;
+    height: 88px;
+  }
+
+  .login-titulo {
+    font-size: 1.25rem;
+  }
+
+  .login-subtitulo {
+    font-size: 0.8rem;
+  }
+
+  .login-card {
+    padding: 14px 12px;
+    border-radius: 18px;
+    gap: 12px;
+  }
+
+  .login-wrapper {
+    gap: 16px;
+  }
+
+  .login-card {
+    padding: 18px 14px;
+    border-radius: 20px;
+    gap: 16px;
+  }
+
+  .avatar-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  .avatar-btn {
+    padding: 6px;
+  }
+
+  .avatar-btn img,
+  .avatar-img,
+  .avatar-img-render {
+    width: 36px;
+    height: 36px;
+  }
+
+  .btn-principal,
+  .btn-secundario,
+  .btn-refazer,
+  .btn-virar-pagina {
+    white-space: normal;
+    line-height: 1.25;
+  }
+
+  .header-avatar {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+  }
+
+  .header-avatar img,
+  .header-avatar-img {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .moedas-badge {
+    min-height: 36px !important;
+    padding: 4px 10px !important;
+  }
+
+  .badge-vidas-header {
+    min-height: 36px;
+  }
+
+  .btn-voltar {
+    min-height: 32px;
+    padding: 4px 8px;
+    font-size: 0.8rem;
+  }
+
+  .config-topo-header {
+    gap: 10px;
+  }
+
+  .config-topo-header .btn-voltar-config-top {
+    min-height: 34px;
+    width: auto;
+    font-size: 0.78rem;
+    padding: 6px 12px;
+  }
+}
+
+@media (max-width: 360px) {
+  .login-titulo {
+    font-size: 1.15rem;
+  }
+
+  .chip {
+    white-space: normal;
+    text-align: center;
+    min-height: 34px;
+    padding: 6px 10px !important;
+    font-size: 0.8rem !important;
+  }
+
+  .nav-item {
+    flex: 0 0 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .header-nome {
+    max-width: 72px !important;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .login-logo-icon {
+    width: 64px;
+    height: 64px;
+  }
+
+  .login-titulo {
+    font-size: 1.4rem;
+  }
+
+  .login-bg {
+    padding: 12px 16px 20px;
+    align-items: flex-start;
+  }
+
+  .app-header {
+    min-height: 44px;
+  }
+}
+
+@media (min-width: 1400px) {
+  .btn-principal,
+  .btn-secundario,
+  .btn-refazer,
+  .btn-icon,
+  .chip,
+  .vf-btn,
+  .tf-btn {
+    font-size: 0.92rem;
+  }
+
+  .historias-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    font-size: 0.88rem;
+    line-height: 1.45;
+  }
+
+  .tela-header {
+    padding: 16px 14px 8px;
+  }
+
+  .tela-header h2 {
+    font-size: 1.2rem;
+  }
+
+  .tela-sub {
+    font-size: 0.8rem;
+  }
+
+  .login-titulo {
+    font-size: 1.25rem;
+  }
+
+  .login-subtitulo {
+    font-size: 0.8rem;
+  }
+
+  .login-card-titulo {
+    font-size: 1.15rem;
+  }
+
+  .campo-label {
+    font-size: 0.72rem;
+  }
+
+  .campo-input,
+  input,
+  select,
+  textarea {
+    padding: 9px 12px;
+    font-size: 0.88rem;
+  }
+
+  .hc-titulo,
+  .historia-titulo {
+    font-size: 0.82rem !important;
+  }
+
+  .hc-tag {
+    font-size: 0.62rem;
+    padding: 2px 7px;
+  }
+
+  .hc-jogar {
+    font-size: 0.75rem;
+    padding: 5px 12px;
+    min-height: 30px;
+  }
+
+  .hc-emoji {
+    font-size: 2.2rem;
+  }
+
+  .estrela-icon {
+    font-size: 0.95rem;
+  }
+
+  .leitura-titulo-badge {
+    font-size: 0.75rem;
+    padding: 4px 12px;
+  }
+
+  .historia-texto,
+  .cartao-livro-leitura .historia-texto {
+    font-size: 0.88rem;
+    line-height: 1.5;
+    padding: 14px 14px;
+  }
+
+  .mg-enunciado,
+  .interacao-pergunta {
+    font-size: 0.92rem;
+  }
+
+  .mg-desc {
+    font-size: 0.82rem;
+  }
+
+  .minigame-titulo-label {
+    font-size: 0.88rem;
+  }
+
+  .mg-contador {
+    font-size: 0.7rem;
+  }
+
+  .resultado-titulo {
+    font-size: 1.4rem;
+  }
+
+  .resultado-msg {
+    font-size: 0.85rem;
+  }
+
+  .stat-valor {
+    font-size: 0.95rem;
+  }
+
+  .stat-label {
+    font-size: 0.65rem;
+  }
+
+  .conquistas-header-info h3 {
+    font-size: 1.1rem;
+  }
+
+  .conquistas-subtitulo {
+    font-size: 0.75rem;
+  }
+
+  .conquistas-contador-badge {
+    font-size: 0.72rem;
+    padding: 3px 10px;
+  }
+
+  .header-nome {
+    font-size: 0.78rem !important;
+  }
+
+  .header-nivel {
+    font-size: 0.62rem !important;
+  }
+
+  .menu-label {
+    font-size: 0.75rem !important;
+  }
+
+  .modal-sair-titulo {
+    font-size: 1.15rem;
+  }
+
+  .modal-op-info strong {
+    font-size: 1rem;
+  }
+
+  .modal-op-btn {
+    min-height: 48px;
+    padding: 10px;
+  }
+
+  .config-aba {
+    padding: 8px 12px;
+    font-size: 0.78rem;
+    min-height: 34px;
+  }
+
+  .badge-vidas-header {
+    font-size: 0.75rem;
+    min-height: 32px;
+    padding: 3px 8px;
+  }
+
+  .moedas-badge {
+    font-size: 0.75rem !important;
+    min-height: 30px !important;
+    padding: 3px 8px !important;
+  }
+
+  .lp-btn {
+    min-height: 42px;
+    font-size: 0.8rem;
+  }
+
+  .color-item {
+    padding: 6px 4px;
+    font-size: 0.72rem;
+    gap: 2px;
+  }
+
+  .feedback-msg,
+  #mg-feedback .feedback-msg {
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .mc-opcoes,
+  .interacao-opcoes,
+  .qd-opcoes,
+  .sp-grid,
+  .rima-opcoes-grid,
+  .rima-opcoes,
+  .color-scene,
+  .vf-opcoes,
+  .tf-opcoes {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 5px !important;
+    margin-top: 6px;
+  }
+
+  .mc-btn,
+  .opcao-btn,
+  .qd-btn,
+  .sp-btn,
+  .rima-btn,
+  .rima-opc,
+  .vf-btn,
+  .tf-btn,
+  .color-item {
+    width: 100% !important;
+    min-height: 30px !important;
+    padding: 5px 7px !important;
+    font-size: 0.72rem !important;
+    border-radius: 8px !important;
+    text-align: center !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1.2 !important;
+    box-sizing: border-box !important;
+  }
+
+  .mc-btn:hover:not(:disabled),
+  .opcao-btn:hover:not(:disabled),
+  .qd-btn:hover:not(:disabled),
+  .sp-btn:hover:not(:disabled),
+  .rima-opc:hover:not(:disabled) {
+    transform: none !important;
+  }
+
+  .color-emoji {
+    font-size: 1.15rem;
+  }
+
+  .color-name {
+    font-size: 0.68rem;
+  }
+}
+
+/* Garante que botões escondidos continuem ocultos em qualquer resolução */
+.oculto,
+.btn-principal.oculto,
+.btn-secundario.oculto,
+.btn-refazer.oculto,
+#btn-proximo-mg.oculto,
+#btn-finalizar-mg.oculto,
+#btn-continuar.oculto,
+.btn-principal[hidden],
+.btn-secundario[hidden],
+.btn-principal[style*="display: none"],
+.btn-secundario[style*="display: none"],
+.btn-virar-pagina[style*="display: none"] {
+  display: none !important;
 }

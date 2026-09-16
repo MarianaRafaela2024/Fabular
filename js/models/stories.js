@@ -409,18 +409,17 @@ function extrairPalavrasLista(valor) {
       if (Array.isArray(parsed)) return extrairPalavrasLista(parsed);
     } catch (_) { }
   }
-  const limpo = texto.replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-  return limpo.split(/\s+/).filter(Boolean);
+  return texto.split(/\s+/).filter(Boolean);
 }
 
 function extrairDadosMontaFrase(spec) {
   const fonte = spec && typeof spec === 'object' ? spec : {};
-  const fraseCorretaRaw = String(
+  const fraseCorreta = String(
     fonte.resposta != null ? fonte.resposta
       : (fonte.frase_correta != null ? fonte.frase_correta
         : (fonte.frase != null ? fonte.frase : ''))
   ).trim();
-  let palavrasCorretas = extrairPalavrasLista(fraseCorretaRaw);
+  let palavrasCorretas = extrairPalavrasLista(fraseCorreta);
   let palavrasPool = extrairPalavrasLista(fonte.palavras);
   if (!palavrasCorretas.length && palavrasPool.length) palavrasCorretas = [...palavrasPool];
   if (!palavrasPool.length && palavrasCorretas.length) palavrasPool = [...palavrasCorretas];
@@ -431,7 +430,6 @@ function extrairDadosMontaFrase(spec) {
   });
   return {
     pergunta: fonte.pergunta || '🧩 Monte a frase com as palavras abaixo.',
-    fraseCorretaRaw,
     palavrasCorretas,
     palavrasPool: palavrasPool.filter(Boolean)
   };
@@ -776,7 +774,7 @@ const EMOJI_POR_PALAVRA = {
   leao: '🦁', leoa: '🦁', leoes: '🦁',
   zebra: '🦓', elefante: '🐘', macaco: '🐒', macaca: '🐒',
   gato: '🐱', gata: '🐱', cachorro: '🐶', cachorra: '🐶', cao: '🐶',
-  coelho: '🐰', passaro: '🐦', passarinho: '🐦', borboleta: '🦋', peixe: '🐟', baleia: '🐋',
+  coelho: '🐰', passaro: '🐦', passarinho: '', borboleta: '🦋', peixe: '🐟', baleia: '🐋',
   dragao: '🐉', urso: '🐻', ursoa: '🐻', vaca: '🐄', porco: '🐷',
   cavalo: '🐴', ovelha: '🐑', galinha: '🐔', pato: '🦆', sapo: '🐸',
   tartaruga: '🐢', cobra: '🐍', lagarto: '🦎', crocodilo: '🐊',
@@ -833,7 +831,7 @@ const EMOJI_POR_PALAVRA = {
   magia: '✨', fada: '🧚', bruxa: '🧙', princesa: '👸', principe: '🤴',
   castelo: '🏰', rei: '👑', rainha: '👑', coroa: '👑', lembrança: '💭', simbolico: '💡', pertencimento: '🫂', identidade: '🪪',
   cavaleiro: '🛡️', espada: '⚔️', escudo: '🛡️', asas: '🪽', palavras: '✍️', papel: '📄',
-  pirata: '🏴‍☠️', ilha: '🏝️', tesouro: '💰', buraco: '🕳️', tinta: '🎨', caixa: '📦', palitos: '🥢',
+  pirata: '🏴‍☠️', ilha: '🏝️', tesouro: '💰', buraco: '', tinta: '🎨', caixa: '📦', palitos: '🥢',
   natal: '🎄', pascoa: '🐣', aniversario: '🎂', colecionar: '🗃️',
   primavera: '🌷', verao: '☀️', outono: '🍂', inverno: '❄️', vermelhas: '🔴', vovo: '👵', banco: '🪑', tranquilo: '🤙', gostoso: '😋'
 };
