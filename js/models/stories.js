@@ -409,17 +409,18 @@ function extrairPalavrasLista(valor) {
       if (Array.isArray(parsed)) return extrairPalavrasLista(parsed);
     } catch (_) { }
   }
-  return texto.split(/\s+/).filter(Boolean);
+  const limpo = texto.replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  return limpo.split(/\s+/).filter(Boolean);
 }
 
 function extrairDadosMontaFrase(spec) {
   const fonte = spec && typeof spec === 'object' ? spec : {};
-  const fraseCorreta = String(
+  const fraseCorretaRaw = String(
     fonte.resposta != null ? fonte.resposta
       : (fonte.frase_correta != null ? fonte.frase_correta
         : (fonte.frase != null ? fonte.frase : ''))
   ).trim();
-  let palavrasCorretas = extrairPalavrasLista(fraseCorreta);
+  let palavrasCorretas = extrairPalavrasLista(fraseCorretaRaw);
   let palavrasPool = extrairPalavrasLista(fonte.palavras);
   if (!palavrasCorretas.length && palavrasPool.length) palavrasCorretas = [...palavrasPool];
   if (!palavrasPool.length && palavrasCorretas.length) palavrasPool = [...palavrasCorretas];
@@ -430,6 +431,7 @@ function extrairDadosMontaFrase(spec) {
   });
   return {
     pergunta: fonte.pergunta || '🧩 Monte a frase com as palavras abaixo.',
+    fraseCorretaRaw,
     palavrasCorretas,
     palavrasPool: palavrasPool.filter(Boolean)
   };

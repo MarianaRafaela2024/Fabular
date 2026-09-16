@@ -1965,6 +1965,13 @@ html.alto-contraste .portao-input {
   transition: border-color var(--trans), background var(--trans);
 }
 
+.mf-line-break {
+  flex-basis: 100%;
+  height: 0;
+  margin: 0;
+  padding: 0;
+}
+
 .mf-placeholder {
   color: var(--texto-sub);
   font-size: .9rem;
