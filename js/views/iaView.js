@@ -398,6 +398,10 @@ ligar_pontos:
 - cada item deve ter "palavra" e "def" (definição simples e fácil para a criança)
 - ex.: { "palavra": "leão", "def": "Rei da selva corajoso" }
 
+colorir:
+- usar de 3 a 5 palavras-chave presentes no texto em palavrasAlvo
+- fornecer de 3 a 8 palavras distratoras (palavras simples que NÃO aparecem na história) em distratoras
+
 Sempre coerentes com a história
 
 QUALIDADE LITERÁRIA

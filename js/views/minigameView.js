@@ -973,15 +973,53 @@ function renderCompletarMG(fase, corpo, spec) {
   btnDesistir?.addEventListener('click', () => validar(true));
 }
 
+const PALAVRAS_DISTRATORAS_COLORIR_PADRAO = [
+  'castelo', 'peixe', 'janela', 'foguete', 'estrada', 'girafa', 'relógio',
+  'vassoura', 'tambor', 'sorvete', 'abacaxi', 'mochila', 'bicicleta', 'espelho',
+  'computador', 'sapo', 'tesouro', 'telefone', 'jardim', 'piano', 'pirata',
+  'planeta', 'borboleta', 'sino', 'trenzinho', 'vulcão', 'fantasma', 'dragão',
+  'melancia', 'caderno', 'luneta', 'escada', 'tartaruga', 'capacete', 'pipoca',
+  'trampolim', 'submarino', 'chocolate', 'lanterna', 'dinossauro', 'astronauta',
+  'carrossel', 'guarda-chuva', 'pirulito', 'palhaço', 'balão', 'ventilador',
+  'girassol', 'espada', 'sereia', 'cometa', 'moeda', 'escultura', 'martelo',
+  'pincel', 'chapéu', 'apito', 'almofada', 'violão', 'pipa', 'barco', 'esquilo',
+  'sol', 'nuvem', 'lápis', 'coruja', 'formiga', 'mosaico', 'planície'
+];
+
 function renderColorirMG(h, corpo, spec) {
   const alvo = (spec && Array.isArray(spec.palavrasAlvo) && spec.palavrasAlvo.length
     ? spec.palavrasAlvo
     : (h.palavrasChave || []).slice(0, 5));
-  const distratoras = (spec && Array.isArray(spec.distratoras) && spec.distratoras.length
-    ? spec.distratoras
-    : ['castelo', 'peixe', 'janela', 'foguete', 'estrada'])
-    .filter((p) => !alvo.includes(p))
-    .slice(0, 3);
+  
+  const textoStoryBruto = obterTextoBaseHistoria(h);
+  const textoStoryLimpo = textoStoryBruto.replace(/<[^>]+>/g, ' ').toLowerCase();
+  const textoStorySemAcento = textoStoryLimpo.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+  const alvoNormalizados = alvo.map((p) => String(p).toLowerCase().trim());
+  const alvoSemAcento = alvoNormalizados.map((p) => p.normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+
+  const distratorasSpec = (spec && Array.isArray(spec.distratoras)) ? spec.distratoras : [];
+  const poolDistratoras = [...new Set([...distratorasSpec, ...PALAVRAS_DISTRATORAS_COLORIR_PADRAO])];
+
+  const distratorasValidas = poolDistratoras.filter((p) => {
+    const pLow = String(p).toLowerCase().trim();
+    if (!pLow) return false;
+    const pSemAcento = pLow.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    // 1. Não pode estar entre as palavras-alvo (corretas)
+    if (alvoNormalizados.includes(pLow) || alvoSemAcento.includes(pSemAcento)) {
+      return false;
+    }
+
+    // 2. Não pode aparecer em NENHUM lugar do texto da história que o usuário lê
+    if (textoStoryLimpo.includes(pLow) || textoStorySemAcento.includes(pSemAcento)) {
+      return false;
+    }
+
+    return true;
+  });
+
+  const distratoras = embaralhar(distratorasValidas).slice(0, 3);
   const itens = embaralhar([...alvo.map((p) => ({ p, correta: true })), ...distratoras.map((p) => ({ p, correta: false }))]);
   const wrap = document.createElement('div');
   wrap.innerHTML = `

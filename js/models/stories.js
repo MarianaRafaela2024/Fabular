@@ -831,7 +831,7 @@ const EMOJI_POR_PALAVRA = {
   magia: '✨', fada: '🧚', bruxa: '🧙', princesa: '👸', principe: '🤴',
   castelo: '🏰', rei: '👑', rainha: '👑', coroa: '👑', lembrança: '💭', simbolico: '💡', pertencimento: '🫂', identidade: '🪪',
   cavaleiro: '🛡️', espada: '⚔️', escudo: '🛡️', asas: '🪽', palavras: '✍️', papel: '📄',
-  pirata: '🏴‍☠️', ilha: '🏝️', tesouro: '💰', buraco: '', tinta: '🎨', caixa: '📦', palitos: '🥢',
+  pirata: '🏴‍☠️', ilha: '🏝️', tesouro: '💰', buraco: '🕳️', tinta: '🎨', caixa: '📦', palitos: '🥢',
   natal: '🎄', pascoa: '🐣', aniversario: '🎂', colecionar: '🗃️',
   primavera: '🌷', verao: '☀️', outono: '🍂', inverno: '❄️', vermelhas: '🔴', vovo: '👵', banco: '🪑', tranquilo: '🤙', gostoso: '😋'
 };
