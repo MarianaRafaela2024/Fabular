@@ -34,16 +34,13 @@ function renderizarBiblioteca() {
     card.setAttribute('role', 'button');
     card.setAttribute('aria-label', `${h.titulo}, gênero ${h.genero}, faixa ${h.faixa}`);
 
+    const srcCapa = typeof resolverImagemCapa === 'function' ? resolverImagemCapa(h) : null;
+    const capaHtml = srcCapa
+      ? `<img src="${srcCapa}" alt="${h.titulo}" class="hc-capa-img" onerror="this.parentElement.classList.add('hc-emoji--placeholder'); this.remove();">`
+      : `${h.emoji}`;
+
     card.innerHTML = `
-      <div class="hc-emoji">
-        <img
-          src="${resolverImagemCapa(h.emoji)}"
-          alt="${h.titulo}"
-          class="hc-capa-img"
-          onerror="this.parentElement.classList.add('hc-emoji--fallback'); this.style.display='none';"
-        >
-        <span class="hc-emoji-fallback" aria-hidden="true">${h.emoji}</span>
-      </div>
+      <div class="hc-emoji">${capaHtml}</div>
       <div class="hc-titulo">${h.titulo}</div>
       <div class="hc-tags">
         <span class="hc-tag genero">${labelGenero(h.genero)}</span>

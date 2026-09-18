@@ -291,17 +291,21 @@ function renderizarPaginaAtualLivro(direcaoAnimacao = null) {
 
   const cenaEl = document.getElementById('historia-emoji-cena');
   if (cenaEl) {
-    const valorCena = h.cena || (h.fases && h.fases[0] && h.fases[0].cena) || '📖';
-    const srcImagem = resolverImagemCena(valorCena);
-    cenaEl.innerHTML = `
-      <img
-        src="${srcImagem}"
-        alt="Cena da história"
-        class="cena-img"
-        onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"
-      >
-      <span class="cena-emoji-fallback" style="display:none;" aria-hidden="true">${valorCena}</span>
-    `;
+    const srcImagem = typeof resolverImagemCena === 'function' ? resolverImagemCena(h) : null;
+    cenaEl.classList.remove('cena--placeholder');
+    if (srcImagem) {
+      cenaEl.innerHTML = `
+        <img
+          src="${srcImagem}"
+          alt="Cena da história"
+          class="cena-img"
+          onerror="this.parentElement.classList.add('cena--placeholder'); this.remove();"
+        >
+      `;
+    } else {
+      const valorCena = h.cena || (h.fases && h.fases[0] && h.fases[0].cena) || '📖';
+      cenaEl.textContent = valorCena;
+    }
   }
 
   const indicadorEl = document.getElementById('livro-pagina-indicador');
