@@ -9,7 +9,7 @@
      PARTE 1 — PERFIL DA CRIANÇA
   ───────────────────────────────────────── */
 
-  const perfil = { nome: '', avatar: 'midia/lion.png', faixa: 1, genero: 'narrativo', dataNascimento: null, horarioBrincar: null };
+  const perfil = { nome: '', avatar: 'midia/user/lion.png', faixa: 1, genero: 'narrativo', dataNascimento: null, horarioBrincar: null };
   const CHAVE_ESTADO = 'mundoHistorias_estado';
   const CHAVE_SESSAO = 'mundoHistorias_responsavel_sessao';
   const API_BASE = (window.API_BASE_URL || 'http://localhost:5275').replace(/\/$/, '');
@@ -187,7 +187,7 @@
         nome: perfil.nome,
         faixaEtaria: Number(perfil.faixa),
         dataNascimento: perfil.dataNascimento,
-        avatar: perfil.avatar || 'midia/lion.png',
+        avatar: perfil.avatar || 'midia/user/lion.png',
         generoFavorito: perfil.genero || 'narrativo',
         horarioBrincar: perfil.horarioBrincar
       });
@@ -202,7 +202,7 @@
       const perfilFinal = {
         id: childId,
         nome: perfil.nome,
-        avatar: perfil.avatar || 'midia/lion.png',
+        avatar: perfil.avatar || 'midia/user/lion.png',
         genero: perfil.genero || 'narrativo',
         dataNascimento: perfil.dataNascimento,
         faixa: perfil.faixa,
@@ -457,7 +457,7 @@
           btn.className = 'avatar-btn';
           btn.type = 'button';
           const avatarHtml = typeof renderizarAvatarHTML === 'function'
-            ? renderizarAvatarHTML(p.avatar || p.Avatar || 'midia/lion.png', 'avatar-img')
+            ? renderizarAvatarHTML(p.avatar || p.Avatar || 'midia/user/lion.png', 'avatar-img')
             : `<span class="avatar-emoji" style="font-size: 2.2rem; display: block; margin-bottom: 0.2rem;">${p.avatar || p.Avatar || '🦁'}</span>`;
           btn.innerHTML = `
             <div style="display:flex;align-items:center;justify-content:center;margin-bottom:0.2rem;height:48px;">${avatarHtml}</div>
@@ -513,7 +513,9 @@
     const perfilObj = {
       id: perfilApi.id || perfilApi.Id,
       nome: perfilApi.nome || perfilApi.Nome,
-      avatar: perfilApi.avatar || perfilApi.Avatar || 'midia/lion.png',
+      avatar: typeof normalizarCaminhoAvatar === 'function'
+        ? normalizarCaminhoAvatar(perfilApi.avatar || perfilApi.Avatar)
+        : (perfilApi.avatar || perfilApi.Avatar || 'midia/user/lion.png'),
       genero: perfilApi.generoFavorito || perfilApi.GeneroFavorito || 'narrativo',
       dataNascimento: perfilApi.dataNascimento || perfilApi.DataNascimento,
       faixa: perfilApi.faixaEtaria || perfilApi.FaixaEtaria || 1,

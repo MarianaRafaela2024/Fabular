@@ -16,7 +16,7 @@ function atualizarTelaProgresso() {
 
   if (ppAvatar) {
     if (typeof renderizarElementoAvatar === 'function') {
-      renderizarElementoAvatar(ppAvatar, p.avatar || 'midia/lion.png', 'pp-avatar-img');
+      renderizarElementoAvatar(ppAvatar, p.avatar || 'midia/user/lion.png', 'pp-avatar-img');
     } else {
       ppAvatar.textContent = p.avatar;
     }

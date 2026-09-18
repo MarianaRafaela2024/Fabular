@@ -31,7 +31,9 @@ function normalizarPerfilCrianca(perfil) {
   if (!perfil) return perfil;
   const p = Object.assign({}, perfil);
   p.nome = p.nome || '';
-  p.avatar = p.avatar || 'midia/lion.png';
+  p.avatar = typeof normalizarCaminhoAvatar === 'function'
+    ? normalizarCaminhoAvatar(p.avatar)
+    : (p.avatar || 'midia/user/lion.png');
   p.genero = p.genero || p.generoFavorito || 'narrativo';
   p.dataNascimento = p.dataNascimento || null;
   p.horarioBrincar = p.horarioBrincar || p.horario || null;

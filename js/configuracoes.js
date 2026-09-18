@@ -60,7 +60,7 @@
   }
 
   let criancasConfig = [];
-  let criancaConfigEdit = { genero: 'narrativo', avatar: 'midia/lion.png' };
+  let criancaConfigEdit = { genero: 'narrativo', avatar: 'midia/user/lion.png' };
 
   function setConfigMsg(erro, sucesso) {
     const erroEl = document.getElementById('config-erro');
@@ -135,9 +135,12 @@
   }
 
   function selecionarAvatarConfig(avatar) {
-    criancaConfigEdit.avatar = avatar;
+    const av = typeof normalizarCaminhoAvatar === 'function'
+      ? normalizarCaminhoAvatar(avatar)
+      : (avatar || 'midia/user/lion.png');
+    criancaConfigEdit.avatar = av;
     document.querySelectorAll('#config-avatar-grid .avatar-btn').forEach(btn => {
-      const ativo = btn.dataset.av === avatar;
+      const ativo = btn.dataset.av === av;
       btn.classList.toggle('ativo', ativo);
       btn.setAttribute('aria-pressed', ativo ? 'true' : 'false');
     });
@@ -151,7 +154,7 @@
     if (nascEl) nascEl.value = formatarDataInput(crianca.dataNascimento || crianca.DataNascimento);
     if (horarioEl) horarioEl.value = crianca.horarioBrincar || crianca.HorarioBrincar || '';
     selecionarGeneroConfig(crianca.generoFavorito || crianca.GeneroFavorito || 'narrativo');
-    selecionarAvatarConfig(crianca.avatar || crianca.Avatar || 'midia/lion.png');
+    selecionarAvatarConfig(crianca.avatar || crianca.Avatar || 'midia/user/lion.png');
   }
 
   function obterCriancaSelecionada(selectId) {
