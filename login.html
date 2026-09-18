@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <style>
     html.alto-contraste,
@@ -16,7 +17,7 @@
     }
   </style>
   <script>
-    (function() {
+    (function () {
       try {
         if (localStorage.getItem('mundoHistorias_modoNoturno') === '1') {
           document.documentElement.classList.add('alto-contraste');
@@ -27,7 +28,7 @@
           document.documentElement.style.fontSize = f + 'px';
           document.documentElement.style.setProperty('--fonte-base', f + 'px');
         }
-      } catch(e) {}
+      } catch (e) { }
     })();
   </script>
   <meta charset="UTF-8" />
@@ -36,7 +37,11 @@
   <link rel="icon" type="image/png" href="midia/iconeRaposa.png">
   <link rel="stylesheet" href="css/style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"></head>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700;800&display=swap"
+    rel="stylesheet">
+</head>
+
 <body class="login-body">
 
   <!-- ═══════════ LOGIN ═══════════ -->
@@ -67,15 +72,8 @@
         <!-- Nome -->
         <div class="campo-grupo">
           <label class="campo-label" for="input-nome">Seu nome ou apelido</label>
-          <input
-            type="text"
-            id="input-nome"
-            class="campo-input"
-            placeholder="Ex: Lulú, Bento, Ana..."
-            maxlength="20"
-            autocomplete="given-name"
-            aria-required="true"
-          />
+          <input type="text" id="input-nome" class="campo-input" placeholder="Ex: Lulú, Bento, Ana..." maxlength="20"
+            autocomplete="given-name" aria-required="true" />
           <span class="campo-erro oculto" id="erro-nome" role="alert">Por favor, escreva seu nome! 😊</span>
         </div>
 
@@ -83,29 +81,31 @@
         <div class="campo-grupo">
           <label class="campo-label" id="label-avatar">Escolha seu avatar</label>
           <div class="avatar-grid" id="avatar-grid" role="radiogroup" aria-labelledby="label-avatar">
-           
-            <button class="avatar-btn ativo" data-av="midia/user/lion.png" aria-label="Leão" aria-pressed="true" role="radio"><img src="midia/user/lion.png" alt="Leão"></button>
-            <button class="avatar-btn" data-av="midia/user/frog.png" aria-label="Sapo" aria-pressed="false" role="radio"><img src="midia/user/frog.png" alt="Sapo"></button>
-            <button class="avatar-btn" data-av="midia/user/butterfly.png" aria-label="Borboleta" aria-pressed="false" role="radio"><img src="midia/user/butterfly.png" alt="Borboleta"></button>
-            <button class="avatar-btn" data-av="midia/user/sea-turtle.png" aria-label="Tartaruga" aria-pressed="false" role="radio"><img src="midia/user/sea-turtle.png" alt="Tartaruga"></button>
-            <button class="avatar-btn" data-av="midia/user/fox.png" aria-label="Raposa" aria-pressed="false" role="radio"><img src="midia/user/fox.png" alt="Raposa"></button>
-            <button class="avatar-btn" data-av="midia/user/penguin.png" aria-label="Pinguim" aria-pressed="false" role="radio"><img src="midia/user/penguin.png" alt="Pinguim"></button>
-            <button class="avatar-btn" data-av="midia/user/dragon.png" aria-label="Dragão" aria-pressed="false" role="radio"><img src="midia/user/dragon.png" alt="Dragão"></button>
-            <button class="avatar-btn" data-av="midia/user/panda.png" aria-label="Panda" aria-pressed="false" role="radio"><img src="midia/user/panda.png" alt="Panda"></button>
+
+            <button class="avatar-btn ativo" data-av="midia/user/sapo.png" aria-label="Sapo" aria-pressed="true"
+              role="radio"><img src="midia/user/sapo.png" alt="sapo"></button>
+            <button class="avatar-btn" data-av="midia/user/unicornio.png" aria-label="Unicórnio" aria-pressed="false"
+              role="radio"><img src="midia/user/unicornio.png" alt="unicornio"></button>
+            <button class="avatar-btn" data-av="midia/user/jacare.png" aria-label="Jacare" aria-pressed="false"
+              role="radio"><img src="midia/user/jacare.png" alt="jacare"></button>
+            <button class="avatar-btn" data-av="midia/user/tubarao.png" aria-label="Tubarão" aria-pressed="false"
+              role="radio"><img src="midia/user/tubarao.png" alt="tubarao"></button>
+            <button class="avatar-btn" data-av="midia/user/porco.png" aria-label="Porco" aria-pressed="false"
+              role="radio"><img src="midia/user/porco.png" alt="porco"></button>
+            <button class="avatar-btn" data-av="midia/user/pato.png" aria-label="Pato" aria-pressed="false"
+              role="radio"><img src="midia/user/pato.png" alt="pato"></button>
+            <button class="avatar-btn" data-av="midia/user/gato.png" aria-label="Gato" aria-pressed="false"
+              role="radio"><img src="midia/user/gato.png" alt="gato"></button>
+            <button class="avatar-btn" data-av="midia/user/urso.png" aria-label="Urso" aria-pressed="false"
+              role="radio"><img src="midia/user/urso.png" alt="urso"></button>
           </div>
         </div>
 
         <!-- Data de nascimento -->
         <div class="campo-grupo">
           <label class="campo-label" for="input-nascimento">🎂 Data de nascimento</label>
-          <input
-            type="date"
-            id="input-nascimento"
-            class="campo-input"
-            aria-label="Data de nascimento"
-            aria-required="true"
-            required
-          />
+          <input type="date" id="input-nascimento" class="campo-input" aria-label="Data de nascimento"
+            aria-required="true" required />
           <span class="campo-erro oculto" id="erro-nascimento" role="alert">Informe a data de nascimento.</span>
           <p class="tela-sub" id="faixa-preview" style="margin-top:.35rem;font-size:.85rem;" aria-live="polite"></p>
         </div>
@@ -114,20 +114,16 @@
         <div class="campo-grupo">
           <label class="campo-label" id="label-genero">Gênero de história favorito</label>
           <div class="chip-grupo" id="genero-grupo" role="radiogroup" aria-labelledby="label-genero">
-            <button class="chip ativo" data-genero="narrativo"    aria-pressed="true">📖 Narrativo</button>
-            <button class="chip"       data-genero="poetico"      aria-pressed="false">🎵 Poético</button>
-            <button class="chip"       data-genero="instrucional" aria-pressed="false">📋 Instrucional</button>
-            <button class="chip"       data-genero="descritivo"   aria-pressed="false">🔍 Descritivo</button>
-            <button class="chip"       data-genero="informativo"  aria-pressed="false">💡 Informativo</button>
+            <button class="chip ativo" data-genero="narrativo" aria-pressed="true">📖 Narrativo</button>
+            <button class="chip" data-genero="poetico" aria-pressed="false">🎵 Poético</button>
+            <button class="chip" data-genero="instrucional" aria-pressed="false">📋 Instrucional</button>
+            <button class="chip" data-genero="descritivo" aria-pressed="false">🔍 Descritivo</button>
+            <button class="chip" data-genero="informativo" aria-pressed="false">💡 Informativo</button>
           </div>
         </div>
         <div class="campo-grupo">
           <label class="campo-label" for="input-horario"> ⏰ Qual horário você mais gosta de brincar no Fabular?</label>
-          <input
-            type="time"
-            id="input-horario"
-            class="campo-input"
-            aria-label="Horário preferido para jogar"/>
+          <input type="time" id="input-horario" class="campo-input" aria-label="Horário preferido para jogar" />
         </div>
 
         <button class="btn-principal btn-entrar" id="btn-iniciar" aria-label="Iniciar aventura">
@@ -166,7 +162,8 @@
             <input type="password" id="resp-confirmar-senha" class="campo-input" placeholder="••••••••" />
           </div>
           <button class="btn-principal" id="btn-resp-continuar">Continuar</button>
-          <p class="resp-link-texto" id="resp-link-esqueci"><button class="link-inline" id="btn-esqueci-senha" type="button">Esqueci minha senha</button></p>
+          <p class="resp-link-texto" id="resp-link-esqueci"><button class="link-inline" id="btn-esqueci-senha"
+              type="button">Esqueci minha senha</button></p>
           <p class="resp-link-texto" id="resp-link-alterar"></p>
         </div>
         <div id="resp-recuperar-box" class="oculto">
@@ -183,7 +180,7 @@
             <label class="campo-label" for="resp-nova-senha">Nova senha</label>
             <input type="password" id="resp-nova-senha" class="campo-input" placeholder="Digite a nova senha" />
           </div>
-          
+
           <button class="btn-principal" id="btn-resetar-senha" type="button">Redefinir senha</button>
           <button class="link-inline" id="btn-cancelar-reset" type="button">Voltar para login</button>
         </div>
@@ -193,7 +190,8 @@
       <div class="login-card oculto" id="perfis-card" role="region" aria-label="Seleção de perfil infantil">
         <div class="perfis-header-wrap">
           <h2 class="login-card-titulo" style="margin: 0;">👨‍👩‍👧 Troca de perfil</h2>
-          <button class="btn-config-engrenagem" id="btn-ir-configuracoes" title="Configurações" aria-label="Configurações">
+          <button class="btn-config-engrenagem" id="btn-ir-configuracoes" title="Configurações"
+            aria-label="Configurações">
             <img src="midia/gear.png" alt="Configurações" class="img-engrenagem" />
           </button>
         </div>
@@ -210,4 +208,5 @@
   <script src="js/utils/avatarUtils.js"></script>
   <script src="js/login.js"></script>
 </body>
+
 </html>

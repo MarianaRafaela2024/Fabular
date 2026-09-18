@@ -71,7 +71,10 @@
         <div class="config-secao ativa" id="config-secao-relatorios" role="tabpanel">
           <div class="campo-grupo" style="max-width: 360px;">
             <label class="campo-label" for="config-relatorio-crianca">Selecione a criança</label>
-            <select id="config-relatorio-crianca" class="campo-input"></select>
+            <div class="config-select-com-avatar">
+              <select id="config-relatorio-crianca" class="campo-input"></select>
+              <span id="config-relatorio-avatar-previa" class="config-avatar-previa" aria-hidden="true"></span>
+            </div>
           </div>
           <div id="config-relatorios-conteudo" class="config-relatorios-conteudo">
             <p class="tela-sub">Selecione uma criança para ver o relatório.</p>
@@ -112,7 +115,10 @@
           <div class="config-grid-2col">
             <div class="campo-grupo">
               <label class="campo-label" for="config-crianca-select">Selecione a criança</label>
-              <select id="config-crianca-select" class="campo-input"></select>
+              <div class="config-select-com-avatar">
+                <select id="config-crianca-select" class="campo-input"></select>
+                <span id="config-crianca-avatar-previa" class="config-avatar-previa" aria-hidden="true"></span>
+              </div>
             </div>
             <div class="campo-grupo">
               <label class="campo-label" for="config-crianca-nome">Nome ou apelido</label>
@@ -140,14 +146,14 @@
           <div class="campo-grupo" style="margin-top: 10px;">
             <label class="campo-label" id="config-label-avatar">Avatar</label>
             <div class="avatar-grid config-avatar-grid" id="config-avatar-grid" role="radiogroup" aria-labelledby="config-label-avatar">
-              <button class="avatar-btn ativo" data-av="midia/user/lion.png" type="button" aria-pressed="true" role="radio"><img src="midia/user/lion.png" alt="Leão"></button>
-              <button class="avatar-btn" data-av="midia/user/frog.png" type="button" aria-pressed="false" role="radio"><img src="midia/user/frog.png" alt="Sapo"></button>
-              <button class="avatar-btn" data-av="midia/user/butterfly.png" type="button" aria-pressed="false" role="radio"><img src="midia/user/butterfly.png" alt="Borboleta"></button>
-              <button class="avatar-btn" data-av="midia/user/sea-turtle.png" type="button" aria-pressed="false" role="radio"><img src="midia/user/sea-turtle.png" alt="Tartaruga"></button>
-              <button class="avatar-btn" data-av="midia/user/fox.png" type="button" aria-pressed="false" role="radio"><img src="midia/user/fox.png" alt="Raposa"></button>
-              <button class="avatar-btn" data-av="midia/user/penguin.png" type="button" aria-pressed="false" role="radio"><img src="midia/user/penguin.png" alt="Pinguim"></button>
-              <button class="avatar-btn" data-av="midia/user/dragon.png" type="button" aria-pressed="false" role="radio"><img src="midia/user/dragon.png" alt="Dragão"></button>
-              <button class="avatar-btn" data-av="midia/user/panda.png" type="button" aria-pressed="false" role="radio"><img src="midia/user/panda.png" alt="Panda"></button>
+              <button class="avatar-btn ativo" data-av="midia/user/sapo.png" type="button" aria-pressed="true" role="radio"><img src="midia/user/sapo.png" alt="Sapo"></button>
+              <button class="avatar-btn" data-av="midia/user/unicornio.png" type="button" aria-pressed="false" role="radio"><img src="midia/user/unicornio.png" alt="Unicórnio"></button>
+              <button class="avatar-btn" data-av="midia/user/jacare.png" type="button" aria-pressed="false" role="radio"><img src="midia/user/jacare.png" alt="Jacare"></button>
+              <button class="avatar-btn" data-av="midia/user/tubarao.png" type="button" aria-pressed="false" role="radio"><img src="midia/user/tubarao.png" alt="Tubarão"></button>
+              <button class="avatar-btn" data-av="midia/user/porco.png" type="button" aria-pressed="false" role="radio"><img src="midia/user/porco.png" alt="Porco"></button>
+              <button class="avatar-btn" data-av="midia/user/pato.png" type="button" aria-pressed="false" role="radio"><img src="midia/user/pato.png" alt="Pato"></button>
+              <button class="avatar-btn" data-av="midia/user/gato.png" type="button" aria-pressed="false" role="radio"><img src="midia/user/gato.png" alt="Gato"></button>
+              <button class="avatar-btn" data-av="midia/user/urso.png" type="button" aria-pressed="false" role="radio"><img src="midia/user/urso.png" alt="Urso"></button>
             </div>
           </div>
           <button class="btn-principal" id="btn-salvar-crianca" type="button" style="margin-top: 12px; align-self: flex-start; max-width: 320px;">Salvar dados da criança</button>
@@ -178,7 +184,7 @@
           // Veio do login: comportamento original (volta para troca de perfil)
           btnVoltar.textContent = '← Voltar para troca de perfil';
           btnVoltar.addEventListener('click', function () {
-            history.back();
+            window.location.href = 'login.html';
           });
         }
       }

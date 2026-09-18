@@ -33,7 +33,7 @@ function normalizarPerfilCrianca(perfil) {
   p.nome = p.nome || '';
   p.avatar = typeof normalizarCaminhoAvatar === 'function'
     ? normalizarCaminhoAvatar(p.avatar)
-    : (p.avatar || 'midia/user/lion.png');
+    : (p.avatar || 'midia/user/sapo.png');
   p.genero = p.genero || p.generoFavorito || 'narrativo';
   p.dataNascimento = p.dataNascimento || null;
   p.horarioBrincar = p.horarioBrincar || p.horario || null;

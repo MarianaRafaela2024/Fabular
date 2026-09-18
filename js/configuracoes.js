@@ -60,7 +60,7 @@
   }
 
   let criancasConfig = [];
-  let criancaConfigEdit = { genero: 'narrativo', avatar: 'midia/user/lion.png' };
+  let criancaConfigEdit = { genero: 'narrativo', avatar: 'midia/user/sapo.png' };
 
   function setConfigMsg(erro, sucesso) {
     const erroEl = document.getElementById('config-erro');
@@ -134,10 +134,100 @@
     });
   }
 
+  function avatarCrianca(crianca) {
+    const bruto = crianca ? (crianca.avatar || crianca.Avatar || 'midia/user/sapo.png') : 'midia/user/sapo.png';
+    return typeof normalizarCaminhoAvatar === 'function' ? normalizarCaminhoAvatar(bruto) : bruto;
+  }
+
+  function renderizarPreviaAvatar(el, avatar) {
+    if (!el) return;
+    if (typeof renderizarElementoAvatar === 'function') {
+      renderizarElementoAvatar(el, avatar, 'config-avatar-previa-img');
+    } else {
+      el.innerHTML = `<img src="${avatar}" alt="" class="config-avatar-previa-img">`;
+    }
+  }
+
+  function atualizarPreviasAvatar(crianca) {
+    const av = avatarCrianca(crianca);
+    renderizarPreviaAvatar(document.getElementById('config-crianca-avatar-previa'), av);
+    renderizarPreviaAvatar(document.getElementById('config-relatorio-avatar-previa'), av);
+  }
+
+  function sincronizarAvatarLocal(criancaId, avatar, extras) {
+    const av = typeof normalizarCaminhoAvatar === 'function' ? normalizarCaminhoAvatar(avatar) : avatar;
+    const idx = criancasConfig.findIndex(c => Number(c.id || c.Id) === Number(criancaId));
+    if (idx >= 0) {
+      criancasConfig[idx] = Object.assign({}, criancasConfig[idx], extras || {}, { avatar: av, Avatar: av });
+    }
+
+    try {
+      const estado = carregarJSON(CHAVE_ESTADO, {});
+      const pid = estado?.perfil?.id || estado?.perfil?.Id;
+      if (estado?.perfil && Number(pid) === Number(criancaId)) {
+        estado.perfil.avatar = av;
+        if (extras?.nome || extras?.Nome) estado.perfil.nome = extras.nome || extras.Nome;
+        salvarJSON(CHAVE_ESTADO, estado);
+      }
+    } catch (_) { }
+
+    try {
+      const chave = `mundoHistorias_estado_crianca_${criancaId}`;
+      const raw = localStorage.getItem(chave);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.perfil) {
+          parsed.perfil.avatar = av;
+          localStorage.setItem(chave, JSON.stringify(parsed));
+        }
+      }
+    } catch (_) { }
+  }
+
+  async function persistirAvatarImediatamente(avatar) {
+    const sessao = getSessaoResponsavel();
+    const crianca = obterCriancaSelecionada('config-crianca-select');
+    if (!sessao?.responsavelId || !crianca) return;
+
+    const av = typeof normalizarCaminhoAvatar === 'function' ? normalizarCaminhoAvatar(avatar) : avatar;
+    const criancaId = crianca.id || crianca.Id;
+    sincronizarAvatarLocal(criancaId, av);
+    atualizarPreviasAvatar(Object.assign({}, crianca, { avatar: av, Avatar: av }));
+
+    const nome = document.getElementById('config-crianca-nome')?.value.trim()
+      || crianca.nome || crianca.Nome;
+    const dataNascimento = document.getElementById('config-crianca-nascimento')?.value
+      || formatarDataInput(crianca.dataNascimento || crianca.DataNascimento);
+    const horarioBrincar = document.getElementById('config-crianca-horario')?.value
+      || crianca.horarioBrincar || crianca.HorarioBrincar || null;
+
+    if (!nome || !dataNascimento) return;
+
+    try {
+      const atualizado = await apiRequest(
+        `/api/v1/children/${encodeURIComponent(criancaId)}`,
+        'PUT',
+        {
+          responsavelId: Number(sessao.responsavelId),
+          nome,
+          dataNascimento,
+          avatar: av,
+          generoFavorito: criancaConfigEdit.genero,
+          horarioBrincar
+        }
+      );
+      const idx = criancasConfig.findIndex(c => Number(c.id || c.Id) === Number(criancaId));
+      if (idx >= 0) criancasConfig[idx] = atualizado;
+      sincronizarAvatarLocal(criancaId, atualizado.avatar || atualizado.Avatar || av, atualizado);
+    } catch (e) {
+      setConfigMsg(e.message || 'Não foi possível salvar o avatar.', '');
+    }
+  }
+
   function selecionarAvatarConfig(avatar) {
     const av = typeof normalizarCaminhoAvatar === 'function'
       ? normalizarCaminhoAvatar(avatar)
-      : (avatar || 'midia/user/lion.png');
+      : (avatar || 'midia/user/sapo.png');
     criancaConfigEdit.avatar = av;
     document.querySelectorAll('#config-avatar-grid .avatar-btn').forEach(btn => {
       const ativo = btn.dataset.av === av;
@@ -154,7 +244,8 @@
     if (nascEl) nascEl.value = formatarDataInput(crianca.dataNascimento || crianca.DataNascimento);
     if (horarioEl) horarioEl.value = crianca.horarioBrincar || crianca.HorarioBrincar || '';
     selecionarGeneroConfig(crianca.generoFavorito || crianca.GeneroFavorito || 'narrativo');
-    selecionarAvatarConfig(crianca.avatar || crianca.Avatar || 'midia/user/lion.png');
+    selecionarAvatarConfig(crianca.avatar || crianca.Avatar || 'midia/user/sapo.png');
+    atualizarPreviasAvatar(crianca);
   }
 
   function obterCriancaSelecionada(selectId) {
@@ -212,9 +303,12 @@
     if (acertos > limiteMinigames) acertos = limiteMinigames;
     if (erros > limiteMinigames) erros = limiteMinigames;
 
+    const avatarHtml = typeof renderizarAvatarHTML === 'function'
+      ? renderizarAvatarHTML(avatarCrianca(crianca), 'config-relatorio-avatar-img')
+      : '';
     cont.innerHTML = `
       <div class="config-relatorio-card">
-        <h4>📄 Relatório — ${nome}</h4>
+        <h4><span class="config-relatorio-titulo-avatar">${avatarHtml}</span> Relatório — ${nome}</h4>
         <div class="config-stats-grid">
           <div class="config-stat"><strong>${historias}</strong>Histórias concluídas</div>
           <div class="config-stat"><strong>${estrelas}</strong>Estrelas</div>
@@ -249,6 +343,17 @@
           }
         });
         setConfigMsg('', '');
+        if (secao === 'relatorios') {
+          const crianca = obterCriancaSelecionada('config-relatorio-crianca');
+          atualizarPreviasAvatar(crianca);
+          const sessao = getSessaoResponsavel();
+          if (sessao?.responsavelId && crianca) {
+            carregarRelatorioCrianca(sessao.responsavelId, crianca);
+          }
+        }
+        if (secao === 'crianca') {
+          atualizarPreviasAvatar(obterCriancaSelecionada('config-crianca-select'));
+        }
       };
     });
   }
@@ -258,7 +363,10 @@
       btn.onclick = () => selecionarGeneroConfig(btn.dataset.genero);
     });
     document.querySelectorAll('#config-avatar-grid .avatar-btn').forEach(btn => {
-      btn.onclick = () => selecionarAvatarConfig(btn.dataset.av);
+      btn.onclick = () => {
+        selecionarAvatarConfig(btn.dataset.av);
+        persistirAvatarImediatamente(btn.dataset.av);
+      };
     });
 
     const selectRelatorio = document.getElementById('config-relatorio-crianca');
@@ -266,6 +374,7 @@
       selectRelatorio.onchange = async () => {
         const sessao = getSessaoResponsavel();
         const crianca = obterCriancaSelecionada('config-relatorio-crianca');
+        atualizarPreviasAvatar(crianca);
         if (sessao?.responsavelId) await carregarRelatorioCrianca(sessao.responsavelId, crianca);
       };
     }
@@ -275,6 +384,7 @@
       selectCrianca.onchange = () => {
         const crianca = obterCriancaSelecionada('config-crianca-select');
         if (crianca) preencherFormCriancaConfig(crianca);
+        atualizarPreviasAvatar(crianca);
       };
     }
 
@@ -357,6 +467,7 @@
           if (selectRel) selectRel.value = String(criancaId);
           if (selectCri) selectCri.value = String(criancaId);
           preencherFormCriancaConfig(atualizado);
+          atualizarPreviasAvatar(atualizado);
           await carregarRelatorioCrianca(sessao.responsavelId, atualizado);
           setConfigMsg('', 'Dados da criança atualizados com sucesso!');
         } catch (e) {
@@ -389,6 +500,7 @@
 
       if (criancasConfig.length > 0) {
         preencherFormCriancaConfig(criancasConfig[0]);
+        atualizarPreviasAvatar(criancasConfig[0]);
         await carregarRelatorioCrianca(sessao.responsavelId, criancasConfig[0]);
       } else {
         document.getElementById('config-relatorios-conteudo').innerHTML =

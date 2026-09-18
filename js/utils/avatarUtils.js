@@ -5,19 +5,29 @@
 
 'use strict';
 
-/** Pasta e arquivos dos avatares da criança. Troque o PNG aqui para mudar a arte. */
+/** Pasta e arquivos dos avatares da criança. Troque o PNG em midia/user/ para mudar a arte. */
 const PASTA_AVATAR_USUARIO = 'midia/user/';
-const AVATAR_PADRAO = PASTA_AVATAR_USUARIO + 'lion.png';
+const AVATAR_PADRAO = PASTA_AVATAR_USUARIO + 'sapo.png';
 const ARQUIVOS_AVATAR_USUARIO = new Set([
-  'lion.png',
-  'frog.png',
-  'butterfly.png',
-  'sea-turtle.png',
-  'fox.png',
-  'penguin.png',
-  'dragon.png',
-  'panda.png'
+  'sapo.png',
+  'unicornio.png',
+  'jacare.png',
+  'tubarao.png',
+  'porco.png',
+  'pato.png',
+  'gato.png',
+  'urso.png'
 ]);
+const AVATAR_ALIAS = {
+  'lion.png': 'urso.png',
+  'frog.png': 'sapo.png',
+  'butterfly.png': 'unicornio.png',
+  'sea-turtle.png': 'jacare.png',
+  'fox.png': 'gato.png',
+  'penguin.png': 'pato.png',
+  'dragon.png': 'tubarao.png',
+  'panda.png': 'porco.png'
+};
 
 /**
  * Verifica se a string fornecida representa um caminho de imagem, URL ou Base64.
@@ -51,9 +61,10 @@ function normalizarCaminhoAvatar(avatar) {
   const av = String(avatar || '').trim();
   if (!av) return AVATAR_PADRAO;
   if (!ehCaminhoImagem(av)) return av;
-  const nome = av.split(/[/\\]/).pop().toLowerCase();
-  if (ARQUIVOS_AVATAR_USUARIO.has(nome)) {
-    return PASTA_AVATAR_USUARIO + nome;
+  const nome = av.split(/[/\\]/).pop().toLowerCase().replace(/\s+/g, '');
+  const mapeado = AVATAR_ALIAS[nome] || nome;
+  if (ARQUIVOS_AVATAR_USUARIO.has(mapeado)) {
+    return PASTA_AVATAR_USUARIO + mapeado;
   }
   return av;
 }

@@ -417,8 +417,13 @@ input:-webkit-autofill:active {
 /* Avatar grid */
 .avatar-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(6px, 1.6vw, 12px);
+  width: 100%;
+}
+
+.config-avatar-grid {
+  max-width: 520px;
 }
 
 .avatar-btn {
@@ -426,12 +431,19 @@ input:-webkit-autofill:active {
   border: 2.5px solid transparent;
   border-radius: var(--radius-sm);
   font-size: 1.85rem;
-  padding: 9px;
+  padding: clamp(4px, 1.4vw, 8px);
   cursor: pointer;
   transition: all var(--trans-spring);
   line-height: 1;
   position: relative;
   overflow: hidden;
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 .avatar-btn::before {
@@ -445,7 +457,7 @@ input:-webkit-autofill:active {
 
 .avatar-btn:hover {
   background: #EDE9FE;
-  transform: scale(1.12) translateY(-2px);
+  transform: scale(1.06) translateY(-2px);
 }
 
 .avatar-btn:hover::before {
@@ -455,19 +467,57 @@ input:-webkit-autofill:active {
 .avatar-btn.ativo {
   border-color: var(--cor-roxo);
   background: linear-gradient(135deg, #EDE9FE, #DDD6FE);
-  transform: scale(1.1) translateY(-2px);
+  transform: scale(1.05) translateY(-2px);
   box-shadow: 0 4px 16px rgba(168, 85, 247, .3);
 }
 
 .avatar-btn img,
 .avatar-img,
 .avatar-img-render {
-  width: 48px;
-  height: 48px;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
-  border-radius: 50%;
-  display: inline-block;
-  vertical-align: middle;
+  object-position: center;
+  display: block;
+  pointer-events: none;
+  position: relative;
+  z-index: 1;
+}
+
+.avatar-btn-perfil {
+  aspect-ratio: auto;
+  flex-direction: column;
+  gap: 6px;
+  padding: clamp(6px, 1.6vw, 10px) clamp(4px, 1.2vw, 8px) 8px;
+}
+
+.avatar-btn-perfil-img {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.avatar-btn-perfil-img img,
+.avatar-btn-perfil .avatar-img-render {
+  width: 100%;
+  height: 100%;
+}
+
+.avatar-btn-perfil-nome {
+  display: block;
+  font-size: clamp(.7rem, 2.4vw, .8rem);
+  font-weight: 600;
+  color: #333;
+  line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .avatar-emoji-render {
@@ -795,10 +845,9 @@ input:-webkit-autofill:active {
 
 .header-avatar img,
 .header-avatar-img {
-  width: 40px;
-  height: 40px;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
-  border-radius: 50%;
   display: block;
 }
 
@@ -2593,6 +2642,20 @@ html.alto-contraste .portao-input {
   position: relative;
   z-index: 1;
   transition: transform var(--trans-spring);
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pp-avatar img,
+.pp-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .pp-avatar:hover {
@@ -5989,8 +6052,8 @@ body.alto-contraste .link-inline {
 
   .header-avatar img,
   .header-avatar-img {
-    width: 32px !important;
-    height: 32px !important;
+    width: 100% !important;
+    height: 100% !important;
   }
 
   .header-nome {
@@ -6302,8 +6365,8 @@ body.alto-contraste .link-inline {
 
   .header-avatar img,
   .header-avatar-img {
-    width: 32px !important;
-    height: 32px !important;
+    width: 100% !important;
+    height: 100% !important;
   }
 
   .historias-grid {
@@ -7053,6 +7116,52 @@ body.alto-contraste .btn-config-engrenagem:hover {
   font-size: 1.2rem;
   font-weight: 800 !important;
   color: #111827 !important;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.config-relatorio-titulo-avatar {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.config-relatorio-titulo-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.config-select-com-avatar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.config-select-com-avatar .campo-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.config-avatar-previa {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.config-avatar-previa img,
+.config-avatar-previa-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .config-stats-grid {
@@ -7502,11 +7611,7 @@ button,
 }
 
 .avatar-btn {
-  aspect-ratio: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: auto;
+  max-width: 100%;
 }
 
 .btn-confirmar {
@@ -7580,13 +7685,6 @@ button,
     gap: 8px;
   }
 
-  .avatar-btn img,
-  .avatar-img,
-  .avatar-img-render {
-    width: 42px;
-    height: 42px;
-  }
-
   .portao-input-wrap {
     flex-wrap: wrap;
   }
@@ -7652,19 +7750,12 @@ button,
   }
 
   .avatar-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 6px;
   }
 
   .avatar-btn {
-    padding: 6px;
-  }
-
-  .avatar-btn img,
-  .avatar-img,
-  .avatar-img-render {
-    width: 36px;
-    height: 36px;
+    padding: 4px;
   }
 
   .btn-principal,
@@ -7683,8 +7774,8 @@ button,
 
   .header-avatar img,
   .header-avatar-img {
-    width: 32px !important;
-    height: 32px !important;
+    width: 100% !important;
+    height: 100% !important;
   }
 
   .moedas-badge {

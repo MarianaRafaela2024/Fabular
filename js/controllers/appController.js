@@ -58,7 +58,7 @@ function atualizarHeader() {
 
   if (avatarDisp) {
     if (typeof renderizarElementoAvatar === 'function') {
-      renderizarElementoAvatar(avatarDisp, estado.perfil.avatar || 'midia/user/lion.png', 'header-avatar-img');
+      renderizarElementoAvatar(avatarDisp, estado.perfil.avatar || 'midia/user/sapo.png', 'header-avatar-img');
     } else {
       avatarDisp.textContent = estado.perfil.avatar || '🦁';
     }

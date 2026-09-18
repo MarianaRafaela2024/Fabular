@@ -9,7 +9,7 @@
      PARTE 1 — PERFIL DA CRIANÇA
   ───────────────────────────────────────── */
 
-  const perfil = { nome: '', avatar: 'midia/user/lion.png', faixa: 1, genero: 'narrativo', dataNascimento: null, horarioBrincar: null };
+  const perfil = { nome: '', avatar: 'midia/user/sapo.png', faixa: 1, genero: 'narrativo', dataNascimento: null, horarioBrincar: null };
   const CHAVE_ESTADO = 'mundoHistorias_estado';
   const CHAVE_SESSAO = 'mundoHistorias_responsavel_sessao';
   const API_BASE = (window.API_BASE_URL || 'http://localhost:5275').replace(/\/$/, '');
@@ -187,7 +187,7 @@
         nome: perfil.nome,
         faixaEtaria: Number(perfil.faixa),
         dataNascimento: perfil.dataNascimento,
-        avatar: perfil.avatar || 'midia/user/lion.png',
+        avatar: perfil.avatar || 'midia/user/sapo.png',
         generoFavorito: perfil.genero || 'narrativo',
         horarioBrincar: perfil.horarioBrincar
       });
@@ -202,7 +202,7 @@
       const perfilFinal = {
         id: childId,
         nome: perfil.nome,
-        avatar: perfil.avatar || 'midia/user/lion.png',
+        avatar: perfil.avatar || 'midia/user/sapo.png',
         genero: perfil.genero || 'narrativo',
         dataNascimento: perfil.dataNascimento,
         faixa: perfil.faixa,
@@ -454,14 +454,14 @@
       } else {
         perfisApi.forEach((p) => {
           const btn = document.createElement('button');
-          btn.className = 'avatar-btn';
+          btn.className = 'avatar-btn avatar-btn-perfil';
           btn.type = 'button';
           const avatarHtml = typeof renderizarAvatarHTML === 'function'
-            ? renderizarAvatarHTML(p.avatar || p.Avatar || 'midia/user/lion.png', 'avatar-img')
-            : `<span class="avatar-emoji" style="font-size: 2.2rem; display: block; margin-bottom: 0.2rem;">${p.avatar || p.Avatar || '🦁'}</span>`;
+            ? renderizarAvatarHTML(p.avatar || p.Avatar || 'midia/user/sapo.png', 'avatar-img')
+            : `<span class="avatar-emoji-render">${p.avatar || p.Avatar || '🐸'}</span>`;
           btn.innerHTML = `
-            <div style="display:flex;align-items:center;justify-content:center;margin-bottom:0.2rem;height:48px;">${avatarHtml}</div>
-            <small style="display:block;font-size:.8rem;font-weight:600;color:#333;">${p.nome || p.Nome}</small>
+            <span class="avatar-btn-perfil-img">${avatarHtml}</span>
+            <small class="avatar-btn-perfil-nome">${p.nome || p.Nome}</small>
           `;
 
           btn.addEventListener('click', () => entrarComPerfil(p));
@@ -515,7 +515,7 @@
       nome: perfilApi.nome || perfilApi.Nome,
       avatar: typeof normalizarCaminhoAvatar === 'function'
         ? normalizarCaminhoAvatar(perfilApi.avatar || perfilApi.Avatar)
-        : (perfilApi.avatar || perfilApi.Avatar || 'midia/user/lion.png'),
+        : (perfilApi.avatar || perfilApi.Avatar || 'midia/user/sapo.png'),
       genero: perfilApi.generoFavorito || perfilApi.GeneroFavorito || 'narrativo',
       dataNascimento: perfilApi.dataNascimento || perfilApi.DataNascimento,
       faixa: perfilApi.faixaEtaria || perfilApi.FaixaEtaria || 1,
@@ -580,5 +580,13 @@
   } else {
     mostrarCard('#responsavel-card');
   }
+
+  window.addEventListener('pageshow', (evento) => {
+    if (!evento.persisted) return;
+    const sessao = getSessaoResponsavel();
+    if (sessao && sessao.email && sessao.responsavelId) {
+      abrirSelecaoPerfis();
+    }
+  });
 
 })();
