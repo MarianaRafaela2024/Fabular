@@ -1461,6 +1461,23 @@ function renderVerdadeiroFalso(fase, h, corpo, spec) {
 }
 
 // ─── 5. CAÇA-PALAVRAS ────────────────────────────────────────────────────────
+function dimensoesCacaPalavras(maiorPalavra) {
+  const w = window.innerWidth || 400;
+  const h = window.innerHeight || 700;
+  const landscape = w > h;
+  const desktop = w >= 900;
+  const minEixo = Math.max(8, maiorPalavra);
+
+  if (desktop) {
+    return { cols: Math.max(minEixo, 14), rows: Math.max(8, Math.min(minEixo, 9)) };
+  }
+  if (landscape) {
+    return { cols: Math.max(minEixo, 12), rows: Math.max(7, Math.min(minEixo, 8)) };
+  }
+  const cols = w < 380 ? 8 : 9;
+  return { cols, rows: Math.max(minEixo, 13) };
+}
+
 function renderCacaPalavras(fase, h, corpo) {
   const normalize = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z]/g, '').substring(0, 15);
 
@@ -1496,18 +1513,22 @@ function renderCacaPalavras(fase, h, corpo) {
 
   if (palavrasAlvo.length === 0) { renderVerdadeiroFalso(fase, h, corpo, null); return; }
 
-  const TAM = 12;
+  const maiorPalavra = Math.max(...palavrasAlvo.map(p => p.length), 8);
+  const { rows: ROWS, cols: COLS } = dimensoesCacaPalavras(maiorPalavra);
   const LETRAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const grade = Array.from({ length: TAM }, () => Array(TAM).fill(''));
+  const grade = Array.from({ length: ROWS }, () => Array(COLS).fill(''));
   const posicoes = {};
 
   palavrasAlvo.forEach(palavra => {
-    const dirs = [{ dr: 0, dc: 1 }, { dr: 1, dc: 0 }];
+    const dirs = [];
+    if (palavra.length <= COLS) dirs.push({ dr: 0, dc: 1 });
+    if (palavra.length <= ROWS) dirs.push({ dr: 1, dc: 0 });
+    if (!dirs.length) return;
     let inserida = false;
     for (let t = 0; t < 500 && !inserida; t++) {
       const { dr, dc } = dirs[Math.floor(Math.random() * dirs.length)];
-      const maxR = dr === 0 ? TAM : TAM - palavra.length;
-      const maxC = dc === 0 ? TAM : TAM - palavra.length;
+      const maxR = dr === 0 ? ROWS : ROWS - palavra.length + 1;
+      const maxC = dc === 0 ? COLS : COLS - palavra.length + 1;
       if (maxR <= 0 || maxC <= 0) continue;
       const sR = Math.floor(Math.random() * maxR);
       const sC = Math.floor(Math.random() * maxC);
@@ -1528,8 +1549,8 @@ function renderCacaPalavras(fase, h, corpo) {
     }
   });
 
-  for (let r = 0; r < TAM; r++)
-    for (let c = 0; c < TAM; c++)
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++)
       if (grade[r][c] === '')
         grade[r][c] = LETRAS[Math.floor(Math.random() * LETRAS.length)];
 
@@ -1542,7 +1563,7 @@ function renderCacaPalavras(fase, h, corpo) {
       ${palavrasAlvo.map((p, i) => `<span class="cp-alvo" id="cpa-${p}" style="--cor-palavra:${CORES_PALAVRAS[i % CORES_PALAVRAS.length]}">${p}</span>`).join('')}
     </div>
     <div class="cp-scroll-wrap">
-      <div class="cp-grade" id="cpGrade" style="--cp-tam:${TAM}"></div>
+      <div class="cp-grade" id="cpGrade" style="--cp-cols:${COLS};--cp-rows:${ROWS}"></div>
     </div>
     <div class="mg-acoes-row">
       <button class="btn-confirmar" id="btnConfCP" style="flex:1;">✔ Terminei</button>
@@ -1552,8 +1573,8 @@ function renderCacaPalavras(fase, h, corpo) {
   corpo.appendChild(wrap);
 
   const gridEl = document.getElementById('cpGrade');
-  for (let r = 0; r < TAM; r++) {
-    for (let c = 0; c < TAM; c++) {
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
       const cell = document.createElement('div');
       cell.className = 'cp-cel';
       cell.textContent = grade[r][c];
@@ -1567,7 +1588,7 @@ function renderCacaPalavras(fase, h, corpo) {
   let primeira = null;
   let encontradas = new Set();
 
-  function getCell(r, c) { return gridEl.children[r * TAM + c]; }
+  function getCell(r, c) { return gridEl.children[r * COLS + c]; }
 
   function limparPreview() {
     gridEl.querySelectorAll('.cp-preview').forEach(el => {

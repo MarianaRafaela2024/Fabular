@@ -606,7 +606,7 @@
   .cp-grade {
     width: 100% !important;
     max-width: 100% !important;
-    grid-template-columns: repeat(var(--cp-tam, 12), minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(var(--cp-cols, 9), minmax(0, 1fr)) !important;
   }
 
   .cp-cel {

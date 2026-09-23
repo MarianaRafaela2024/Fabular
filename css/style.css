@@ -2619,9 +2619,9 @@ html.alto-contraste .portao-input {
   color: #fff;
   border: none;
   border-radius: var(--btn-radius, 12px);
-  padding: var(--btn-pad-y, 8px) 16px;
+  padding: var(--btn-pad-y, 8px) var(--btn-pad-x, 18px);
   font-family: 'Baloo 2', cursive;
-  font-size: 0.88rem;
+  font-size: var(--btn-font, 0.92rem);
   font-weight: 800;
   cursor: pointer;
   transition: all var(--trans);
@@ -4830,7 +4830,7 @@ body.alto-contraste .conquista-detalhes-bar-fill.fill-bloqueado {
 
 .cp-grade {
   display: grid;
-  grid-template-columns: repeat(var(--cp-tam, 12), minmax(0, 1fr));
+  grid-template-columns: repeat(var(--cp-cols, 12), minmax(0, 1fr));
   gap: 2px;
   width: 100%;
   max-width: 100%;
@@ -8901,6 +8901,65 @@ button,
   font-size: 0.85rem !important;
 }
 
+#tela-minigame .btn-principal,
+#tela-minigame .btn-secundario,
+#tela-minigame .btn-confirmar,
+#tela-minigame .btn-desistir-mg,
+#tela-minigame #btn-proximo-mg,
+#tela-minigame #btn-finalizar-mg,
+#tela-minigame .mc-btn,
+#tela-minigame .opcao-btn,
+#tela-minigame .qd-btn,
+#tela-minigame .sp-btn,
+#tela-minigame .rima-btn,
+#tela-minigame .rima-opc,
+#tela-minigame .vf-btn,
+#tela-minigame .tf-btn {
+  font-size: var(--mg-texto) !important;
+  min-height: 2.75rem !important;
+  padding: 0.65rem 1.1rem !important;
+  border-radius: 12px !important;
+  line-height: 1.25 !important;
+  box-sizing: border-box !important;
+}
+
+#tela-minigame .minigame-rodape,
+#tela-minigame .mg-acoes-row,
+#tela-minigame .leitura-rodape {
+  gap: 10px !important;
+}
+
+#tela-minigame .minigame-rodape .btn-principal,
+#tela-minigame .minigame-rodape .btn-secundario,
+#tela-minigame #btn-proximo-mg,
+#tela-minigame #btn-finalizar-mg {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+}
+
+#tela-resultado .btn-refazer,
+#tela-resultado .btn-secundario,
+#tela-resultado .btn-principal,
+#tela-resultado #btn-refazer-atividade,
+#tela-resultado #btn-jogar-novamente,
+#tela-resultado #btn-ver-progresso {
+  font-size: var(--mg-texto, 1rem) !important;
+  min-height: 2.75rem !important;
+  padding: 0.65rem 1.1rem !important;
+  border-radius: 12px !important;
+  line-height: 1.25 !important;
+  box-sizing: border-box !important;
+  width: auto !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+}
+
+#tela-resultado .resultado-botoes {
+  gap: 10px !important;
+}
+
 /* Garante que botões escondidos continuem ocultos em qualquer resolução */
 .oculto,
 .btn-principal.oculto,
@@ -8913,6 +8972,8 @@ button,
 .btn-secundario[hidden],
 .btn-principal[style*="display: none"],
 .btn-secundario[style*="display: none"],
-.btn-virar-pagina[style*="display: none"] {
+.btn-virar-pagina[style*="display: none"],
+#btn-destaque.oculto,
+#btn-destaque[hidden] {
   display: none !important;
 }

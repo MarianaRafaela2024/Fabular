@@ -277,8 +277,10 @@ function dividirTextoEmPaginasPorPalavras(textoCompleto, limitePalavras) {
 
 function faixaDaHistoriaAtual() {
   const h = estado.historiaAtual;
-  const f = parseInt(h?.faixa ?? h?.faixaEtaria ?? estado.perfil?.faixa, 10);
-  return f || 1;
+  const raw = h?.faixa ?? h?.faixaEtaria ?? h?.FaixaEtaria ?? h?.Faixa ?? estado.perfil?.faixa;
+  const f = parseInt(raw, 10);
+  if (f === 1 || f === 2 || f === 3) return f;
+  return parseInt(estado.perfil?.faixa, 10) || 1;
 }
 
 function podeDestacarPalavras() {
@@ -289,11 +291,16 @@ function atualizarVisibilidadeBotaoDestaque() {
   const btn = document.getElementById('btn-destaque');
   if (!btn) return;
   const permitido = podeDestacarPalavras();
+  btn.classList.toggle('oculto', !permitido);
   btn.hidden = !permitido;
-  btn.style.display = permitido ? '' : 'none';
+  btn.setAttribute('aria-hidden', permitido ? 'false' : 'true');
+  if (permitido) btn.style.removeProperty('display');
+  else btn.style.setProperty('display', 'none', 'important');
   if (!permitido) {
     estado.destaqueAtivo = false;
     btn.classList.remove('ativo');
+    const textoEl = document.getElementById('historia-texto');
+    if (textoEl) textoEl.classList.add('sem-destaque');
   }
 }
 
