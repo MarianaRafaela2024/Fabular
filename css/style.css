@@ -42,6 +42,9 @@
 
   /* fonte controlada via JS */
   --fonte-base: 16px;
+  --mg-titulo: 1.25rem;
+  --mg-subtitulo: 1.05rem;
+  --mg-texto: 1rem;
 
   /* proporção estável de botões em qualquer resolução */
   --btn-min-h: 40px;
@@ -83,13 +86,14 @@ body.alto-contraste {
 /*Variváveis de icon*/
 
 .icon {
-  width: 32px;
-  height: 32px;
+  width: clamp(28px, 4.5vw, 36px);
+  height: clamp(28px, 4.5vw, 36px);
   display: inline-block;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
   transition: all .25s ease;
+  flex-shrink: 0;
 }
 
 .nav-item.ativo .icon {
@@ -135,8 +139,8 @@ body.alto-contraste {
     --btn-pad-x: 12px;
     --btn-font: 0.8rem;
     --btn-radius: 10px;
-    --btn-icon-size: 32px;
-    --btn-icon-img: 16px;
+    --btn-icon-size: 40px;
+    --btn-icon-img: 22px;
   }
 }
 
@@ -1019,10 +1023,10 @@ input:-webkit-autofill:active {
 /* Ícone de imagem dentro dos botões do dropdown */
 .header-mais-menu .menu-icon,
 .btn-header-mais .menu-icon {
-  width: 20px !important;
-  height: 20px !important;
-  max-width: 20px;
-  max-height: 20px;
+  width: clamp(20px, 5.2vw, 24px) !important;
+  height: clamp(20px, 5.2vw, 24px) !important;
+  max-width: none;
+  max-height: none;
   object-fit: contain;
   flex-shrink: 0;
   display: inline-block;
@@ -1634,11 +1638,19 @@ html.alto-contraste .portao-input {
 }
 
 .leitura-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
   margin-bottom: 14px;
+}
+
+.leitura-header .btn-voltar {
+  justify-self: start;
+  text-align: left;
+  width: auto;
+  max-width: max-content;
+  font-size: clamp(0.85rem, 3.4vw, 0.95rem);
 }
 
 .leitura-info {
@@ -1699,6 +1711,7 @@ html.alto-contraste .portao-input {
 .leitura-acoes {
   display: flex;
   gap: 6px;
+  justify-self: end;
 }
 
 .barra-progresso-fases {
@@ -1807,7 +1820,7 @@ html.alto-contraste .portao-input {
 
 .interacao-pergunta {
   font-family: 'Baloo 2', cursive;
-  font-size: 1.1rem;
+  font-size: var(--mg-subtitulo);
   font-weight: 700;
   color: var(--texto);
   margin-bottom: 14px;
@@ -2031,17 +2044,19 @@ html.alto-contraste .portao-input {
   text-align: center;
 }
 
-.minigame-titulo-label {
+.minigame-titulo-label,
+.minigame-tipo-badge {
   display: block;
   font-family: 'Baloo 2', cursive;
   font-weight: 800;
-  font-size: clamp(0.95rem, 4vw, 1.15rem);
+  font-size: var(--mg-titulo);
   color: var(--texto);
   letter-spacing: -.01em;
+  line-height: 1.25;
 }
 
 .mg-contador {
-  font-size: .78rem;
+  font-size: 0.85rem;
   color: var(--texto-sub);
   font-weight: 800;
   text-transform: uppercase;
@@ -2062,7 +2077,7 @@ html.alto-contraste .portao-input {
 
 .mg-enunciado {
   font-family: 'Baloo 2', cursive;
-  font-size: clamp(1rem, 2.8vw, 1.15rem);
+  font-size: var(--mg-titulo);
   font-weight: 700;
   color: var(--texto);
   margin-bottom: 14px;
@@ -2070,10 +2085,11 @@ html.alto-contraste .portao-input {
   align-items: center;
   gap: 8px;
   letter-spacing: -.01em;
+  line-height: 1.25;
 }
 
 .mg-desc {
-  font-size: clamp(0.95rem, 2.6vw, 1.1rem);
+  font-size: var(--mg-subtitulo);
   color: var(--texto-sub);
   margin-bottom: 14px;
   line-height: 1.5;
@@ -2100,7 +2116,7 @@ html.alto-contraste .portao-input {
   border-radius: 12px;
   padding: 10px 14px;
   font-family: 'Baloo 2', cursive;
-  font-size: 1rem;
+  font-size: var(--mg-texto);
   font-weight: 800;
   cursor: pointer;
   transition: all var(--trans);
@@ -2162,7 +2178,7 @@ html.alto-contraste .portao-input {
   border-radius: 12px;
   padding: 9px 14px;
   font-family: 'Nunito', sans-serif;
-  font-size: 0.92rem;
+  font-size: var(--mg-texto);
   font-weight: 700;
   cursor: pointer;
   transition: all var(--trans);
@@ -3599,7 +3615,7 @@ body.alto-contraste .conquista-detalhes-bar-fill.fill-bloqueado {
   border: 2px solid rgba(124, 58, 237, .2);
   border-radius: var(--radius);
   padding: 18px 20px;
-  font-size: 1.08rem;
+  font-size: var(--mg-texto);
   line-height: 1.85;
   color: var(--texto);
   box-shadow: var(--shadow);
@@ -3616,7 +3632,7 @@ body.alto-contraste .conquista-detalhes-bar-fill.fill-bloqueado {
 }
 
 .mg-completar-dica {
-  font-size: .9rem;
+  font-size: var(--mg-subtitulo);
   color: #78350F;
   font-weight: 700;
   background: linear-gradient(135deg, #FEF9C3, #FDE68A);
@@ -3630,7 +3646,7 @@ body.alto-contraste .conquista-detalhes-bar-fill.fill-bloqueado {
 }
 
 .mg-input-palavra {
-  font-size: 1.15rem !important;
+  font-size: var(--mg-texto) !important;
 }
 
 .nivel-steps {
@@ -4791,6 +4807,10 @@ body.alto-contraste .conquista-detalhes-bar-fill.fill-bloqueado {
   color: #7c6000;
   transition: all var(--trans);
   letter-spacing: .06em;
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  flex: 0 0 auto;
 }
 
 .cp-alvo.cp-alvo-found {
@@ -4803,15 +4823,17 @@ body.alto-contraste .conquista-detalhes-bar-fill.fill-bloqueado {
 
 .cp-scroll-wrap {
   width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+  overflow: hidden;
   padding-bottom: 4px;
 }
 
 .cp-grade {
   display: grid;
+  grid-template-columns: repeat(var(--cp-tam, 12), minmax(0, 1fr));
   gap: 2px;
-  width: max-content;
+  width: 100%;
+  max-width: 100%;
   margin: 0 auto;
 }
 
@@ -4819,11 +4841,17 @@ body.alto-contraste .conquista-detalhes-bar-fill.fill-bloqueado {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 1;
+  height: auto;
   border: 1px solid rgba(229, 231, 235, .6);
   border-radius: 5px;
   background: rgba(240, 244, 255, .6);
   font-family: 'Baloo 2', cursive;
   font-weight: 800;
+  font-size: clamp(0.62rem, 2.8vw, 1.05rem);
+  line-height: 1;
   cursor: pointer;
   transition: background .1s, color .1s, transform .1s;
   color: var(--texto);
@@ -6299,11 +6327,11 @@ body.alto-contraste .link-inline {
   }
 
   .nav-item {
-    flex: 0 0 42px;
-    min-width: 42px;
-    max-width: 42px;
-    width: 42px;
-    height: 42px;
+    flex: 1 1 0;
+    min-width: 48px;
+    max-width: 72px;
+    width: auto;
+    height: 52px;
     justify-content: center;
     padding: 0;
     gap: 0;
@@ -6315,7 +6343,10 @@ body.alto-contraste .link-inline {
     display: none;
   }
 
+  .nav-item .icon,
   .nav-item .nav-icon {
+    width: clamp(26px, 8vw, 34px);
+    height: clamp(26px, 8vw, 34px);
     font-size: 1.5rem;
   }
 
@@ -6344,13 +6375,13 @@ body.alto-contraste .link-inline {
   }
 
   .app-main {
-    padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
   }
 }
 
 @media (max-width: 768px) {
   .app-main {
-    padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
   .app-header {
@@ -6445,9 +6476,11 @@ body.alto-contraste .link-inline {
   }
 
   .btn-icon img,
-  .header-mais-btn img {
-    width: 16px !important;
-    height: 16px !important;
+  .header-mais-btn img,
+  .header-mais-menu .menu-icon,
+  .btn-header-mais .menu-icon {
+    width: clamp(20px, 5.5vw, 24px) !important;
+    height: clamp(20px, 5.5vw, 24px) !important;
   }
 
   .menu-label {
@@ -6457,26 +6490,28 @@ body.alto-contraste .link-inline {
   }
 
   .sidebar {
-    height: 50px !important;
-    padding: 3px 6px !important;
-    gap: 4px !important;
+    height: auto !important;
+    min-height: 60px !important;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+    gap: 6px !important;
     justify-content: space-around !important;
     align-items: center !important;
   }
 
   .nav-item {
-    flex: 0 0 42px !important;
-    min-width: 42px !important;
-    max-width: 42px !important;
-    width: 42px !important;
-    height: 42px !important;
-    border-radius: 10px !important;
+    flex: 1 1 0 !important;
+    min-width: 48px !important;
+    max-width: 72px !important;
+    width: auto !important;
+    height: 52px !important;
+    border-radius: 12px !important;
     padding: 0 !important;
   }
 
-  .nav-item .icon {
-    width: 18px !important;
-    height: 18px !important;
+  .nav-item .icon,
+  .nav-item .nav-icon {
+    width: clamp(26px, 8vw, 34px) !important;
+    height: clamp(26px, 8vw, 34px) !important;
   }
 
   .nav-rotulo {
@@ -6606,21 +6641,43 @@ body.alto-contraste .link-inline {
     line-height: 1.2 !important;
   }
 
-  .leitura-header,
   .resultado-stats {
     flex-direction: column;
     align-items: stretch;
     gap: 8px !important;
   }
 
-  .minigame-header {
+  .leitura-header {
     display: grid !important;
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     gap: 8px !important;
   }
 
+  .leitura-header .btn-voltar {
+    justify-self: start !important;
+    align-self: center;
+    width: auto !important;
+    max-width: max-content !important;
+    text-align: left !important;
+  }
+
+  .leitura-header .leitura-acoes {
+    justify-self: end;
+  }
+
+  .minigame-header {
+    display: grid !important;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "voltar ouvir"
+      "titulo titulo";
+    align-items: center;
+    gap: 10px 8px !important;
+  }
+
   .minigame-header .btn-voltar {
+    grid-area: voltar;
     justify-self: start !important;
     align-self: center;
     width: auto !important;
@@ -6629,7 +6686,15 @@ body.alto-contraste .link-inline {
   }
 
   .minigame-header .btn-icon {
+    grid-area: ouvir;
     justify-self: end;
+  }
+
+  .minigame-header .minigame-info {
+    grid-area: titulo;
+    width: 100%;
+    text-align: center;
+    justify-self: center;
   }
 
   .leitura-rodape,
@@ -7970,6 +8035,11 @@ body.alto-contraste .config-stat strong {
   line-height: 1.9;
   color: #3D3224;
   min-height: 120px;
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  overflow-wrap: break-word;
 }
 
 /* Animação de troca de página: slide + fade */
@@ -8111,9 +8181,10 @@ body.alto-contraste .config-stat strong {
   }
 
   .historia-texto {
-    font-size: 0.95rem;
+    font-size: 1.125rem;
     line-height: 1.7;
     padding: 2px 16px 6px;
+    text-align: justify;
   }
 
   .livro-navegacao-paginas {
@@ -8464,11 +8535,17 @@ button,
   }
 
   .nav-item {
-    flex: 0 0 40px !important;
-    min-width: 40px !important;
-    max-width: 40px !important;
-    width: 40px !important;
-    height: 40px !important;
+    flex: 1 1 0 !important;
+    min-width: 48px !important;
+    max-width: 68px !important;
+    width: auto !important;
+    height: 50px !important;
+  }
+
+  .nav-item .icon,
+  .nav-item .nav-icon {
+    width: clamp(24px, 8vw, 30px) !important;
+    height: clamp(24px, 8vw, 30px) !important;
   }
 
   .header-nome {
@@ -8585,26 +8662,26 @@ button,
 
   .historia-texto,
   .cartao-livro-leitura .historia-texto {
-    font-size: 0.88rem;
-    line-height: 1.5;
-    padding: 14px 14px;
+    font-size: 1.125rem;
+    line-height: 1.7;
+    padding: 14px 16px;
+    text-align: justify;
   }
 
   .mg-enunciado,
-  .interacao-pergunta {
-    font-size: 0.92rem;
+  .minigame-titulo-label,
+  .minigame-tipo-badge {
+    font-size: var(--mg-titulo);
   }
 
-  .mg-desc {
-    font-size: 0.82rem;
-  }
-
-  .minigame-titulo-label {
-    font-size: clamp(0.95rem, 4.2vw, 1.15rem);
+  .mg-desc,
+  .interacao-pergunta,
+  .mg-completar-dica {
+    font-size: var(--mg-subtitulo);
   }
 
   .mg-contador {
-    font-size: 0.7rem;
+    font-size: 0.85rem;
   }
 
   .resultado-titulo {
@@ -8697,9 +8774,28 @@ button,
 }
 
 @media (max-width: 768px) {
+  #tela-minigame .minigame-container {
+    max-width: none;
+    width: 100%;
+    padding: 10px 8px 18px;
+    box-sizing: border-box;
+  }
+
+  #tela-minigame .minigame-corpo {
+    padding: 12px 10px;
+    border-radius: 14px;
+    width: 100%;
+  }
+
   .mc-opcoes,
   .interacao-opcoes,
-  .qd-opcoes,
+  .qd-opcoes {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    margin-top: 8px;
+  }
+
   .sp-grid,
   .rima-opcoes-grid,
   .rima-opcoes,
@@ -8708,13 +8804,26 @@ button,
   .tf-opcoes {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
-    gap: 5px !important;
-    margin-top: 6px;
+    gap: 8px !important;
+    margin-top: 8px;
   }
 
   .mc-btn,
   .opcao-btn,
-  .qd-btn,
+  .qd-btn {
+    width: 100% !important;
+    min-height: 44px !important;
+    padding: 10px 14px !important;
+    font-size: var(--mg-texto) !important;
+    border-radius: 12px !important;
+    text-align: left !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    line-height: 1.35 !important;
+    box-sizing: border-box !important;
+  }
+
   .sp-btn,
   .rima-btn,
   .rima-opc,
@@ -8722,10 +8831,10 @@ button,
   .tf-btn,
   .color-item {
     width: 100% !important;
-    min-height: 30px !important;
-    padding: 5px 7px !important;
-    font-size: 0.72rem !important;
-    border-radius: 8px !important;
+    min-height: 44px !important;
+    padding: 10px 12px !important;
+    font-size: var(--mg-texto) !important;
+    border-radius: 12px !important;
     text-align: center !important;
     display: flex !important;
     align-items: center !important;
@@ -8749,6 +8858,47 @@ button,
   .color-name {
     font-size: 0.68rem;
   }
+}
+
+/* Tipografia dos minigames — rem, acompanha fonte + / fonte - */
+#tela-minigame .minigame-titulo-label,
+#tela-minigame .minigame-tipo-badge,
+#tela-minigame .mg-enunciado {
+  font-size: var(--mg-titulo) !important;
+  line-height: 1.25;
+}
+
+#tela-minigame .mg-desc,
+#tela-minigame .mg-completar-dica,
+#tela-minigame .interacao-pergunta {
+  font-size: var(--mg-subtitulo) !important;
+  line-height: 1.5;
+}
+
+#tela-minigame .mg-frase-lacuna,
+#tela-minigame .mg-texto-contexto,
+#tela-minigame .mc-btn,
+#tela-minigame .opcao-btn,
+#tela-minigame .qd-btn,
+#tela-minigame .sp-btn,
+#tela-minigame .rima-btn,
+#tela-minigame .rima-opc,
+#tela-minigame .vf-btn,
+#tela-minigame .tf-btn,
+#tela-minigame .palavra-tile,
+#tela-minigame .palavra-colocada,
+#tela-minigame .mg-input-palavra,
+#tela-minigame .lp-palavra,
+#tela-minigame .rima-palavra-alvo,
+#tela-minigame .rima-destaque,
+#tela-minigame #mg-feedback-msg,
+#tela-minigame .mem-status,
+#tela-minigame .cp-alvo {
+  font-size: var(--mg-texto) !important;
+}
+
+#tela-minigame .mg-contador {
+  font-size: 0.85rem !important;
 }
 
 /* Garante que botões escondidos continuem ocultos em qualquer resolução */

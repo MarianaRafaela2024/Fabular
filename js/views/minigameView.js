@@ -456,6 +456,27 @@ const CORES_PARES_MEMORIA = [
   { border: '#6366F1', bg: 'linear-gradient(135deg, #E0E7FF, #C7D2FE)', shadow: 'rgba(99, 102, 241, 0.4)' }  // Índigo
 ];
 
+function paresParaGradeMemoriaFechada(pares) {
+  const lista = Array.isArray(pares) ? pares.slice() : [];
+  if (lista.length < 2) return lista;
+  const mobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
+  let max = lista.length;
+  if (mobile && max === 5) max = 3;
+  if (mobile && max === 4) max = 3;
+  for (let n = max; n >= 2; n--) {
+    const cartas = n * 2;
+    if (cartas % 3 === 0 || cartas % 4 === 0) return lista.slice(0, n);
+  }
+  return lista.slice(0, 2);
+}
+
+function colunasGradeMemoria(nCartas) {
+  if (nCartas === 4) return 2;
+  if (nCartas % 3 === 0) return 3;
+  if (nCartas % 4 === 0) return 4;
+  return 2;
+}
+
 function aplicarCorDoPar(el, pairId) {
   const cor = CORES_PARES_MEMORIA[pairId % CORES_PARES_MEMORIA.length];
   el.style.setProperty('--pair-border-color', cor.border);
@@ -483,6 +504,8 @@ function renderMemoria(fase, h, corpo, spec) {
     });
   }
 
+  pares = paresParaGradeMemoriaFechada(pares);
+
   const cards = embaralhar([
     ...pares.map(p => ({ tipo: 'palavra', valor: p.palavra, pairId: p.id })),
     ...pares.map(p => ({ tipo: 'emoji', valor: p.emoji, pairId: p.id }))
@@ -500,6 +523,8 @@ function renderMemoria(fase, h, corpo, spec) {
   corpo.appendChild(wrap);
 
   const grid = document.getElementById('memGrid');
+  const cols = colunasGradeMemoria(cards.length);
+  if (grid) grid.style.setProperty('--mem-cols', String(cols));
   const btnDesistir = document.getElementById('btnDesistirMemoria');
   let virados = [];
   let paresEncontrados = 0;
@@ -1508,10 +1533,6 @@ function renderCacaPalavras(fase, h, corpo) {
       if (grade[r][c] === '')
         grade[r][c] = LETRAS[Math.floor(Math.random() * LETRAS.length)];
 
-  const dispW = Math.min(window.innerWidth, 700) - 48;
-  const CEL = Math.max(22, Math.min(30, Math.floor(dispW / TAM)));
-  const FSIZE = Math.max(9, CEL - 14);
-
   const CORES_PALAVRAS = ['#A855F7', '#FF6B35', '#22C55E', '#3B82F6'];
 
   const wrap = document.createElement('div');
@@ -1521,7 +1542,7 @@ function renderCacaPalavras(fase, h, corpo) {
       ${palavrasAlvo.map((p, i) => `<span class="cp-alvo" id="cpa-${p}" style="--cor-palavra:${CORES_PALAVRAS[i % CORES_PALAVRAS.length]}">${p}</span>`).join('')}
     </div>
     <div class="cp-scroll-wrap">
-      <div class="cp-grade" id="cpGrade" style="grid-template-columns:repeat(${TAM},${CEL}px);width:${TAM * CEL + TAM * 2}px"></div>
+      <div class="cp-grade" id="cpGrade" style="--cp-tam:${TAM}"></div>
     </div>
     <div class="mg-acoes-row">
       <button class="btn-confirmar" id="btnConfCP" style="flex:1;">✔ Terminei</button>
@@ -1535,7 +1556,6 @@ function renderCacaPalavras(fase, h, corpo) {
     for (let c = 0; c < TAM; c++) {
       const cell = document.createElement('div');
       cell.className = 'cp-cel';
-      cell.style.cssText = `width:${CEL}px;height:${CEL}px;font-size:${FSIZE}px`;
       cell.textContent = grade[r][c];
       cell.dataset.r = r;
       cell.dataset.c = c;

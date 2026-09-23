@@ -248,7 +248,7 @@
   border-left: 4px solid var(--cor-primaria, #7C3AED);
   border-radius: 0 12px 12px 0;
   padding: 12px 14px;
-  font-size: .95rem;
+  font-size: var(--mg-texto, 1rem);
   line-height: 1.7;
   color: var(--texto, #1F2937);
   margin-bottom: 14px;
@@ -261,7 +261,7 @@
 
 .mem-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--mem-cols, 4), minmax(0, 1fr));
   gap: 12px;
   margin: 16px 0;
 }
@@ -273,6 +273,7 @@
   min-height: 72px;
   perspective: 700px;
   cursor: pointer;
+  container-type: inline-size;
 }
 
 .mem-inner {
@@ -310,7 +311,7 @@
 .mem-frente {
   background: linear-gradient(135deg, var(--cor-primaria, #7C3AED), #A78BFA);
   color: #fff;
-  font-size: clamp(1.4rem, 5vw, 1.9rem);
+  font-size: 42cqi;
   border: 3px solid rgba(255, 255, 255, .3);
   transform: translateZ(0.01px);
 }
@@ -319,7 +320,7 @@
   background: linear-gradient(135deg, #ECFDF5, #D1FAE5);
   border: 3px solid #34D399;
   color: var(--texto, #1F2937);
-  font-size: clamp(0.85rem, 2.8vw, 1.05rem);
+  font-size: clamp(0.8rem, 18cqi, 1.15rem);
   line-height: 1.25;
   transform: rotateY(180deg) translateZ(0.01px);
   text-align: center;
@@ -327,6 +328,13 @@
   word-break: break-word;
   overflow: hidden;
   hyphens: auto;
+}
+
+.mem-card[data-tipo="emoji"] .mem-verso {
+  font-size: 56cqi;
+  line-height: 1;
+  padding: 4px;
+  word-break: normal;
 }
 
 .mem-card.mem-acertado {
@@ -466,6 +474,9 @@
   margin: 3px;
   background: rgba(124, 58, 237, .06);
   transition: all .3s;
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow-wrap: normal;
 }
 
 .cp-alvo.cp-alvo-found {
@@ -481,9 +492,11 @@
   .ia-gerar-wrap,
   .minigame-card,
   .minigame-pergunta-box {
-    padding: 10px 12px !important;
+    padding: 12px 10px !important;
     border-radius: 12px !important;
-    margin: 8px 0 !important;
+    margin: 6px 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   .bot-chat-avatar {
@@ -556,9 +569,10 @@
   }
 
   .mem-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    gap: 10px !important;
-    margin: 14px 0 !important;
+    grid-template-columns: repeat(var(--mem-cols, 3), minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    margin: 10px 0 !important;
+    width: 100%;
   }
 
   .mem-card {
@@ -568,26 +582,47 @@
   }
 
   .mem-frente {
-    font-size: clamp(1.5rem, 8vw, 2rem) !important;
+    font-size: 42cqi !important;
     border-width: 2px !important;
     border-radius: 12px !important;
   }
 
   .mem-verso {
-    font-size: clamp(0.82rem, 3.8vw, 1.05rem) !important;
+    font-size: clamp(0.8rem, 18cqi, 1.1rem) !important;
     border-width: 2px !important;
     padding: 8px !important;
     border-radius: 12px !important;
   }
 
+  .mem-card[data-tipo="emoji"] .mem-verso {
+    font-size: 56cqi !important;
+    padding: 4px !important;
+  }
+
+  .cp-scroll-wrap {
+    overflow: hidden !important;
+  }
+
+  .cp-grade {
+    width: 100% !important;
+    max-width: 100% !important;
+    grid-template-columns: repeat(var(--cp-tam, 12), minmax(0, 1fr)) !important;
+  }
+
   .cp-cel {
-    font-size: 0.78rem !important;
-    border-radius: 5px !important;
+    width: 100% !important;
+    height: auto !important;
+    min-width: 0 !important;
+    aspect-ratio: 1;
+    font-size: clamp(0.62rem, 2.8vw, 0.95rem) !important;
+    border-radius: 4px !important;
   }
 
   .cp-alvo {
-    padding: 3px 10px !important;
-    font-size: 0.78rem !important;
-    margin: 3px !important;
+    padding: 4px 10px !important;
+    font-size: 0.82rem !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+    word-break: keep-all !important;
   }
 }
