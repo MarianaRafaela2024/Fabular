@@ -255,16 +255,75 @@
     return criancasConfig.find(c => Number(c.id || c.Id) === id) || null;
   }
 
+  function escapeHtmlRelatorio(valor) {
+    return String(valor ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function formatarTempoLeitura(minutos) {
+    const n = Math.max(0, Number(minutos) || 0);
+    if (n < 60) return `${n} min`;
+    const h = Math.floor(n / 60);
+    const m = n % 60;
+    return m ? `${h} h ${m} min` : `${h} h`;
+  }
+
+  function formatarDataRelatorio(valor) {
+    if (!valor) return '—';
+    const iso = String(valor).slice(0, 10);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+      const [y, m, d] = iso.split('-');
+      return `${d}/${m}/${y}`;
+    }
+    const parsed = new Date(valor);
+    if (!Number.isNaN(parsed.getTime())) return parsed.toLocaleDateString('pt-BR');
+    return String(valor);
+  }
+
+  function labelGeneroRelatorio(genero) {
+    const mapa = {
+      narrativo: 'Narrativo',
+      poetico: 'Poético',
+      instrucional: 'Instrucional',
+      descritivo: 'Descritivo',
+      informativo: 'Informativo'
+    };
+    const chave = String(genero || '').toLowerCase();
+    return mapa[chave] || genero || '—';
+  }
+
+  function mesclarHistoriasRelatorio(local, remoto) {
+    const mapa = new Map();
+    [...(remoto || []), ...(local || [])].forEach((r) => {
+      if (!r) return;
+      const id = String(r.id || r.Id || '');
+      const titulo = r.titulo || r.Titulo || '';
+      const chave = id || titulo;
+      if (!chave) return;
+      const atual = mapa.get(chave) || {};
+      mapa.set(chave, {
+        titulo: titulo || atual.titulo || 'História sem título',
+        genero: r.genero || r.Genero || atual.genero || '',
+        data: r.dataIso || r.DataIso || r.data || r.Data || atual.data || '',
+        estrelas: Math.max(Number(r.estrelas || r.Estrelas) || 0, Number(atual.estrelas) || 0)
+      });
+    });
+    return Array.from(mapa.values()).sort((a, b) => String(b.data).localeCompare(String(a.data)));
+  }
+
   async function carregarRelatorioCrianca(responsavelId, crianca) {
     const cont = document.getElementById('config-relatorios-conteudo');
     if (!cont || !crianca) {
-      if (cont) cont.innerHTML = '<p class="tela-sub">Selecione uma criança para ver o relatório.</p>';
+      if (cont) cont.innerHTML = '<p class="relatorio-estado">Selecione um perfil para visualizar o relatório.</p>';
       return;
     }
 
     const criancaId = crianca.id || crianca.Id;
-    const nome = crianca.nome || crianca.Nome;
-    cont.innerHTML = '<p class="tela-sub">Carregando relatório...</p>';
+    const nome = crianca.nome || crianca.Nome || 'Perfil';
+    cont.innerHTML = '<p class="relatorio-estado">Carregando relatório de acompanhamento...</p>';
 
     let prog = null;
     try {
@@ -287,8 +346,9 @@
 
     const hlLocal = localDados?.historiasLidas || [];
     const hlRemoto = Array.isArray(prog?.historiasLidas) ? prog.historiasLidas : (prog?.HistoriasLidas || []);
+    const listaHistorias = mesclarHistoriasRelatorio(hlLocal, hlRemoto);
 
-    const historias = Math.max(hlLocal.length, hlRemoto.length);
+    const historias = Math.max(listaHistorias.length, hlLocal.length, hlRemoto.length);
     const estrelas = Math.max(prog?.totalEstrelas ?? prog?.TotalEstrelas ?? 0, localDados?.totalEstrelas || 0);
     const tempo = Math.max(prog?.tempoTotal ?? prog?.TempoTotal ?? 0, localDados?.tempoTotal || 0);
     const minigames = Math.max(prog?.minigamesJogados ?? prog?.MinigamesJogados ?? 0, localDados?.minigamesJogados || 0);
@@ -303,22 +363,107 @@
     if (acertos > limiteMinigames) acertos = limiteMinigames;
     if (erros > limiteMinigames) erros = limiteMinigames;
 
+    const totalRespostas = acertos + erros;
+    const taxaAcerto = totalRespostas > 0 ? Math.round((acertos / totalRespostas) * 100) : null;
+    const mediaMinPorHistoria = historias > 0 ? Math.round(tempo / historias) : null;
+    const emitidoEm = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+
     const avatarHtml = typeof renderizarAvatarHTML === 'function'
       ? renderizarAvatarHTML(avatarCrianca(crianca), 'config-relatorio-avatar-img')
       : '';
+
+    const linhasHistorias = listaHistorias.length
+      ? listaHistorias.map((h) => `
+          <tr>
+            <td>${escapeHtmlRelatorio(h.titulo)}</td>
+            <td>${escapeHtmlRelatorio(labelGeneroRelatorio(h.genero))}</td>
+            <td>${escapeHtmlRelatorio(formatarDataRelatorio(h.data))}</td>
+            <td>${h.estrelas}/5</td>
+          </tr>`).join('')
+      : '<tr><td colspan="4" class="relatorio-tabela-vazio">Nenhuma história concluída até o momento.</td></tr>';
+
     cont.innerHTML = `
-      <div class="config-relatorio-card">
-        <h4><span class="config-relatorio-titulo-avatar">${avatarHtml}</span> Relatório — ${nome}</h4>
-        <div class="config-stats-grid">
-          <div class="config-stat"><strong>${historias}</strong>Histórias concluídas</div>
-          <div class="config-stat"><strong>${estrelas}</strong>Estrelas</div>
-          <div class="config-stat"><strong>${tempo} min</strong>Tempo total</div>
-          <div class="config-stat"><strong>${minigames}</strong>Minigames</div>
-          <div class="config-stat"><strong>${reprovadas}</strong>Tentativas reprovadas</div>
-          <div class="config-stat"><strong>${acertos}</strong>Acertos MG</div>
-          <div class="config-stat"><strong>${erros}</strong>Erros MG</div>
-        </div>
-      </div>
+      <article class="relatorio-painel">
+        <header class="relatorio-cabecalho">
+          <div class="relatorio-identidade">
+            <span class="config-relatorio-titulo-avatar">${avatarHtml}</span>
+            <div>
+              <p class="relatorio-kicker">Relatório de acompanhamento</p>
+              <h4 class="relatorio-nome">${escapeHtmlRelatorio(nome)}</h4>
+              <p class="relatorio-meta">Emitido em ${escapeHtmlRelatorio(emitidoEm)}</p>
+            </div>
+          </div>
+          <p class="relatorio-resumo">Síntese da leitura e das atividades realizadas neste perfil. Os indicadores abaixo reúnem o histórico sincronizado e o progresso registrado neste aparelho.</p>
+        </header>
+
+        <section class="relatorio-kpis" aria-label="Indicadores principais">
+          <div class="relatorio-kpi">
+            <span class="relatorio-kpi-label">Histórias concluídas</span>
+            <strong class="relatorio-kpi-valor">${historias}</strong>
+          </div>
+          <div class="relatorio-kpi">
+            <span class="relatorio-kpi-label">Tempo de leitura</span>
+            <strong class="relatorio-kpi-valor">${formatarTempoLeitura(tempo)}</strong>
+          </div>
+          <div class="relatorio-kpi">
+            <span class="relatorio-kpi-label">Atividades realizadas</span>
+            <strong class="relatorio-kpi-valor">${minigames}</strong>
+          </div>
+          <div class="relatorio-kpi">
+            <span class="relatorio-kpi-label">Taxa de acerto</span>
+            <strong class="relatorio-kpi-valor">${taxaAcerto == null ? '—' : taxaAcerto + '%'}</strong>
+          </div>
+        </section>
+
+        <section class="relatorio-detalhes" aria-label="Complemento do relatório">
+          <h5 class="relatorio-secao-titulo">Complemento</h5>
+          <div class="relatorio-grupos">
+            <div class="relatorio-grupo">
+              <h6 class="relatorio-grupo-titulo">Leitura</h6>
+              <table class="relatorio-tabela relatorio-tabela--compacta">
+                <tbody>
+                  <tr><th scope="row">Pontuação acumulada</th><td>${estrelas} ${estrelas === 1 ? 'estrela' : 'estrelas'}</td></tr>
+                  <tr><th scope="row">Tempo médio por história</th><td>${mediaMinPorHistoria == null ? '—' : mediaMinPorHistoria + ' min'}</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="relatorio-grupo">
+              <h6 class="relatorio-grupo-titulo">Atividades</h6>
+              <div class="relatorio-desempenho" aria-hidden="${totalRespostas === 0 ? 'true' : 'false'}">
+                <div class="relatorio-desempenho-bar">
+                  <span class="relatorio-desempenho-acertos" style="width:${totalRespostas ? Math.round((acertos / totalRespostas) * 100) : 0}%"></span>
+                </div>
+                <div class="relatorio-desempenho-legenda">
+                  <span>Corretas ${acertos}</span>
+                  <span>Incorretas ${erros}</span>
+                </div>
+              </div>
+              <table class="relatorio-tabela relatorio-tabela--compacta">
+                <tbody>
+                  <tr><th scope="row">Atividades a refazer</th><td>${reprovadas}</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="relatorio-historico" aria-label="Histórico de histórias">
+          <h5 class="relatorio-secao-titulo">Histórico de histórias</h5>
+          <div class="relatorio-tabela-wrap">
+            <table class="relatorio-tabela">
+              <thead>
+                <tr>
+                  <th>História</th>
+                  <th>Gênero</th>
+                  <th>Data</th>
+                  <th>Avaliação</th>
+                </tr>
+              </thead>
+              <tbody>${linhasHistorias}</tbody>
+            </table>
+          </div>
+        </section>
+      </article>
     `;
   }
 
@@ -504,7 +649,7 @@
         await carregarRelatorioCrianca(sessao.responsavelId, criancasConfig[0]);
       } else {
         document.getElementById('config-relatorios-conteudo').innerHTML =
-          '<p class="tela-sub">Cadastre uma criança para visualizar relatórios.</p>';
+          '<p class="relatorio-estado">Cadastre um perfil infantil para gerar o relatório de acompanhamento.</p>';
       }
 
       await carregarPerfilResponsavel(sessao.responsavelId);

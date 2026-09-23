@@ -41,6 +41,16 @@
 <body class="login-body">
 
   <div class="login-bg">
+    <div class="login-orbs" aria-hidden="true">
+      <span class="login-orb login-orb--lg login-orb--laranja"></span>
+      <span class="login-orb login-orb--md login-orb--teal"></span>
+      <span class="login-orb login-orb--md login-orb--ouro"></span>
+      <span class="login-orb login-orb--md login-orb--terracota"></span>
+      <span class="login-orb login-orb--sm login-orb--teal"></span>
+      <span class="login-orb login-orb--sm login-orb--laranja"></span>
+      <span class="login-orb login-orb--xs login-orb--ouro"></span>
+      <span class="login-orb login-orb--xs login-orb--terracota"></span>
+    </div>
     <div class="estrelas-bg" aria-hidden="true">
       <span class="estrela-flutuante" style="--d:0s;  --x:8%;  --y:12%">⭐</span>
       <span class="estrela-flutuante" style="--d:1.2s;--x:82%; --y:10%">✨</span>
@@ -57,27 +67,27 @@
           <div class="config-topo-header">
           <div>
             <h2 class="login-card-titulo" style="margin: 0;">Configurações</h2>
-            <p class="tela-sub" style="margin: 4px 0 0 0;">Seus dados, os perfis das crianças e a leitura.</p>
+            <p class="tela-sub" style="margin: 4px 0 0 0;">Dados da conta, perfis e relatório de acompanhamento.</p>
           </div>
           <button class="btn-secundario btn-voltar-config-top" id="btn-voltar-config-top" type="button">← Voltar</button>
         </div>
 
         <div class="config-abas" role="tablist" aria-label="Seções de configuração">
-          <button class="config-aba ativo" data-secao="relatorios" role="tab" aria-selected="true">Leitura</button>
+          <button class="config-aba ativo" data-secao="relatorios" role="tab" aria-selected="true">Relatório</button>
           <button class="config-aba" data-secao="responsavel" role="tab" aria-selected="false">Responsável</button>
           <button class="config-aba" data-secao="crianca" role="tab" aria-selected="false">Criança</button>
         </div>
 
         <div class="config-secao ativa" id="config-secao-relatorios" role="tabpanel">
           <div class="campo-grupo" style="max-width: 360px;">
-            <label class="campo-label" for="config-relatorio-crianca">Selecione a criança</label>
+            <label class="campo-label" for="config-relatorio-crianca">Perfil</label>
             <div class="config-select-com-avatar">
               <select id="config-relatorio-crianca" class="campo-input"></select>
               <span id="config-relatorio-avatar-previa" class="config-avatar-previa" aria-hidden="true"></span>
             </div>
           </div>
           <div id="config-relatorios-conteudo" class="config-relatorios-conteudo">
-            <p class="tela-sub">Selecione uma criança para ver o relatório.</p>
+            <p class="relatorio-estado">Selecione um perfil para visualizar o relatório.</p>
           </div>
         </div>
 
