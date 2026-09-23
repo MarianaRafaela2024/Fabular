@@ -1,62 +1,151 @@
 # ===========================
 #  Fabular — .gitignore
 # ===========================
+# Frontend estático (HTML/CSS/JS) + API ASP.NET 8 + SQL Server/LocalDB.
+# Mídia, código-fonte, migrations e appsettings da pasta do projeto
+# continuam versionados.
 
 # --- Dependências ---
 node_modules/
 bower_components/
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
 
 # --- Variáveis de ambiente / secrets ---
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+secrets.json
+**/secrets.json
+*.pfx
+*.pem
+*.key
+
+# Cópias locais; o appsettings.json da API continua versionado
+appsettings.*.local.json
+*.local.json
 
 # --- Logs ---
 *.log
+logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# --- Build / Output ---
+# --- Build / output (.NET e frontend) ---
+bin/
+obj/
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+artifacts/
+publish/
+publish-out/
+out/
 dist/
 build/
-out/
+bin-agent-check/
 
-# --- Editores e IDEs ---
+# Artefatos compilados (caso apareçam fora de bin/obj)
+*.dll
+*.exe
+*.pdb
+*.cache
+*.ilk
+*.meta
+*.obj
+*.iobj
+*.ipdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp_proj
+*.vspscc
+*.vssscc
+*.nupkg
+*.snupkg
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# --- Testes ---
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.trx
+*.coverage
+*.coveragexml
+coverage/
+.nyc_output/
+
+# --- Visual Studio / Rider / VS Code ---
+.vs/
 .vscode/
 .idea/
 *.suo
 *.user
 *.userosscache
 *.sln.docstates
-.vs/
+*.rsuser
+*.userprefs
+*.DotSettings.user
+*.pubxml.user
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.ghostdoc
+*.pidb
+*.svclog
+*.scc
+ipch/
+*.opensdf
+*.sdf
+*.cachefile
+*.VC.db
+*.VC.VC.opendb
 
-# --- Sistema Operacional ---
-# Windows
+# --- Sistema operacional ---
 Thumbs.db
 ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
-
-# macOS
 .DS_Store
 .AppleDouble
 .LSOverride
-
-# Linux
 *~
 
 # --- Arquivos temporários ---
 *.tmp
 *.temp
 *.swp
+*.swo
 *.bak
+*.orig
 
-# --- Cobertura de testes ---
-coverage/
-.nyc_output/
+# --- Banco local / backups SQL ---
+*.mdf
+*.ldf
+*.ndf
+*.bak
+*.sql.bak
 
-# --- Cache ---
+# --- Cache de ferramentas ---
 .cache/
 .parcel-cache/
 .eslintcache
+.nuget/
+*.nuget.props
+*.nuget.targets
