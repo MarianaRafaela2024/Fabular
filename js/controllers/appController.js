@@ -320,6 +320,7 @@ async function inicializar() {
   });
 
   bindSeExistir('btn-destaque', 'click', () => {
+    if (typeof podeDestacarPalavras === 'function' && !podeDestacarPalavras()) return;
     estado.destaqueAtivo = !estado.destaqueAtivo;
     const btnDestaque = document.getElementById('btn-destaque');
     const historiaTexto = document.getElementById('historia-texto');

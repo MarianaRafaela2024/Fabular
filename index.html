@@ -154,12 +154,7 @@
             <div class="leitura-header">
               <button class="btn-voltar" id="btn-voltar-biblioteca" aria-label="Voltar à biblioteca">←
                 Biblioteca</button>
-              <div class="leitura-info">
-                <span class="leitura-titulo-badge" id="leitura-titulo-badge">Título</span>
-                <div class="fase-indicador">
-                  <span id="fase-atual-label">História Completa</span>
-                </div>
-              </div>
+              <div class="leitura-info"></div>
               <div class="leitura-acoes">
                 <button class="btn-icon" id="btn-ouvir" title="Ouvir história em voz alta"
                   aria-label="Ouvir história em voz alta">🔊</button>
@@ -168,15 +163,12 @@
               </div>
             </div>
 
-            <!-- ILUSTRAÇÃO DA CENA -->
-            <div class="historia-imagem-area" id="historia-imagem-area">
-              <div class="historia-emoji-cena" id="historia-emoji-cena">🌲🏡🌸</div>
-            </div>
-
-            <!-- CARTÃO DO LIVRO -->
-            <div class="cartao-livro-leitura" id="cartao-livro-leitura">
+            <article class="cartao-livro-leitura" id="cartao-livro-leitura">
+              <div class="historia-imagem-area" id="historia-imagem-area">
+                <div class="historia-emoji-cena" id="historia-emoji-cena">🌲🏡🌸</div>
+              </div>
+              <h2 class="leitura-titulo-badge" id="leitura-titulo-badge">Título</h2>
               <div class="historia-texto" id="historia-texto"></div>
-              <!-- NAVEGAÇÃO DE PÁGINAS (rodapé interno do card) -->
               <div class="livro-navegacao-paginas" id="livro-navegacao-paginas" style="display:none">
                 <button class="btn-virar-pagina btn-pagina-anterior" id="btn-pagina-anterior" disabled
                   aria-label="Página anterior">
@@ -190,7 +182,7 @@
                   <span class="btn-texto-completo">Próxima</span> <span class="seta">→</span>
                 </button>
               </div>
-            </div>
+            </article>
 
             <div class="interacao-area oculto" id="interacao-area" style="display:none"></div>
             <div class="feedback-area oculto" id="feedback-area">
@@ -202,8 +194,7 @@
 
             <div class="leitura-rodape">
               <button class="btn-secundario" id="btn-pular-fase" style="display:none">Pular fase →</button>
-              <button class="btn-principal" id="btn-continuar" style="display:none">Vamos Jogar! 🚀 (5
-                minigames)</button>
+              <button class="btn-principal" id="btn-continuar" style="display:none">Vamos Jogar!</button>
             </div>
           </div>
         </section>

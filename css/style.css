@@ -1647,16 +1647,19 @@ html.alto-contraste .portao-input {
 }
 
 .leitura-titulo-badge {
-  display: inline-block;
-  background: var(--grad-btn);
-  color: #fff;
-  border-radius: 999px;
-  padding: 5px 18px;
+  display: block;
+  margin: 22px 28px 14px;
+  padding: 0;
+  background: none;
+  color: #3D3224;
+  border-radius: 0;
+  box-shadow: none;
+  font-family: 'Baloo 2', cursive;
   font-weight: 800;
-  font-size: .88rem;
-  margin-bottom: 5px;
-  box-shadow: 0 2px 10px rgba(255, 107, 53, .3);
-  letter-spacing: .02em;
+  font-size: 1.4rem;
+  line-height: 1.3;
+  letter-spacing: -.01em;
+  text-align: center;
 }
 
 .fase-indicador {
@@ -1716,13 +1719,17 @@ html.alto-contraste .portao-input {
 }
 
 .historia-imagem-area {
-  background: #F3E6D8;
-  border-radius: var(--radius);
-  padding: 28px;
+  background: #FFFFFF;
+  border-radius: 0;
+  padding: 0;
   text-align: center;
-  margin-bottom: 18px;
-  box-shadow: inset 0 1px 6px rgba(42, 36, 32, .06);
-  border: 1px solid var(--borda);
+  margin: 0;
+  box-shadow: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  isolation: isolate;
 }
 
 .historia-emoji-cena {
@@ -1739,17 +1746,24 @@ html.alto-contraste .portao-input {
 .historia-emoji-cena.cena--placeholder {
   width: 100%;
   aspect-ratio: 16 / 9;
-  max-height: 260px;
-  border-radius: var(--radius);
+  max-height: 280px;
+  border-radius: 0;
+}
+
+.historia-emoji-cena:has(.cena-img) {
+  filter: none;
+  background: #FFFFFF;
 }
 
 .cena-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: var(--radius);
+  border-radius: 0;
   display: block;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, .15));
+  filter: none;
+  mix-blend-mode: normal;
+  isolation: isolate;
   transition: opacity 0.4s ease;
 }
 
@@ -1997,15 +2011,23 @@ html.alto-contraste .portao-input {
 }
 
 .minigame-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
   margin-bottom: 18px;
 }
 
+.minigame-header .btn-voltar {
+  justify-self: start;
+  text-align: left;
+  width: auto;
+  max-width: max-content;
+  font-size: clamp(0.85rem, 3.4vw, 0.95rem);
+}
+
 .minigame-info {
-  flex: 1;
+  min-width: 0;
   text-align: center;
 }
 
@@ -2013,7 +2035,7 @@ html.alto-contraste .portao-input {
   display: block;
   font-family: 'Baloo 2', cursive;
   font-weight: 800;
-  font-size: 1rem;
+  font-size: clamp(0.95rem, 4vw, 1.15rem);
   color: var(--texto);
   letter-spacing: -.01em;
 }
@@ -5818,7 +5840,8 @@ body.alto-contraste .historia-card:hover {
 body.alto-contraste .historia-titulo,
 body.alto-contraste .bot-ia-titulo,
 body.alto-contraste .ia-gerar-titulo,
-body.alto-contraste .leitura-titulo {
+body.alto-contraste .leitura-titulo,
+body.alto-contraste .leitura-titulo-badge {
   color: #F0F6FC !important;
 }
 
@@ -6584,11 +6607,29 @@ body.alto-contraste .link-inline {
   }
 
   .leitura-header,
-  .minigame-header,
   .resultado-stats {
     flex-direction: column;
     align-items: stretch;
     gap: 8px !important;
+  }
+
+  .minigame-header {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px !important;
+  }
+
+  .minigame-header .btn-voltar {
+    justify-self: start !important;
+    align-self: center;
+    width: auto !important;
+    max-width: max-content !important;
+    text-align: left !important;
+  }
+
+  .minigame-header .btn-icon {
+    justify-self: end;
   }
 
   .leitura-rodape,
@@ -7871,29 +7912,26 @@ body.alto-contraste .config-stat strong {
 
 .cartao-livro-leitura {
   position: relative;
-  background: linear-gradient(135deg, #FFFDF9 0%, #FAF5EA 100%);
+  background: #F7F0DE;
   border-radius: 20px;
-  padding: 24px 28px;
-  border: 2px solid #E2D7C3;
-  box-shadow:
-    0 12px 32px rgba(0, 0, 0, 0.09),
-    0 2px 8px rgba(0, 0, 0, 0.04),
-    inset 0 0 0 4px rgba(245, 235, 215, 0.6);
+  padding: 0 0 20px;
+  border: 1.5px solid #E4D6B8;
+  box-shadow: 0 8px 28px rgba(90, 64, 32, 0.1);
   margin-bottom: 16px;
   overflow: hidden;
   transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
-/* Camada da Folha Embaixo (Underneath Page Effect) */
 .cartao-livro-leitura::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, #F5EFE0 0%, #EBE1CB 100%);
-  border-radius: 20px;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.6;
+  display: none;
+}
+
+.cartao-livro-leitura .historia-imagem-area,
+.cartao-livro-leitura .historia-emoji-cena:has(.cena-img),
+.cartao-livro-leitura .cena-img {
+  background: #FFFFFF;
+  filter: none;
+  mix-blend-mode: normal;
 }
 
 .cartao-livro-leitura>* {
@@ -7927,19 +7965,19 @@ body.alto-contraste .config-stat strong {
   background: transparent;
   border: none;
   box-shadow: none;
-  padding: 0;
-  font-size: 1.1rem;
-  line-height: 1.95;
-  color: var(--texto, #2D3748);
+  padding: 4px 28px 8px;
+  font-size: 1.08rem;
+  line-height: 1.9;
+  color: #3D3224;
   min-height: 120px;
 }
 
 /* Animação de troca de página: slide + fade */
-.cartao-livro-leitura.pagina-virando-avancar {
+.historia-texto.pagina-virando-avancar {
   animation: slideFadeAvancar 0.38s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
-.cartao-livro-leitura.pagina-virando-recuar {
+.historia-texto.pagina-virando-recuar {
   animation: slideFadeRecuar 0.38s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
@@ -7973,7 +8011,7 @@ body.alto-contraste .config-stat strong {
   justify-content: space-between;
   align-items: center;
   gap: 8px;
-  margin-top: 20px;
+  margin: 18px 20px 0;
   padding-top: 14px;
   border-top: 1.5px dashed rgba(180, 160, 120, 0.4);
 }
@@ -8063,13 +8101,19 @@ body.alto-contraste .config-stat strong {
 /* Responsivo para Celular */
 @media (max-width: 640px) {
   .cartao-livro-leitura {
-    padding: 14px 14px;
+    padding: 0 0 14px;
     border-radius: 14px;
   }
 
+  .leitura-titulo-badge {
+    margin: 16px 16px 10px;
+    font-size: 1.2rem;
+  }
+
   .historia-texto {
-    font-size: 0.9rem;
-    line-height: 1.5;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    padding: 2px 16px 6px;
   }
 
   .livro-navegacao-paginas {
@@ -8535,8 +8579,8 @@ button,
   }
 
   .leitura-titulo-badge {
-    font-size: 0.75rem;
-    padding: 4px 12px;
+    font-size: 1.15rem;
+    padding: 0;
   }
 
   .historia-texto,
@@ -8556,7 +8600,7 @@ button,
   }
 
   .minigame-titulo-label {
-    font-size: 0.88rem;
+    font-size: clamp(0.95rem, 4.2vw, 1.15rem);
   }
 
   .mg-contador {

@@ -275,9 +275,32 @@ function dividirTextoEmPaginasPorPalavras(textoCompleto, limitePalavras) {
   return paginas.length > 0 ? paginas : [textoCompleto];
 }
 
+function faixaDaHistoriaAtual() {
+  const h = estado.historiaAtual;
+  const f = parseInt(h?.faixa ?? h?.faixaEtaria ?? estado.perfil?.faixa, 10);
+  return f || 1;
+}
+
+function podeDestacarPalavras() {
+  return faixaDaHistoriaAtual() === 1;
+}
+
+function atualizarVisibilidadeBotaoDestaque() {
+  const btn = document.getElementById('btn-destaque');
+  if (!btn) return;
+  const permitido = podeDestacarPalavras();
+  btn.hidden = !permitido;
+  btn.style.display = permitido ? '' : 'none';
+  if (!permitido) {
+    estado.destaqueAtivo = false;
+    btn.classList.remove('ativo');
+  }
+}
+
 function renderizarPaginaAtualLivro(direcaoAnimacao = null) {
   const h = estado.historiaAtual;
   if (!h) return;
+  atualizarVisibilidadeBotaoDestaque();
 
   const total = estadoLeitura.totalPaginas || 1;
   const atual = Math.max(0, Math.min(total - 1, estadoLeitura.paginaAtual || 0));
@@ -285,9 +308,6 @@ function renderizarPaginaAtualLivro(direcaoAnimacao = null) {
 
   const tituloBadge = document.getElementById('leitura-titulo-badge');
   if (tituloBadge) tituloBadge.textContent = h.titulo || 'História';
-
-  const labelEl = document.getElementById('fase-atual-label');
-  if (labelEl) labelEl.textContent = 'História Completa';
 
   const cenaEl = document.getElementById('historia-emoji-cena');
   if (cenaEl) {
@@ -323,10 +343,10 @@ function renderizarPaginaAtualLivro(direcaoAnimacao = null) {
     textoEl.classList.toggle('sem-destaque', !estado.destaqueAtivo);
   }
 
-  if (direcaoAnimacao && cartaoEl) {
-    cartaoEl.classList.remove('pagina-virando-avancar', 'pagina-virando-recuar');
-    void cartaoEl.offsetWidth;
-    cartaoEl.classList.add(direcaoAnimacao === 'recuar' ? 'pagina-virando-recuar' : 'pagina-virando-avancar');
+  if (direcaoAnimacao && textoEl) {
+    textoEl.classList.remove('pagina-virando-avancar', 'pagina-virando-recuar');
+    void textoEl.offsetWidth;
+    textoEl.classList.add(direcaoAnimacao === 'recuar' ? 'pagina-virando-recuar' : 'pagina-virando-avancar');
   }
 
   const navPaginas = document.getElementById('livro-navegacao-paginas');
@@ -367,8 +387,7 @@ function renderizarPaginaAtualLivro(direcaoAnimacao = null) {
 
   if (btnContinuar) {
     const isUltima = (atual >= total - 1);
-    const n = (estado.minigamesLista && estado.minigamesLista.length) || 5;
-    btnContinuar.textContent = `Vamos Jogar! 🚀 (${n} minigame${n > 1 ? 's' : ''})`;
+    btnContinuar.textContent = 'Vamos Jogar!';
     btnContinuar.style.display = isUltima ? 'block' : 'none';
     if (isUltima && total > 1) {
       btnContinuar.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -431,11 +450,9 @@ function lerTextoCompletoHistoria(opcoes) {
 
 function setUiLeituraModoCompleto(completo) {
   estado.modoLeituraCompleta = completo;
-  const faseInd = document.querySelector('.fase-indicador');
   const barra = document.querySelector('.barra-progresso-fases');
   const inter = document.getElementById('interacao-area');
   const btnPular = document.getElementById('btn-pular-fase');
-  if (faseInd) faseInd.style.display = completo ? '' : '';
   if (barra) barra.style.display = 'none';
   if (inter) inter.style.display = 'none';
   if (btnPular) btnPular.style.display = 'none';

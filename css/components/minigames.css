@@ -261,13 +261,16 @@
 
 .mem-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(clamp(52px, 12vw, 70px), 1fr));
-  gap: 6px;
-  margin: 12px 0;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 16px 0;
 }
 
 .mem-card {
-  height: clamp(52px, 12vw, 70px);
+  width: 100%;
+  aspect-ratio: 1;
+  height: auto;
+  min-height: 72px;
   perspective: 700px;
   cursor: pointer;
 }
@@ -307,7 +310,7 @@
 .mem-frente {
   background: linear-gradient(135deg, var(--cor-primaria, #7C3AED), #A78BFA);
   color: #fff;
-  font-size: 1.6rem;
+  font-size: clamp(1.4rem, 5vw, 1.9rem);
   border: 3px solid rgba(255, 255, 255, .3);
   transform: translateZ(0.01px);
 }
@@ -316,11 +319,11 @@
   background: linear-gradient(135deg, #ECFDF5, #D1FAE5);
   border: 3px solid #34D399;
   color: var(--texto, #1F2937);
-  font-size: 0.8rem;
-  line-height: 1.2;
+  font-size: clamp(0.85rem, 2.8vw, 1.05rem);
+  line-height: 1.25;
   transform: rotateY(180deg) translateZ(0.01px);
   text-align: center;
-  padding: 6px;
+  padding: 8px;
   word-break: break-word;
   overflow: hidden;
   hyphens: auto;
@@ -553,26 +556,28 @@
   }
 
   .mem-grid {
-    grid-template-columns: repeat(auto-fill, minmax(clamp(44px, 12vw, 60px), 1fr)) !important;
-    gap: 6px !important;
-    margin: 10px 0 !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    margin: 14px 0 !important;
   }
 
   .mem-card {
-    height: clamp(44px, 12vw, 60px) !important;
+    height: auto !important;
+    min-height: 88px !important;
+    aspect-ratio: 1;
   }
 
   .mem-frente {
-    font-size: 1.3rem !important;
+    font-size: clamp(1.5rem, 8vw, 2rem) !important;
     border-width: 2px !important;
-    border-radius: 10px !important;
+    border-radius: 12px !important;
   }
 
   .mem-verso {
-    font-size: 0.72rem !important;
+    font-size: clamp(0.82rem, 3.8vw, 1.05rem) !important;
     border-width: 2px !important;
-    padding: 4px !important;
-    border-radius: 10px !important;
+    padding: 8px !important;
+    border-radius: 12px !important;
   }
 
   .cp-cel {

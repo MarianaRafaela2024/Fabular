@@ -91,8 +91,10 @@ function renderizarMinigame() {
   const textoBase = obterTextoBaseHistoria(h);
   const fase = { texto: textoBase, cena: h?.cena || '' };
 
-  document.getElementById('mg-titulo-label').textContent = nomeMinigame(tipo);
-  document.getElementById('mg-contador').textContent = `${estado.minigameAtual + 1} / ${total}`;
+  const tituloFora = document.getElementById('mg-titulo-label') || document.getElementById('mg-tipo-badge');
+  if (tituloFora) tituloFora.textContent = nomeMinigame(tipo);
+  const contadorEl = document.getElementById('mg-contador');
+  if (contadorEl) contadorEl.textContent = `${estado.minigameAtual + 1} / ${total}`;
 
   document.getElementById('mg-feedback').classList.add('oculto');
   definirVisibilidadeBotao(document.getElementById('btn-proximo-mg'), false);
@@ -100,14 +102,6 @@ function renderizarMinigame() {
 
   const corpo = document.getElementById('minigame-corpo');
   corpo.innerHTML = '';
-
-  const tiposSemEnunciadoDuplicado = ['completar', 'palavras_perdidas', 'escolha', 'verdadeiro_falso', 'som_palavra', 'rima', 'quem_disse', 'memoria', 'jogo_memoria'];
-  if (!tiposSemEnunciadoDuplicado.includes(tipo)) {
-    const header = document.createElement('div');
-    header.className = 'mg-enunciado';
-    header.textContent = nomeMinigame(tipo);
-    corpo.appendChild(header);
-  }
 
   switch (tipo) {
     case 'memoria':
