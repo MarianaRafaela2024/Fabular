@@ -77,7 +77,7 @@ function refazerAtividade() {
 
   if (!estado.historiaAtual) {
     irParaTela('biblioteca');
-    mostrarToast('Escolha uma história primeiro! 📚');
+    mostrarToast('Escolha uma história primeiro.');
     return;
   }
 
@@ -292,7 +292,7 @@ async function inicializar() {
     btn.addEventListener('click', () => {
       const tela = btn.dataset.tela;
       if (tela === 'leitura' && !estado.historiaAtual) {
-        mostrarToast('Escolha uma história primeiro! 📚');
+        mostrarToast('Escolha uma história primeiro.');
         return;
       }
       irParaTela(tela);
@@ -302,7 +302,7 @@ async function inicializar() {
   bindSeExistir('btn-ouvir', 'click', () => {
     const h = estado.historiaAtual;
     if (!h) {
-      mostrarToast('Escolha uma história primeiro! 📚');
+      mostrarToast('Escolha uma história primeiro.');
       return;
     }
     if (ttsAtivo) {
@@ -325,7 +325,7 @@ async function inicializar() {
     const historiaTexto = document.getElementById('historia-texto');
     if (btnDestaque) btnDestaque.classList.toggle('ativo', estado.destaqueAtivo);
     if (historiaTexto) historiaTexto.classList.toggle('sem-destaque', !estado.destaqueAtivo);
-    mostrarToast(estado.destaqueAtivo ? 'Palavras-chave destacadas! 🔍' : 'Destaque removido');
+    mostrarToast(estado.destaqueAtivo ? 'As palavras importantes ficaram em destaque.' : 'Destaque removido.');
   });
 
   bindSeExistir('btn-continuar', 'click', () => {

@@ -5,25 +5,107 @@
 'use strict';
 
 let calendarioMesAtual = new Date();
+let ultimoEstagioRaposaExibido = null;
+
+const ICONES_PROGRESSO = {
+  trofeu: 'midia/trophy-menu.png',
+  livro: 'midia/book-menu.png',
+  livros: 'midia/qmsomos/book-stack.png',
+  estrela: 'midia/estrela.png',
+  lumi: 'midia/IconeRaposa.png',
+  fogo: 'midia/qmsomos/rising.png',
+  gamepad: 'midia/qmsomos/gamepad.png',
+  meta: 'midia/qmsomos/point.png'
+};
+
+function icoProgresso(tipo, opts = {}) {
+  const src = ICONES_PROGRESSO[tipo];
+  if (!src) return '';
+  const w = opts.width || 18;
+  const h = opts.height || 18;
+  const mod = opts.mod || tipo;
+  const extra = opts.className ? ` ${opts.className}` : '';
+  const alt = opts.alt !== undefined ? opts.alt : '';
+  return `<img src="${src}" alt="${alt}" class="prog-ico prog-ico--${mod}${extra}" width="${w}" height="${h}" loading="lazy" decoding="async">`;
+}
+
+function renderEstrelasProgresso(ganhas, total = 5) {
+  const n = Math.max(0, Math.min(total, Number(ganhas) || 0));
+  let html = `<span class="estrelas-rating estrelas-rating--img" aria-label="${n} de ${total} estrelas">`;
+  for (let i = 0; i < total; i++) {
+    html += icoProgresso('estrela', {
+      width: 16,
+      height: 16,
+      className: i < n ? 'estrela-preenchida-img' : 'estrela-vazia-img',
+      alt: ''
+    });
+  }
+  return html + '</span>';
+}
+
+function renderMiniEstrelasCalendario(qtd) {
+  if (!qtd || qtd <= 0) return '';
+  const n = qtd >= 4 ? 4 : qtd;
+  let html = `<span class="cal-dia-estrelas cal-dia-estrelas-img" data-qtd="${qtd}" aria-hidden="true">`;
+  for (let i = 0; i < n; i++) {
+    html += icoProgresso('estrela', { width: 10, height: 10, className: 'cal-estrela-mini', alt: '' });
+  }
+  return html + '</span>';
+}
+
+function labelEstrelasDia(qtd) {
+  if (!qtd || qtd <= 0) return 'sem leitura';
+  const n = qtd >= 4 ? 4 : qtd;
+  return `${n} estrela${n === 1 ? '' : 's'} no dia`;
+}
+
+function renderIconeConquista(conquista) {
+  if (conquista.iconeImg) {
+    return `<img src="${conquista.iconeImg}" alt="" class="conquista-round-icone-img" width="40" height="40" loading="lazy" decoding="async">`;
+  }
+  if (conquista.icone) {
+    return `<span class="conquista-round-icone">${conquista.icone}</span>`;
+  }
+  return icoProgresso('trofeu', { width: 36, height: 36, mod: 'conquista' });
+}
+
+const IMG_ESTAGIO_CONQUISTADO = 'midia/trophy-menu.png';
+const IMG_ESTAGIO_BLOQUEADO = 'midia/question.svg';
+
+function htmlSeloTrofeu(texto, cls = 'cal-selo-trofeu-img') {
+  return `${icoProgresso('trofeu', { width: 16, height: 16, className: cls, alt: '' })} ${texto}`;
+}
+
+function htmlCapaHistoriaConcluida(registro, historia, titulo) {
+  const alvo = historia || registro;
+  const src = typeof resolverImagemCapa === 'function' ? resolverImagemCapa(alvo) : null;
+  if (src) {
+    const alt = titulo || (alvo && alvo.titulo) || '';
+    return `<img src="${src}" alt="${alt}" class="hci-capa-img">`;
+  }
+  const emoji = (registro && registro.emoji && registro.emoji !== '📖')
+    ? registro.emoji
+    : (historia ? historia.emoji : ((registro && registro.emoji) || '📖'));
+  return emoji;
+}
+
+function renderizarHistoriasConcluidasVazio(cont) {
+  cont.innerHTML = `
+    <div class="progresso-vazio-wrap">
+      <img src="midia/raposa/raposa1.png" alt="" class="progresso-vazio-lumi" width="88" height="88" />
+      <p class="vazio-msg">A Lumi está esperando a primeira história com você!</p>
+      <button type="button" class="btn-principal" id="btn-progresso-ir-biblioteca">Ir para a Biblioteca</button>
+    </div>`;
+  document.getElementById('btn-progresso-ir-biblioteca')?.addEventListener('click', () => {
+    if (typeof irParaTela === 'function') irParaTela('biblioteca');
+  });
+}
 
 function atualizarTelaProgresso() {
   const p = estado.perfil;
-  const ppAvatar = document.getElementById('pp-avatar');
-  const ppNome = document.getElementById('pp-nome');
-  const ppNivelBadge = document.getElementById('pp-nivel-badge');
-  const ppTotal = document.getElementById('pp-total');
   const progressoSub = document.getElementById('progresso-sub');
+  const progressoSubStats = document.getElementById('progresso-sub-stats');
 
-  if (ppAvatar) {
-    if (typeof renderizarElementoAvatar === 'function') {
-      renderizarElementoAvatar(ppAvatar, p.avatar || 'midia/user/sapo.png', 'pp-avatar-img');
-    } else {
-      ppAvatar.textContent = p.avatar;
-    }
-  }
-  if (ppNome) ppNome.textContent = p.nome;
-  if (ppNivelBadge) ppNivelBadge.textContent = labelNivel(estado.nivel);
-  if (ppTotal) ppTotal.textContent = estado.totalEstrelas + ' ⭐';
   if (typeof garantirContadoresRelatorio === 'function') {
     garantirContadoresRelatorio();
   }
@@ -31,9 +113,33 @@ function atualizarTelaProgresso() {
   let acertosMG = Number(estado.acertosMG) || 0;
   let errosMG = Number(estado.errosMG) || 0;
   const naoOuco = Number(estado.naoConsigoOuvir) || 0;
+
+  const atividade = agruparAtividadePorDia();
+  const streak = calcularSequenciaLeitura(atividade);
+  const agora = new Date();
+  const mesAtual = agora.getMonth();
+  const anoAtual = agora.getFullYear();
+  let totalMesAtual = 0;
+  (estado.historiasLidas || []).forEach((r) => {
+    const iso = typeof obterDataIsoHistoria === 'function' ? obterDataIsoHistoria(r) : null;
+    if (!iso) return;
+    const [y, m] = iso.split('-').map(Number);
+    if (y === anoAtual && m === mesAtual + 1) totalMesAtual += Number(r.vezesLida) || 1;
+  });
+
+  const fraseLumi = obterFraseMotivacionalRaposa(streak, totalMesAtual);
+  const nomeExibicao = p.nome || 'explorador';
   if (progressoSub) {
-    progressoSub.textContent =
-      `Olá, ${p.nome}! Você tem ${estado.totalEstrelas || 0} estrela${estado.totalEstrelas === 1 ? '' : 's'} — continue lendo e jogando para evoluir!`;
+    progressoSub.textContent = `Olá, ${nomeExibicao}! ${fraseLumi.trim()}`;
+  }
+  if (progressoSubStats) {
+    const n = estado.totalEstrelas || 0;
+    if (n === 0) {
+      progressoSubStats.textContent = `${nomeExibicao}, a Lumi está pronta para começar a primeira aventura com você.`;
+    } else {
+      progressoSubStats.textContent =
+        `Cada estrela conta um pedacinho da história de ${nomeExibicao} com a Lumi — ${n} até agora.`;
+    }
   }
 
   atualizarBarraExperiencia();
@@ -42,7 +148,7 @@ function atualizarTelaProgresso() {
   if (cont) {
     cont.innerHTML = '';
     if (!estado.historiasLidas || estado.historiasLidas.length === 0) {
-      cont.innerHTML = '<p class="vazio-msg">Nenhuma história concluída ainda. Comece a ler! 📚</p>';
+      renderizarHistoriasConcluidasVazio(cont);
     } else {
       estado.historiasLidas.forEach(r => {
         if (!r || r.id == null) return;
@@ -52,22 +158,31 @@ function atualizarTelaProgresso() {
           return xNorm === idNorm || String(x.id) === String(r.id);
         });
         const titulo = (r.titulo && r.titulo.trim()) ? r.titulo : (h ? h.titulo : 'História Concluída');
-        const emoji = (r.emoji && r.emoji !== '📖') ? r.emoji : (h ? h.emoji : (r.emoji || '📖'));
+        const capaHtml = htmlCapaHistoriaConcluida(r, h, titulo);
         const generoRaw = (r.genero && r.genero !== 'narrativo') ? r.genero : (h ? h.genero : (r.genero || 'narrativo'));
         const genero = typeof labelGenero === 'function' ? labelGenero(generoRaw) : generoRaw;
         const dataStr = r.data || (r.dataIso ? new Date(r.dataIso + 'T00:00:00').toLocaleDateString('pt-BR') : '');
 
+        const vezes = Number(r.vezesLida) || 1;
+        const releituraBadge = vezes > 1
+          ? `<span class="hci-tag hc-tag concluida">Lida ${vezes}x</span>`
+          : '';
+
         const item = document.createElement('div');
-        item.className = 'historia-concluida-item';
+        item.className = 'historia-concluida-item historia-concluida-selo';
         item.innerHTML = `
           <div class="hci-esq">
-            <span class="hci-emoji">${emoji}</span>
+            <span class="hci-emoji">${capaHtml}</span>
             <div class="hci-info">
               <span class="hci-titulo">${titulo}</span>
-              <span class="hci-genero">${genero}${dataStr ? ' · ' + dataStr : ''}</span>
+              <span class="hci-meta-linha">
+                <span class="hci-tag hc-tag genero">${genero}</span>
+                ${releituraBadge}
+                ${dataStr ? `<span class="hci-data">${dataStr}</span>` : ''}
+              </span>
             </div>
           </div>
-          <span class="hci-estrelas">${typeof renderEstrelas === 'function' ? renderEstrelas(r.estrelas, 5) : '⭐'.repeat(Number(r.estrelas) || 1)}</span>
+          <span class="hci-estrelas">${renderEstrelasProgresso(r.estrelas, 5)}</span>
         `;
         cont.appendChild(item);
       });
@@ -101,7 +216,7 @@ function renderizarAcessoRelatorioResponsavel(metricas) {
 
   let historiasHtml = '';
   if (!estado.historiasLidas || estado.historiasLidas.length === 0) {
-    historiasHtml = '<p class="vazio-msg">Nenhuma história concluída ainda. Comece a ler! 📚</p>';
+    historiasHtml = '<p class="vazio-msg">Nenhuma história concluída ainda. Comece a ler!</p>';
   } else {
     historiasHtml = '<div class="historias-concluidas">';
     estado.historiasLidas.forEach(r => {
@@ -112,15 +227,15 @@ function renderizarAcessoRelatorioResponsavel(metricas) {
         return xNorm === idNorm || String(x.id) === String(r.id);
       });
       const titulo = (r.titulo && r.titulo.trim()) ? r.titulo : (h ? h.titulo : 'História Concluída');
-      const emoji = (r.emoji && r.emoji !== '📖') ? r.emoji : (h ? h.emoji : (r.emoji || '📖'));
+      const capaHtml = htmlCapaHistoriaConcluida(r, h, titulo);
       const genero = (r.genero && r.genero !== 'Geral') ? (typeof labelGenero === 'function' ? labelGenero(r.genero) : r.genero) : (h ? (typeof labelGenero === 'function' ? labelGenero(h.genero) : h.genero) : 'Geral');
       const dataStr = r.data || (r.dataIso ? new Date(r.dataIso + 'T00:00:00').toLocaleDateString('pt-BR') : '');
-      const estrelasHtml = typeof renderEstrelas === 'function' ? renderEstrelas(r.estrelas, 5) : '⭐'.repeat(Number(r.estrelas) || 1);
+      const estrelasHtml = renderEstrelasProgresso(r.estrelas, 5);
 
       historiasHtml += `
         <div class="historia-concluida-item">
           <div class="hci-esq">
-            <span class="hci-emoji">${emoji}</span>
+            <span class="hci-emoji">${capaHtml}</span>
             <div class="hci-info">
               <span class="hci-titulo">${titulo}</span>
               <span class="hci-genero">${genero}${dataStr ? ' · ' + dataStr : ''}</span>
@@ -135,20 +250,20 @@ function renderizarAcessoRelatorioResponsavel(metricas) {
 
   secoes.innerHTML = `
     <div class="progresso-secao" id="prog-extra-relatorio">
-      <h3>📄 Relatório Geral — ${nomeCrianca}</h3>
+      <h3 class="prog-secao-titulo">Relatório geral — ${nomeCrianca}</h3>
       <div class="stats-grid" id="stats-relatorio-grid">
-        <div class="stat-card-prog"><span class="scp-icon">📚</span><span class="scp-valor">${totalHistorias}</span><span class="scp-label">Histórias Concluídas</span></div>
-        <div class="stat-card-prog"><span class="scp-icon">⭐</span><span class="scp-valor">${totalEstrelas}</span><span class="scp-label">Estrelas Acumuladas</span></div>
-        <div class="stat-card-prog"><span class="scp-icon">⏰</span><span class="scp-valor">${tempoTotal} min</span><span class="scp-label">Tempo Total</span></div>
-        <div class="stat-card-prog"><span class="scp-icon">❌</span><span class="scp-valor">${estado.tentativasReprovadas || 0}</span><span class="scp-label">Tentativas reprovadas</span></div>
-        <div class="stat-card-prog"><span class="scp-icon">✅</span><span class="scp-valor">${metricas.acertosMG}</span><span class="scp-label">Acertos MG</span></div>
-        <div class="stat-card-prog"><span class="scp-icon">⚠️</span><span class="scp-valor">${metricas.errosMG}</span><span class="scp-label">Erros MG</span></div>
-        <div class="stat-card-prog"><span class="scp-icon">🔊</span><span class="scp-valor">${metricas.naoOuco}</span><span class="scp-label">Não consigo ouvir</span></div>
+        <div class="stat-card-prog"><span class="scp-icon scp-icon-img">${icoProgresso('livro', { width: 22, height: 22 })}</span><span class="scp-valor">${totalHistorias}</span><span class="scp-label">Histórias concluídas</span></div>
+        <div class="stat-card-prog"><span class="scp-icon scp-icon-img">${icoProgresso('estrela', { width: 22, height: 22 })}</span><span class="scp-valor">${totalEstrelas}</span><span class="scp-label">Estrelas acumuladas</span></div>
+        <div class="stat-card-prog"><span class="scp-icon scp-icon-img scp-icon-text">⏱</span><span class="scp-valor">${tempoTotal} min</span><span class="scp-label">Tempo de leitura</span></div>
+        <div class="stat-card-prog"><span class="scp-icon scp-icon-text">—</span><span class="scp-valor">${estado.tentativasReprovadas || 0}</span><span class="scp-label">Tentativas reprovadas</span></div>
+        <div class="stat-card-prog"><span class="scp-icon scp-icon-text">+</span><span class="scp-valor">${metricas.acertosMG}</span><span class="scp-label">Acertos nos minigames</span></div>
+        <div class="stat-card-prog"><span class="scp-icon scp-icon-text">−</span><span class="scp-valor">${metricas.errosMG}</span><span class="scp-label">Erros nos minigames</span></div>
+        <div class="stat-card-prog"><span class="scp-icon scp-icon-text">♪</span><span class="scp-valor">${metricas.naoOuco}</span><span class="scp-label">Não consigo ouvir</span></div>
       </div>
     </div>
 
     <div class="progresso-secao progresso-secao-historias">
-      <h3>📖 Histórias Concluídas no Relatório</h3>
+      <h3 class="prog-secao-titulo">${icoProgresso('livro', { width: 22, height: 22, mod: 'titulo' })} Histórias concluídas no relatório</h3>
       <div class="historias-concluidas-wrap">
         ${historiasHtml}
       </div>
@@ -182,14 +297,6 @@ function nivelAtividadeDia(qtd) {
   return 4;
 }
 
-function obterEstrelasPorDia(qtd) {
-  if (!qtd || qtd <= 0) return '';
-  if (qtd === 1) return '⭐';
-  if (qtd === 2) return '⭐⭐';
-  if (qtd === 3) return '⭐⭐⭐';
-  return '⭐⭐⭐⭐';
-}
-
 function calcularSequenciaLeitura(atividade) {
   const agora = new Date();
   let d = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
@@ -218,24 +325,25 @@ function calcularSequenciaLeitura(atividade) {
 }
 
 const FRASES_MOTIVACIONAIS_RAPOSA = [
-  'Cada página que você lê traz uma nova aventura mágica! ',
-  'Ler todos os dias deixa sua imaginação super poderosa! ',
-  'A Lumi está muito orgulhosa do seu progresso! ',
-  'Quanto mais histórias você lê, mais longe você pode voar! ',
-  'Aprender lendo é o melhor minigame de todos! ',
-  'Você é um verdadeiro campeão das histórias! ',
-  'Abrir um livro é abrir uma porta para o mundo dos sonhos!'
+  'Cada página que você lê traz uma aventura nova — a Lumi adora ler com você!',
+  'Ler um pouquinho todo dia deixa a imaginação cada vez mais forte.',
+  'A Lumi fica feliz quando vocês leem juntos. Continue assim!',
+  'Quanto mais histórias, mais lugares a gente visita sem sair do cantinho da leitura.',
+  'Aprender lendo é o minigame favorito da Lumi.',
+  'Você está construindo uma biblioteca de memórias muito especial.',
+  'Abrir uma história é abrir uma porta para sonhar acordado.'
 ];
 
 function obterFraseMotivacionalRaposa(streak, totalMes) {
-  if (streak >= 5) return `Nossa! ${streak} dias seguidos lendo! A Lumi te ama! `;
-  if (streak >= 3) return `Uau! ${streak} dias seguidos! A Lumi ficou muito feliz! `;
-  if (totalMes >= 10) return `Já foram ${totalMes} histórias este mês! A Lumi está impressionada! `;
+  const nome = estado?.perfil?.nome || 'amigo';
+  if (streak >= 5) return `${nome}, ${streak} dias seguidos lendo! A Lumi está muito orgulhosa de você.`;
+  if (streak >= 3) return `${nome}, ${streak} dias seguidos! A Lumi sentiu sua dedicação.`;
+  if (totalMes >= 10) return `${nome}, ${totalMes} histórias neste mês! A Lumi ficou impressionada.`;
   const idx = (totalMes + streak) % FRASES_MOTIVACIONAIS_RAPOSA.length;
   return FRASES_MOTIVACIONAIS_RAPOSA[idx];
 }
 
-function exibirModalDetalhesDia(iso, dia, mes, ano, qtd, estrelasStr) {
+function exibirModalDetalhesDia(iso, dia, mes, ano, qtd) {
   let modal = document.getElementById('cal-dia-modal');
   if (!modal) {
     modal = document.createElement('div');
@@ -279,37 +387,37 @@ function exibirModalDetalhesDia(iso, dia, mes, ano, qtd, estrelasStr) {
         return xNorm === idNorm || String(x.id) === String(r.id);
       });
       const titulo = (r.titulo && r.titulo.trim()) ? r.titulo : (h ? h.titulo : 'História Concluída');
-      const emoji = (r.emoji && r.emoji !== '📖') ? r.emoji : (h ? h.emoji : (r.emoji || '📖'));
+      const capaHtml = htmlCapaHistoriaConcluida(r, h, titulo);
       const estCount = Math.min(5, Math.max(1, Number(r.estrelas) || 1));
-      const est = typeof renderEstrelas === 'function' ? renderEstrelas(estCount, 5) : '⭐'.repeat(estCount);
-      const vezesBadge = r.qtd > 1 ? `<span class="cal-modal-vezes" style="margin-left:6px;font-size:0.8rem;background:rgba(255,107,53,0.15);color:#FF6B35;padding:2px 8px;border-radius:12px;font-weight:700;">🔁 ${r.qtd}x lida</span>` : '';
+      const est = renderEstrelasProgresso(estCount, 5);
+      const vezesBadge = r.qtd > 1 ? `<span class="cal-modal-vezes">Lida ${r.qtd}x</span>` : '';
 
-      historiasHtml += `<li><span class="cal-modal-h-emoji">${emoji}</span> <div class="cal-modal-h-info"><strong>${titulo}${vezesBadge}</strong><span class="cal-modal-h-est">${est}</span></div></li>`;
+      historiasHtml += `<li><span class="cal-modal-h-emoji">${capaHtml}</span> <div class="cal-modal-h-info"><strong>${titulo}${vezesBadge}</strong><span class="cal-modal-h-est">${est}</span></div></li>`;
     });
     historiasHtml += '</ul>';
   } else if (qtd > 0) {
-    historiasHtml = `<p class="cal-modal-info-texto">📚 ${qtd} história${qtd > 1 ? 's' : ''} concluída${qtd > 1 ? 's' : ''} neste dia!</p>`;
+    historiasHtml = `<p class="cal-modal-info-texto">${qtd} história${qtd > 1 ? 's' : ''} concluída${qtd > 1 ? 's' : ''} neste dia.</p>`;
   } else {
-    historiasHtml = `<p class="cal-modal-vazio">Nenhuma história lida neste dia ainda. Que tal ler uma hoje? </p>`;
+    historiasHtml = `<p class="cal-modal-vazio">Nenhuma história neste dia ainda. A Lumi sugere: que tal ler uma hoje?</p>`;
   }
 
+  const badgeEstrelas = qtd > 0 ? renderMiniEstrelasCalendario(qtd) : '<span class="cal-modal-sem-leitura">Sem leitura</span>';
 
   modal.innerHTML = `
     <div class="cal-modal-card">
       <button type="button" class="cal-modal-fechar" aria-label="Fechar detalhes">✕</button>
       <div class="cal-modal-header">
-        <span class="cal-modal-icon">📅</span>
+        <span class="cal-modal-icon">${icoProgresso('livro', { width: 28, height: 28, mod: 'modal' })}</span>
         <div class="cal-modal-data-wrap">
           <h4 class="cal-modal-data">${dataFormatada}</h4>
-          <span class="cal-modal-badge-estrelas">${estrelasStr || (qtd > 0 ? '⭐' : 'Sem leitura')}</span>
+          <span class="cal-modal-badge-estrelas">${badgeEstrelas}</span>
         </div>
       </div>
       <div class="cal-modal-body">
         <div class="cal-modal-secao">
-          <h5 class="cal-modal-subtitulo">📖 Histórias Lidas</h5>
+          <h5 class="cal-modal-subtitulo">${icoProgresso('livros', { width: 18, height: 18, mod: 'modal-sub' })} Histórias lidas</h5>
           ${historiasHtml}
         </div>
-       
       </div>
     </div>
   `;
@@ -375,7 +483,8 @@ function renderizarCalendarioAtividade() {
     const nivel = nivelAtividadeDia(qtd);
     const futuro = iso > hojeIso;
     const hoje = iso === hojeIso;
-    const estrelasStr = obterEstrelasPorDia(qtd);
+    const estrelasHtml = renderMiniEstrelasCalendario(qtd);
+    const resumoEstrelas = labelEstrelasDia(qtd);
 
     const slotIndex = offset + (dia - 1);
     const semanaIndex = Math.floor(slotIndex / 7);
@@ -390,18 +499,18 @@ function renderizarCalendarioAtividade() {
     ].filter(Boolean).join(' ');
 
     const label = qtd
-      ? `${dia} — ${qtd} história${qtd > 1 ? 's' : ''} concluída${qtd > 1 ? 's' : ''} (${estrelasStr})`
+      ? `${dia} — ${qtd} história${qtd > 1 ? 's' : ''} concluída${qtd > 1 ? 's' : ''} (${resumoEstrelas})`
       : `${dia} — sem atividade`;
 
     const ehUltimoDiaDaSemana = ((slotIndex + 1) % 7 === 0) || (dia === diasNoMes && ehDiaSemanaPerfeita);
     const seloHtml = (ehDiaSemanaPerfeita && ehUltimoDiaDaSemana)
-      ? '<span class="cal-selo-semana" title="Semana Perfeita de Leitura! 🏆" aria-label="Semana Perfeita">👑</span>'
+      ? `<span class="cal-selo-semana" title="Semana perfeita de leitura" aria-label="Semana perfeita">${icoProgresso('trofeu', { width: 14, height: 14, className: 'cal-selo-trofeu-img', alt: '' })}</span>`
       : '';
 
     grade += `
       <div class="${classes}" role="gridcell" tabindex="0" data-iso="${iso}" data-dia="${dia}" data-qtd="${qtd}" aria-label="${label}" title="${label}">
         <span class="cal-dia-num">${dia}</span>
-        ${estrelasStr ? `<span class="cal-dia-estrelas" data-qtd="${qtd}" aria-hidden="true">${estrelasStr}</span>` : ''}
+        ${estrelasHtml}
         ${hoje ? '<span class="cal-dia-hoje-badge">HOJE</span>' : ''}
         ${seloHtml}
       </div>
@@ -411,29 +520,33 @@ function renderizarCalendarioAtividade() {
   const tituloMes = `${MESES_PT[mes]} ${ano}`;
   const fraseMotivacional = obterFraseMotivacionalRaposa(streak, totalMes);
 
-  const topoCalendario = streak > 0
+  const blocoStreak = streak > 0
     ? `
-    <div class="calendario-topo-bar">
       <div class="calendario-streak-badge">
         <span class="icon res-icon fire"></span>
-
         <div class="cal-streak-info">
-          <span class="cal-streak-valor">
-            ${streak} ${streak === 1 ? 'dia seguido' : 'dias seguidos'}
-          </span>
-
-          <span class="cal-streak-label">
-            Sequência de Leitura
-          </span>
+          <span class="cal-streak-valor">${streak} ${streak === 1 ? 'dia seguido' : 'dias seguidos'}</span>
+          <span class="cal-streak-label">Sequência de leitura</span>
         </div>
-      </div>
+      </div>`
+    : `
+      <div class="calendario-streak-badge calendario-streak-badge--convite">
+        <img src="midia/IconeRaposa.png" alt="" class="cal-lumi-mini" width="32" height="32" />
+        <div class="cal-streak-info">
+          <span class="cal-streak-valor">Hora de ler!</span>
+          <span class="cal-streak-label">Uma história hoje já ilumina o calendário</span>
+        </div>
+      </div>`;
 
-      ${temAlgumaSemanaPerfeita
-      ? '<div class="calendario-selo-topo">👑 Semana Perfeita!</div>'
-      : ''}
+  const topoCalendario = `
+    <div class="calendario-topo-bar">
+      ${blocoStreak}
+      ${temAlgumaSemanaPerfeita ? `<div class="calendario-selo-topo">${htmlSeloTrofeu('Semana perfeita!')}</div>` : ''}
     </div>
-  `
-    : '';
+    <div class="calendario-lumi-frase">
+      <img src="midia/IconeRaposa.png" alt="" class="cal-lumi-mini" width="28" height="28" />
+      <p>${fraseMotivacional.trim()}</p>
+    </div>`;
 
   el.innerHTML = `
   ${topoCalendario}
@@ -452,7 +565,7 @@ function renderizarCalendarioAtividade() {
       ${grade}
     </div>
     <div class="calendario-legenda">
-      <span>Menos ⭐</span>
+      <span class="cal-legenda-label">Menos ${icoProgresso('estrela', { width: 12, height: 12, alt: '' })}</span>
       <div class="calendario-legenda-cores">
         <span class="cal-legenda-amostra" style="background:#F3F4F6"></span>
         <span class="cal-legenda-amostra cal-dia-nivel-1"></span>
@@ -460,7 +573,7 @@ function renderizarCalendarioAtividade() {
         <span class="cal-legenda-amostra cal-dia-nivel-3"></span>
         <span class="cal-legenda-amostra cal-dia-nivel-4"></span>
       </div>
-      <span>Mais ⭐⭐⭐⭐</span>
+      <span class="cal-legenda-label cal-legenda-label-mais">Mais ${renderMiniEstrelasCalendario(4)}</span>
     </div>
     <p class="calendario-resumo">${totalMes > 0
       ? `${totalMes} história${totalMes > 1 ? 's' : ''} concluída${totalMes > 1 ? 's' : ''} neste mês`
@@ -482,8 +595,7 @@ function renderizarCalendarioAtividade() {
       const iso = diaEl.getAttribute('data-iso');
       const diaNum = Number(diaEl.getAttribute('data-dia'));
       const qtdNum = Number(diaEl.getAttribute('data-qtd')) || 0;
-      const est = obterEstrelasPorDia(qtdNum);
-      exibirModalDetalhesDia(iso, diaNum, mes, ano, qtdNum, est);
+      exibirModalDetalhesDia(iso, diaNum, mes, ano, qtdNum);
     };
     diaEl.addEventListener('click', handleDiaClick);
     diaEl.addEventListener('keydown', (e) => {
@@ -502,7 +614,7 @@ const ETAGES_RAPOSA = [
     minEstrelas: 0,
     maxEstrelas: 10,
     imagem: 'midia/raposa/raposa1.png',
-    mensagem: 'A Lumi acabou de nascer! Continue lendo histórias e completando minigames para ajudá-la a crescer. '
+    mensagem: '{nome}, acabei de nascer! Cada história que lemos juntos me deixa mais forte.'
   },
   {
     id: 'jovem',
@@ -510,7 +622,7 @@ const ETAGES_RAPOSA = [
     minEstrelas: 10,
     maxEstrelas: 25,
     imagem: 'midia/raposa/raposa2.png',
-    mensagem: 'A Lumi está crescendo forte e curiosa! Continue praticando para ver o próximo estágio. '
+    mensagem: '{nome}, estou crescendo e cheia de curiosidade! Obrigada por ler comigo.'
   },
   {
     id: 'aventureira',
@@ -518,7 +630,7 @@ const ETAGES_RAPOSA = [
     minEstrelas: 25,
     maxEstrelas: 45,
     imagem: 'midia/raposa/raposa3.png',
-    mensagem: 'Que incrível! A Lumi agora é uma grande aventureira explorando novos mundos! '
+    mensagem: '{nome}, agora sou uma aventureira! Você me levou até aqui com suas leituras.'
   },
   {
     id: 'mestre',
@@ -526,7 +638,7 @@ const ETAGES_RAPOSA = [
     minEstrelas: 45,
     maxEstrelas: Infinity,
     imagem: 'midia/raposa/raposa4.png',
-    mensagem: 'Parabéns! A Lumi atingiu a sabedoria máxima e se tornou uma grande Mestre! '
+    mensagem: '{nome}, chegamos juntos ao topo! Obrigada por essa jornada de leitura.'
   }
 ];
 
@@ -540,7 +652,7 @@ function obterEstagioRaposa(estrelas) {
 
 function labelNivel(n) {
   const estagio = obterEstagioRaposa(estado.totalEstrelas);
-  return estagio ? estagio.nome : 'Raposa Filhote';
+  return estagio ? estagio.nome : 'Lumi — Filhote';
 }
 
 function atualizarBarraExperiencia() {
@@ -551,6 +663,15 @@ function atualizarEvolucaoRaposa() {
   const total = estado.totalEstrelas || 0;
   const estagio = obterEstagioRaposa(total);
 
+  const nomeCrianca = estado.perfil?.nome || 'explorador';
+
+  if (ultimoEstagioRaposaExibido && ultimoEstagioRaposaExibido !== estagio.id) {
+    if (typeof mostrarToast === 'function') {
+      mostrarToast(`A Lumi evoluiu, ${nomeCrianca}! Agora ela é ${estagio.nome}.`);
+    }
+  }
+  ultimoEstagioRaposaExibido = estagio.id;
+
   const imgEl = document.getElementById('raposa-img');
   const nomeEl = document.getElementById('raposa-fase-nome');
   const msgEl = document.getElementById('raposa-mensagem');
@@ -558,18 +679,19 @@ function atualizarEvolucaoRaposa() {
   const estrelasTextoEl = document.getElementById('raposa-estrelas-texto');
   const proximoTextoEl = document.getElementById('raposa-proximo-texto');
   const fillEl = document.getElementById('raposa-bar-fill');
+  const icoEstrela = icoProgresso('estrela', { width: 14, height: 14, alt: '' });
 
   if (imgEl) {
     imgEl.src = estagio.imagem;
     imgEl.alt = estagio.nome;
   }
   if (nomeEl) nomeEl.textContent = estagio.nome;
-  if (msgEl) msgEl.textContent = estagio.mensagem;
-  if (badgeEl) badgeEl.textContent = `🦊 ${estagio.nome}`;
+  if (msgEl) msgEl.textContent = estagio.mensagem.replace('{nome}', nomeCrianca);
+  if (badgeEl) badgeEl.textContent = estagio.nome;
 
   if (estagio.maxEstrelas === Infinity) {
-    if (estrelasTextoEl) estrelasTextoEl.textContent = `${total} ⭐ acumuladas`;
-    if (proximoTextoEl) proximoTextoEl.textContent = 'Estágio Máximo Alcançado! 🏆';
+    if (estrelasTextoEl) estrelasTextoEl.innerHTML = `${total} ${icoEstrela} acumuladas`;
+    if (proximoTextoEl) proximoTextoEl.innerHTML = `${htmlSeloTrofeu('Estágio máximo alcançado!')}`;
     if (fillEl) fillEl.style.width = '100%';
   } else {
     const estrelasNoEstagio = total - estagio.minEstrelas;
@@ -580,8 +702,8 @@ function atualizarEvolucaoRaposa() {
     const proximoEstagio = ETAGES_RAPOSA.find(e => e.minEstrelas === estagio.maxEstrelas);
     const nomeProximo = proximoEstagio ? proximoEstagio.nome : 'Próximo Estágio';
 
-    if (estrelasTextoEl) estrelasTextoEl.textContent = `${total} / ${estagio.maxEstrelas} ⭐`;
-    if (proximoTextoEl) proximoTextoEl.textContent = `Faltam ${faltam} ⭐ para ${nomeProximo}`;
+    if (estrelasTextoEl) estrelasTextoEl.innerHTML = `${total} / ${estagio.maxEstrelas} ${icoEstrela}`;
+    if (proximoTextoEl) proximoTextoEl.innerHTML = `Faltam ${faltam} ${icoEstrela} para ${nomeProximo}`;
     if (fillEl) fillEl.style.width = `${pct}%`;
   }
 
@@ -592,11 +714,15 @@ function atualizarEvolucaoRaposa() {
     if (el) {
       const estaAlcancado = index <= indexAtual;
       el.classList.toggle('ativo', estaAlcancado);
-      const iconEl = el.querySelector('.icon');
-      if (iconEl) {
-        iconEl.classList.toggle('trofeuestrela', estaAlcancado);
-        iconEl.classList.toggle('interrogacao', !estaAlcancado);
-        iconEl.classList.toggle('interrogação', !estaAlcancado);
+      const stageData = ETAGES_RAPOSA.find(e => e.id === id);
+      const thumbEl = el.querySelector('.raposa-estagio-thumb');
+      if (thumbEl) {
+        thumbEl.src = estaAlcancado ? IMG_ESTAGIO_CONQUISTADO : IMG_ESTAGIO_BLOQUEADO;
+        thumbEl.alt = estaAlcancado ? 'Conquistado' : 'Ainda não conquistado';
+        thumbEl.classList.toggle('bloqueado', !estaAlcancado);
+      }
+      if (stageData) {
+        el.title = `${stageData.nome} (${stageData.minEstrelas}+ estrelas)`;
       }
     }
   });
@@ -610,8 +736,8 @@ const LISTA_CONQUISTAS = [
   {
     id: 'primeira_leitura',
     titulo: 'Primeiro Passo',
-    descricao: 'Ler 1 história',
-    icone: '📖',
+    descricao: 'Termine sua primeira história com a Lumi.',
+    iconeImg: 'midia/book-menu.png',
     recompensa: 1,
     cor: '#4CAF50',
     eval: (st) => {
@@ -622,8 +748,8 @@ const LISTA_CONQUISTAS = [
   {
     id: 'sequencia_minigame_perfeito',
     titulo: 'Mestre dos Jogos',
-    descricao: 'Completar uma sequência de minigames sem errar',
-    icone: '🎮',
+    descricao: 'Complete uma sequência de minigames sem errar nenhuma.',
+    iconeImg: 'midia/qmsomos/gamepad.png',
     recompensa: 2,
     cor: '#FF9800',
     eval: (st) => {
@@ -634,8 +760,8 @@ const LISTA_CONQUISTAS = [
   {
     id: 'leitor_dedicado',
     titulo: 'Leitor Dedicado',
-    descricao: 'Ler 5 histórias',
-    icone: '📚',
+    descricao: 'Leia 5 histórias — a Lumi adora acompanhar cada uma.',
+    iconeImg: 'midia/qmsomos/book-stack.png',
     recompensa: 1,
     cor: '#2196F3',
     eval: (st) => {
@@ -646,8 +772,8 @@ const LISTA_CONQUISTAS = [
   {
     id: 'devorador_de_livros',
     titulo: 'Devorador de Livros',
-    descricao: 'Ler 10 histórias',
-    icone: '🏰',
+    descricao: 'Chegue a 10 histórias lidas. Você está montando uma biblioteca!',
+    iconeImg: 'midia/qmsomos/book-stack.png',
     recompensa: 2,
     cor: '#9C27B0',
     eval: (st) => {
@@ -658,8 +784,8 @@ const LISTA_CONQUISTAS = [
   {
     id: 'explorador_generos',
     titulo: 'Explorador de Gêneros',
-    descricao: 'Ler histórias de pelo menos 2 gêneros diferentes',
-    icone: '🎭',
+    descricao: 'Leia histórias de pelo menos 2 gêneros diferentes.',
+    iconeImg: 'midia/qmsomos/book.png',
     recompensa: 1,
     cor: '#00BCD4',
     eval: (st) => {
@@ -671,8 +797,8 @@ const LISTA_CONQUISTAS = [
   {
     id: 'foco_leitura',
     titulo: 'Maratona de Leitura',
-    descricao: 'Acumular 15 minutos de tempo total de leitura',
-    icone: '⏱️',
+    descricao: 'Some 15 minutos de tempo total lendo com calma.',
+    iconeImg: 'midia/book-menu.png',
     recompensa: 1,
     cor: '#3F51B5',
     eval: (st) => {
@@ -683,8 +809,8 @@ const LISTA_CONQUISTAS = [
   {
     id: 'minigamer_ativo',
     titulo: 'Desafiante dos Jogos',
-    descricao: 'Jogar 5 minigames',
-    icone: '🕹️',
+    descricao: 'Jogue 5 minigames e treine o que aprendeu nas histórias.',
+    iconeImg: 'midia/qmsomos/gamepad.png',
     recompensa: 1,
     cor: '#673AB7',
     eval: (st) => {
@@ -695,8 +821,8 @@ const LISTA_CONQUISTAS = [
   {
     id: 'sequencia_dias',
     titulo: 'Hábito Mágico',
-    descricao: 'Ler em 3 dias seguidos',
-    icone: '🔥',
+    descricao: 'Leia em 3 dias seguidos e crie um ritmo com a Lumi.',
+    iconeImg: 'midia/qmsomos/rising.png',
     recompensa: 2,
     cor: '#FF5722',
     eval: (st) => {
@@ -738,7 +864,7 @@ function verificarEAtualizarConquistas(silencioso = false) {
 
       if (!silencioso && typeof mostrarToast === 'function') {
         const coracoesTexto = conquista.recompensa === 1 ? '1 coração' : `${conquista.recompensa} corações`;
-        mostrarToast(`🏆 Conquista Desbloqueada: ${conquista.titulo}! Você ganhou ${coracoesTexto}! ❤️`);
+        mostrarToast(`Conquista desbloqueada: ${conquista.titulo}! Você ganhou ${coracoesTexto}.`);
       }
     }
   });
@@ -791,7 +917,7 @@ function renderizarConquistas() {
 
   const hintEl = document.createElement('div');
   hintEl.className = 'conquistas-dica-click';
-  hintEl.innerHTML = '👆 Clique em uma conquista para ver sua descrição ao lado:';
+  hintEl.textContent = 'Toque num medalhão — a Lumi conta o desafio.';
   circlesCol.appendChild(hintEl);
 
   const roundGrid = document.createElement('div');
@@ -823,6 +949,12 @@ function renderizarConquistas() {
     });
 
     const recText = conquista.recompensa > 0 ? (conquista.recompensa === 1 ? '1 coração' : `${conquista.recompensa} corações`) : null;
+    const falta = Math.max(0, conquista.objetivo - conquista.progressoAtual);
+    const msgLumi = conquista.desbloqueada
+      ? 'A Lumi comemora com você — medalhão conquistado!'
+      : (falta > 0
+        ? `A Lumi torce por você! Faltam só ${falta} para este medalhão.`
+        : 'A Lumi torce por você — quase lá!');
 
     detalhesContainer.innerHTML = `
       <div class="conquista-detalhes-card ${conquista.desbloqueada ? 'card-desbloqueado' : 'card-bloqueado'}">
@@ -835,6 +967,7 @@ function renderizarConquistas() {
           </div>
         </div>
 
+        <p class="conquista-detalhes-lumi">${msgLumi}</p>
         <p class="conquista-detalhes-descricao">${conquista.descricao}</p>
 
         <div class="conquista-detalhes-progresso">
@@ -846,7 +979,7 @@ function renderizarConquistas() {
           </div>
         </div>
 
-        ${recText ? `<div class="conquista-detalhes-meta"><span class="conquista-detalhes-tag recompensa">🎁 Recompensa: +${recText} ❤️</span></div>` : ''}
+        ${recText ? `<div class="conquista-detalhes-meta"><span class="conquista-detalhes-tag recompensa">Recompensa: +${recText}</span></div>` : ''}
       </div>
     `;
 
@@ -863,7 +996,7 @@ function renderizarConquistas() {
           <span>${conquista.desbloqueada ? '🔓' : '🔒'}</span>
         </div>
         <div class="conquista-round-icon-wrap">
-          <span class="conquista-round-icone">${conquista.icone}</span>
+          ${renderIconeConquista(conquista)}
         </div>
       </button>
       <div class="conquista-round-titulo">${conquista.titulo}</div>

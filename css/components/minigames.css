@@ -57,14 +57,14 @@
 }
 
 .hc-tag.ia-badge {
-  background: linear-gradient(135deg, #7C3AED, #EC4899);
+  background: #C45C26;
   color: #fff;
   font-weight: 700;
   border: none;
 }
 
 .hc-tag.ia-badge-local {
-  background: linear-gradient(135deg, #D97706, #F59E0B);
+  background: #A16207;
   color: #fff;
   cursor: help;
 }

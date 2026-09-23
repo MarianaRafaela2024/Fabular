@@ -401,7 +401,7 @@ function irParaPaginaLivro(num) {
 function lerTextoCompletoHistoria(opcoes) {
   const h = estado.historiaAtual;
   if (!h) {
-    mostrarToast('Escolha uma história primeiro! 📚');
+    mostrarToast('Escolha uma história primeiro.');
     return;
   }
 

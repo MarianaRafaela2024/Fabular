@@ -62,19 +62,19 @@
 
       <div class="login-logo" aria-label="Mundo das Histórias">
         <img class="login-logo-icon" src="midia/iconeRaposa.png" alt="Logo Raposa">
-        <h1 class="login-titulo">Fabular - Leitura Gamificada</h1>
-        <p class="login-subtitulo">Aventuras de leitura feitas pra você!</p>
+        <h1 class="login-titulo">Fabular</h1>
+        <p class="login-subtitulo">A Lumi te espera. Vamos ler?</p>
       </div>
 
       <div class="login-card oculto" id="crianca-card" role="main">
-        <h2 class="login-card-titulo">👋 Quem é você?</h2>
+        <h2 class="login-card-titulo">Quem vai ler hoje?</h2>
 
         <!-- Nome -->
         <div class="campo-grupo">
           <label class="campo-label" for="input-nome">Seu nome ou apelido</label>
           <input type="text" id="input-nome" class="campo-input" placeholder="Ex: Lulú, Bento, Ana..." maxlength="20"
             autocomplete="given-name" aria-required="true" />
-          <span class="campo-erro oculto" id="erro-nome" role="alert">Por favor, escreva seu nome! 😊</span>
+          <span class="campo-erro oculto" id="erro-nome" role="alert">Escreva seu nome para a gente te conhecer.</span>
         </div>
 
         <!-- Avatar -->
@@ -103,7 +103,7 @@
 
         <!-- Data de nascimento -->
         <div class="campo-grupo">
-          <label class="campo-label" for="input-nascimento">🎂 Data de nascimento</label>
+          <label class="campo-label" for="input-nascimento">Data de nascimento</label>
           <input type="date" id="input-nascimento" class="campo-input" aria-label="Data de nascimento"
             aria-required="true" required />
           <span class="campo-erro oculto" id="erro-nascimento" role="alert">Informe a data de nascimento.</span>
@@ -114,26 +114,26 @@
         <div class="campo-grupo">
           <label class="campo-label" id="label-genero">Gênero de história favorito</label>
           <div class="chip-grupo" id="genero-grupo" role="radiogroup" aria-labelledby="label-genero">
-            <button class="chip ativo" data-genero="narrativo" aria-pressed="true">📖 Narrativo</button>
-            <button class="chip" data-genero="poetico" aria-pressed="false">🎵 Poético</button>
-            <button class="chip" data-genero="instrucional" aria-pressed="false">📋 Instrucional</button>
-            <button class="chip" data-genero="descritivo" aria-pressed="false">🔍 Descritivo</button>
-            <button class="chip" data-genero="informativo" aria-pressed="false">💡 Informativo</button>
+            <button class="chip ativo" data-genero="narrativo" aria-pressed="true">Narrativo</button>
+            <button class="chip" data-genero="poetico" aria-pressed="false">Poético</button>
+            <button class="chip" data-genero="instrucional" aria-pressed="false">Instrucional</button>
+            <button class="chip" data-genero="descritivo" aria-pressed="false">Descritivo</button>
+            <button class="chip" data-genero="informativo" aria-pressed="false">Informativo</button>
           </div>
         </div>
         <div class="campo-grupo">
-          <label class="campo-label" for="input-horario"> ⏰ Qual horário você mais gosta de brincar no Fabular?</label>
+          <label class="campo-label" for="input-horario">Qual horário você mais gosta de ler no Fabular?</label>
           <input type="time" id="input-horario" class="campo-input" aria-label="Horário preferido para jogar" />
         </div>
 
-        <button class="btn-principal btn-entrar" id="btn-iniciar" aria-label="Iniciar aventura">
-          🚀 Iniciar Aventura!
+        <button class="btn-principal btn-entrar" id="btn-iniciar" aria-label="Começar a ler">
+          Começar a ler
         </button>
         <button class="btn-secundario" id="btn-voltar-perfis" type="button">← Voltar para seleção de perfil</button>
       </div>
 
       <div class="login-card" id="responsavel-card" role="region" aria-label="Login do responsável">
-        <h2 class="login-card-titulo" id="resp-titulo">👤 Entrar</h2>
+        <h2 class="login-card-titulo" id="resp-titulo">Entrar</h2>
         <div id="resp-auth-box">
           <div id="resp-campos-cadastro" class="oculto">
             <div class="campo-grupo">
@@ -189,13 +189,13 @@
 
       <div class="login-card oculto" id="perfis-card" role="region" aria-label="Seleção de perfil infantil">
         <div class="perfis-header-wrap">
-          <h2 class="login-card-titulo" style="margin: 0;">👨‍👩‍👧 Troca de perfil</h2>
+          <h2 class="login-card-titulo" style="margin: 0;">Quem vai ler?</h2>
           <button class="btn-config-engrenagem" id="btn-ir-configuracoes" title="Configurações"
             aria-label="Configurações">
             <img src="midia/gear.png" alt="Configurações" class="img-engrenagem" />
           </button>
         </div>
-        <p class="tela-sub">Escolha uma criança para entrar no sistema.</p>
+        <p class="tela-sub">Escolha o perfil da criança.</p>
         <div id="perfis-lista" class="avatar-grid"></div>
         <button class="btn-secundario" id="btn-add-crianca">+ Adicionar criança</button>
         <button class="btn-principal" id="btn-logout-resp">Sair da conta do responsável</button>

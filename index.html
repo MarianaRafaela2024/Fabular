@@ -53,7 +53,7 @@
       <div class="header-esq">
         <div id="avatar-display" class="header-avatar"></div>
         <div class="header-info">
-          <span class="header-nome" id="header-nome">Aventureiro</span>
+          <span class="header-nome" id="header-nome">Olá</span>
           <span class="header-nivel" id="header-nivel">Iniciante</span>
         </div>
       </div>
@@ -129,7 +129,7 @@
         <section id="tela-biblioteca" class="tela-app ativa">
           <div class="tela-header">
             <h2>Biblioteca</h2>
-            <p class="tela-sub">Escolha uma aventura para começar!</p>
+            <p class="tela-sub">A Lumi está por aqui. Qual história vamos ler?</p>
           </div>
           <div class="filtros-bar">
             <div class="filtro-grupo">
@@ -238,7 +238,7 @@
         <section id="tela-resultado" class="tela-app">
           <div class="resultado-container">
             <div class="resultado-topo">
-              <div class="resultado-estrelas" id="resultado-estrelas">⭐⭐⭐⭐⭐</div>
+              <div class="resultado-estrelas" id="resultado-estrelas"></div>
               <h2 class="resultado-titulo" id="resultado-titulo">Incrível!</h2>
               <p class="resultado-msg" id="resultado-msg">Você completou a história!</p>
             </div>
@@ -263,7 +263,7 @@
               história para continuar!</p>
             <div class="resultado-botoes">
               <button class="btn-refazer" id="btn-refazer-atividade">🔄 Refazer Atividade e Reler</button>
-              <button class="btn-secundario" id="btn-jogar-novamente">📚 Jogar Outra História</button>
+              <button class="btn-secundario" id="btn-jogar-novamente">Ler outra história</button>
               <button class="btn-principal" id="btn-ver-progresso">🏆 Ver Progresso</button>
             </div>
           </div>
@@ -273,47 +273,47 @@
         <section id="tela-progresso" class="tela-app">
           <div class="tela-header">
             <h2>Meu Progresso</h2>
-            <p class="tela-sub" id="progresso-sub">Continue assim, você está indo bem!</p>
+            <p class="tela-sub" id="progresso-sub">A Lumi está por aqui. Vamos ver como vai a aventura?</p>
+            <p class="progresso-sub-stats" id="progresso-sub-stats" aria-live="polite"></p>
           </div>
 
           <div class="progresso-secoes">
             <div class="progresso-secao">
               <div class="raposa-evolucao-card" id="raposa-evolucao-card">
                 <div class="raposa-imagem-wrapper">
-                  <img id="raposa-img" src="midia/raposa/raposa1.png" alt="Raposa Filhote" class="raposa-img" />
+                  <img id="raposa-img" src="midia/raposa/raposa1.png" alt="Lumi — Filhote" class="raposa-img" />
                 </div>
                 <div class="raposa-detalhes">
-                  <div class="raposa-fase-badge" id="raposa-fase-badge"> Raposa Filhote</div>
-                  <p class="raposa-mensagem" id="raposa-mensagem">Sua raposinha acabou de nascer! Continue lendo
-                    histórias e completando minigames para ajudá-la a crescer. </p>
+                  <div class="raposa-fase-badge" id="raposa-fase-badge">Lumi — Filhote</div>
+                  <p class="raposa-mensagem" id="raposa-mensagem">A Lumi acabou de nascer! Continue lendo histórias e
+                    completando minigames para ajudá-la a crescer.</p>
                   <div class="raposa-progresso-bar-wrap">
                     <div class="raposa-progresso-info">
-                      <span class="raposa-estrelas-atual" id="raposa-estrelas-texto">0 / 10 ⭐</span>
-                      <span class="raposa-proximo-estagio" id="raposa-proximo-texto">Faltam 10 ⭐ para Raposa
-                        Jovem</span>
+                      <span class="raposa-estrelas-atual" id="raposa-estrelas-texto">0 / 10 <img src="midia/estrela.png" alt="" class="prog-ico" width="14" height="14"></span>
+                      <span class="raposa-proximo-estagio" id="raposa-proximo-texto">Faltam 10 <img src="midia/estrela.png" alt="" class="prog-ico" width="14" height="14"> para Lumi — Jovem</span>
                     </div>
                     <div class="raposa-bar-track">
                       <div class="raposa-bar-fill" id="raposa-bar-fill"></div>
                     </div>
                   </div>
                   <div class="raposa-estagios-mini">
-                    <div class="raposa-estagio-step" id="res-filhote" title="Raposa Filhote (0+ ⭐)">
-                      <span class="icon res-icon trofeuestrela"></span>
+                    <div class="raposa-estagio-step ativo" id="res-filhote" title="Lumi — Filhote (0+ estrelas)">
+                      <img class="raposa-estagio-thumb" src="midia/trophy-menu.png" alt="Conquistado" width="36" height="36" />
                       <span class="res-nome">Filhote</span>
                     </div>
                     <div class="raposa-estagio-linha"></div>
-                    <div class="raposa-estagio-step" id="res-jovem" title="Raposa Jovem (10+ ⭐)">
-                      <span class="icon res-icon interrogacao"></span>
+                    <div class="raposa-estagio-step" id="res-jovem" title="Lumi — Jovem (10+ estrelas)">
+                      <img class="raposa-estagio-thumb bloqueado" src="midia/question.svg" alt="Ainda não conquistado" width="36" height="36" />
                       <span class="res-nome">Jovem</span>
                     </div>
                     <div class="raposa-estagio-linha"></div>
-                    <div class="raposa-estagio-step" id="res-aventureira" title="Raposa Aventureira (25+ ⭐)">
-                      <span class="icon res-icon interrogacao"></span>
+                    <div class="raposa-estagio-step" id="res-aventureira" title="Lumi — Aventureira (25+ estrelas)">
+                      <img class="raposa-estagio-thumb bloqueado" src="midia/question.svg" alt="Ainda não conquistado" width="36" height="36" />
                       <span class="res-nome">Aventureira</span>
                     </div>
                     <div class="raposa-estagio-linha"></div>
-                    <div class="raposa-estagio-step" id="res-mestre" title="Raposa Mestre (45+ ⭐)">
-                      <span class="icon res-icon interrogacao"></span>
+                    <div class="raposa-estagio-step" id="res-mestre" title="Lumi — Mestre (45+ estrelas)">
+                      <img class="raposa-estagio-thumb bloqueado" src="midia/question.svg" alt="Ainda não conquistado" width="36" height="36" />
                       <span class="res-nome">Mestre</span>
                     </div>
                   </div>
@@ -325,21 +325,19 @@
             <div class="progresso-secao progresso-secao-conquistas">
               <div class="conquistas-header-bar">
                 <div class="conquistas-header-info">
-                  <h3>🏆 Conquistas</h3>
+                  <h3 class="prog-secao-titulo"><img src="midia/trophy-menu.png" alt="" class="prog-ico prog-ico--titulo" width="22" height="22"> Conquistas</h3>
+                  <p class="conquistas-fio-lumi">Medalhas da sua aventura de leitura</p>
                 </div>
               </div>
 
-              <!-- GRID DE CARDS DE CONQUISTAS -->
               <div class="conquistas-grid" id="conquistas-grid"></div>
             </div>
 
             <div class="progresso-secao progresso-secao-historias">
-              <h3>📖 Histórias Concluídas</h3>
+              <h3 class="prog-secao-titulo"><img src="midia/book-menu.png" alt="" class="prog-ico prog-ico--titulo" width="22" height="22"> Histórias Concluídas</h3>
               <div class="progresso-historias-layout">
                 <div class="historias-concluidas-wrap">
-                  <div class="historias-concluidas" id="historias-concluidas">
-                    <p class="vazio-msg">Nenhuma história concluída ainda. Comece a ler!</p>
-                  </div>
+                  <div class="historias-concluidas" id="historias-concluidas"></div>
                 </div>
                 <aside class="calendario-atividade" id="calendario-atividade"
                   aria-label="Calendário de atividade de leitura"></aside>

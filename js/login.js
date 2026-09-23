@@ -271,7 +271,7 @@
       if (camposCadastro) camposCadastro.classList.toggle('oculto', !isCadastro);
       if (campoConfirmarSenha) campoConfirmarSenha.classList.toggle('oculto', !isCadastro);
       if (linkEsqueci) linkEsqueci.classList.toggle('oculto', isCadastro);
-      if (titulo) titulo.textContent = isCadastro ? '📝 Criar conta' : '👤 Entrar';
+      if (titulo) titulo.textContent = isCadastro ? 'Criar conta' : 'Entrar';
       if (linkAlternar) {
         if (isCadastro) {
           linkAlternar.innerHTML = 'Já tem uma conta? <button class="link-inline" id="btn-ir-login" type="button">Entrar</button>';
@@ -449,7 +449,7 @@
       if (!perfisApi || perfisApi.length === 0) {
         const msgVazia = document.createElement('p');
         msgVazia.style.cssText = 'grid-column: 1/-1; text-align: center; color: #666; font-size: 0.9rem; padding: 1rem;';
-        msgVazia.textContent = 'Nenhuma criança cadastrada ainda. Clique abaixo para adicionar!';
+        msgVazia.textContent = 'Ainda não tem criança cadastrada. Toque abaixo para adicionar.';
         lista.appendChild(msgVazia);
       } else {
         perfisApi.forEach((p) => {

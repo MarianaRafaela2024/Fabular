@@ -20,7 +20,7 @@ function renderizarBiblioteca() {
   });
 
   if (lista.length === 0) {
-    grid.innerHTML = '<p class="vazio-msg" style="grid-column:1/-1">Nenhuma história encontrada com esses filtros. Tente outros! 🔍</p>';
+    grid.innerHTML = '<p class="vazio-msg" style="grid-column:1/-1">Não achei história com isso. Quer tentar outro gênero?</p>';
     return;
   }
 
@@ -39,20 +39,23 @@ function renderizarBiblioteca() {
       ? `<img src="${srcCapa}" alt="${h.titulo}" class="hc-capa-img" onerror="this.parentElement.classList.add('hc-emoji--placeholder'); this.remove();">`
       : `${h.emoji}`;
 
+    const meta = [labelGenero(h.genero), h.duracao].filter(Boolean).join(' · ');
+    const badges = [
+      (h.origem === 'ia' || h.criancaId) ? '<span class="hc-tag ia-badge">Criada agora</span>' : '',
+      String(h.id).startsWith('local-') ? '<span class="hc-tag ia-badge ia-badge-local" title="Salva neste aparelho — vincule o perfil ao responsável para sincronizar">Neste aparelho</span>' : '',
+      concluida ? '<span class="hc-tag concluida">Já lida</span>' : ''
+    ].filter(Boolean).join('');
+
     card.innerHTML = `
       <div class="hc-emoji">${capaHtml}</div>
-      <div class="hc-titulo">${h.titulo}</div>
-      <div class="hc-tags">
-        <span class="hc-tag genero">${labelGenero(h.genero)}</span>
-        <span class="hc-tag faixa">${labelFaixa(h.faixa)}</span>
-        <span class="hc-tag duracao">⏱ ${h.duracao}</span>
-        ${(h.origem === 'ia' || h.criancaId) ? '<span class="hc-tag ia-badge">🤖 IA</span>' : ''}
-        ${String(h.id).startsWith('local-') ? '<span class="hc-tag ia-badge ia-badge-local" title="Salva localmente — vincule o perfil ao responsável para sincronizar">🤖 IA · local</span>' : ''}
-        ${concluida ? `<span class="hc-tag concluida">✅ Concluída</span>` : ''}
-      </div>
-      <div class="hc-rodape">
-        <span class="hc-estrelas">${renderEstrelas(estrelas, 5)}</span>
-        <button class="hc-jogar" aria-label="Jogar ${h.titulo}">Jogar 🎮</button>
+      <div class="hc-corpo">
+        <div class="hc-titulo">${h.titulo}</div>
+        <p class="hc-meta">${meta}</p>
+        ${badges ? `<div class="hc-tags">${badges}</div>` : ''}
+        <div class="hc-rodape">
+          <span class="hc-estrelas">${renderEstrelas(estrelas, 5)}</span>
+          <button class="hc-jogar" aria-label="Ler ${h.titulo}">Ler</button>
+        </div>
       </div>
     `;
 
@@ -76,9 +79,9 @@ function labelFaixa(f) {
 
 function renderEstrelas(ganhas, total = 5) {
   const n = Math.max(0, Math.min(total, Number(ganhas) || 0));
-  let html = `<span class="estrelas-rating" aria-label="${n} de ${total} estrelas">`;
+  let html = `<span class="estrelas-rating estrelas-rating--img" aria-label="${n} de ${total} estrelas">`;
   for (let i = 0; i < total; i++) {
-    html += `<span class="estrela-icon ${i < n ? 'estrela-preenchida' : 'estrela-vazia'}" aria-hidden="true">★</span>`;
+    html += `<img src="midia/estrela.png" alt="" class="estrela-icon ${i < n ? 'estrela-preenchida-img' : 'estrela-vazia-img'}" width="18" height="18">`;
   }
   return html + '</span>';
 }

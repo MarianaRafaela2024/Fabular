@@ -417,7 +417,7 @@
           salvarJSON(CHAVE_SESSAO, { ...sessao, email: novoEmail });
           document.getElementById('config-resp-senha-atual').value = '';
           document.getElementById('config-resp-nova-senha').value = '';
-          setConfigMsg('', 'Dados do responsável atualizados com sucesso!');
+          setConfigMsg('', 'Pronto, salvamos seus dados.');
         } catch (e) {
           setConfigMsg(e.message || 'Falha ao salvar dados do responsável.', '');
         }
@@ -469,7 +469,7 @@
           preencherFormCriancaConfig(atualizado);
           atualizarPreviasAvatar(atualizado);
           await carregarRelatorioCrianca(sessao.responsavelId, atualizado);
-          setConfigMsg('', 'Dados da criança atualizados com sucesso!');
+          setConfigMsg('', 'Pronto, salvamos o perfil da criança.');
         } catch (e) {
           setConfigMsg(e.message || 'Falha ao salvar dados da criança.', '');
         }
