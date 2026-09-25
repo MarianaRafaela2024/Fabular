@@ -503,9 +503,21 @@
 
     const btnConfig = document.getElementById('btn-ir-configuracoes');
     if (btnConfig) {
-      btnConfig.onclick = () => {
-        window.location.href = 'configuracoes.html';
-      };
+      if (typeof configurarPortaoParental === 'function') {
+        configurarPortaoParental({
+          onSuccess: () => {
+            if (typeof marcarPortaoParentalOk === 'function') marcarPortaoParentalOk();
+            window.location.href = 'configuracoes.html';
+          }
+        });
+        btnConfig.onclick = () => {
+          if (typeof abrirPortaoParental === 'function') abrirPortaoParental();
+        };
+      } else {
+        btnConfig.onclick = () => {
+          window.location.href = 'configuracoes.html';
+        };
+      }
     }
   }
 

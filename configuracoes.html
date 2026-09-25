@@ -185,6 +185,23 @@
     </div>
   </div>
 
+  <div class="portao-overlay oculto" id="portao-parental-overlay" hidden role="dialog" aria-modal="true"
+    aria-labelledby="portao-titulo">
+    <div class="portao-card" id="portao-card">
+      <div class="portao-icone">🔐</div>
+      <h2 class="portao-titulo" id="portao-titulo">Área dos Responsáveis</h2>
+      <p class="portao-desc">Para acessar as configurações, resolva a conta abaixo:</p>
+      <div class="portao-conta" id="portao-conta" aria-live="polite"></div>
+      <div class="portao-input-wrap">
+        <input class="portao-input" id="portao-resposta" type="number" inputmode="numeric" placeholder="Sua resposta..."
+          autocomplete="off" aria-label="Resposta da conta">
+        <button class="btn-principal portao-btn-confirmar" id="portao-btn-confirmar">Confirmar</button>
+      </div>
+      <p class="portao-erro oculto" id="portao-erro" aria-live="assertive">❌ Resposta incorreta. Tente novamente!</p>
+      <button class="btn-secundario portao-btn-cancelar" id="portao-btn-cancelar">Cancelar</button>
+    </div>
+  </div>
+
   <div class="portao-overlay oculto" id="modal-excluir-conta" hidden>
     <div class="portao-card config-modal-perigo" role="dialog" aria-modal="true" aria-labelledby="modal-excluir-titulo">
       <div class="portao-icone" aria-hidden="true">⚠️</div>
@@ -200,6 +217,7 @@
 
   <script src="js/models/faixaEtaria.js"></script>
   <script src="js/utils/avatarUtils.js"></script>
+  <script src="js/portaoParental.js"></script>
   <script src="js/configuracoes.js"></script>
   <script>
     (function () {

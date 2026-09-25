@@ -838,9 +838,34 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  function iniciarPaginaConfiguracoes() {
     configurarAbasConfig();
     configurarEventosConfig();
     abrirConfiguracoes();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const jaPassou = typeof consumirPortaoParentalOk === 'function' && consumirPortaoParentalOk();
+    if (jaPassou) {
+      iniciarPaginaConfiguracoes();
+      return;
+    }
+
+    if (typeof configurarPortaoParental === 'function' && document.getElementById('portao-parental-overlay')) {
+      configurarPortaoParental({
+        onSuccess: iniciarPaginaConfiguracoes,
+        onCancel: () => {
+          if (sessionStorage.getItem('configVoltarBiblioteca') === '1') {
+            window.location.href = 'index.html';
+          } else {
+            window.location.href = 'login.html';
+          }
+        }
+      });
+      abrirPortaoParental();
+      return;
+    }
+
+    iniciarPaginaConfiguracoes();
   });
 })();
