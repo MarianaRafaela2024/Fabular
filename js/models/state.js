@@ -23,6 +23,8 @@ let estado = {
   minigamesPreset: null,
   mgAcertos: 0,
   mgErros: 0,
+  mgSessaoResultados: [],
+  mgReplayErros: false,
   iniciouEm: null,
   filtroGenero: 'todos',
   filtroFaixa: 'todos',

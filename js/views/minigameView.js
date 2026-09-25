@@ -4,6 +4,16 @@
 
 'use strict';
 
+function escMG(valor) {
+  return typeof escapeHtmlMG === 'function' ? escapeHtmlMG(valor) : String(valor == null ? '' : valor);
+}
+
+function tipoMinigameSessaoAtual() {
+  const spec = estado.minigamesPreset && estado.minigamesPreset[estado.minigameAtual];
+  const raw = (spec && (spec.tipo || spec.Tipo)) || (estado.minigamesLista && estado.minigamesLista[estado.minigameAtual]);
+  return typeof normalizarTipoMinigame === 'function' ? normalizarTipoMinigame(raw) : raw;
+}
+
 function obterTextoBaseHistoria(h) {
   if (!h) return '';
   if (typeof h.textoCompleto === 'string' && h.textoCompleto.trim()) {
@@ -45,6 +55,7 @@ function iniciarSequenciaMinigames() {
     return;
   }
   estado.modoLeituraCompleta = true;
+  if (typeof iniciarSessaoResultados === 'function') iniciarSessaoResultados();
   irParaTela('minigame');
   renderizarMinigame();
 }
@@ -80,21 +91,37 @@ function definirVisibilidadeBotao(el, visivel) {
 }
 
 function renderizarMinigame() {
-  const spec =
+  if (typeof limparMinigameAtivo === 'function') limparMinigameAtivo();
+
+  let spec =
     estado.minigamesPreset && estado.minigamesPreset[estado.minigameAtual]
       ? estado.minigamesPreset[estado.minigameAtual]
       : null;
-  const tipo =
+  let tipo =
     normalizarTipoMinigame((spec && (spec.tipo || spec.Tipo)) || estado.minigamesLista[estado.minigameAtual]);
-  const total = estado.minigamesLista.length;
   const h = estado.historiaAtual;
   const textoBase = obterTextoBaseHistoria(h);
   const fase = { texto: textoBase, cena: h?.cena || '' };
 
+  if (typeof podeMontarPayload === 'function' && !podeMontarPayload(tipo, h, spec)) {
+    const alt = typeof proximoTipoDisponivel === 'function' ? proximoTipoDisponivel(tipo) : null;
+    if (alt) {
+      tipo = normalizarTipoMinigame(alt);
+      spec = { tipo, pergunta: '' };
+      estado.minigamesLista[estado.minigameAtual] = tipo;
+      if (estado.minigamesPreset) estado.minigamesPreset[estado.minigameAtual] = spec;
+    }
+  }
+
   const tituloFora = document.getElementById('mg-titulo-label') || document.getElementById('mg-tipo-badge');
   if (tituloFora) tituloFora.textContent = nomeMinigame(tipo);
-  const contadorEl = document.getElementById('mg-contador');
-  if (contadorEl) contadorEl.textContent = `${estado.minigameAtual + 1} / ${total}`;
+  if (typeof atualizarBarraProgressoMG === 'function') {
+    atualizarBarraProgressoMG();
+  } else {
+    const total = estado.minigamesLista.length;
+    const contadorEl = document.getElementById('mg-contador');
+    if (contadorEl) contadorEl.textContent = `${estado.minigameAtual + 1} / ${total}`;
+  }
 
   document.getElementById('mg-feedback').classList.add('oculto');
   definirVisibilidadeBotao(document.getElementById('btn-proximo-mg'), false);
@@ -135,6 +162,11 @@ function mostrarRespostaEsperada(texto, container) {
 
 
 function mostrarFeedbackMG(ok, mostrarProximo = true) {
+  if (typeof registrarResultadoMinigame === 'function') {
+    registrarResultadoMinigame(tipoMinigameSessaoAtual(), ok);
+  }
+  if (typeof travarAreaMinigame === 'function') travarAreaMinigame();
+
   let zerouVidas = false;
   if (ok) {
     estado.mgAcertos = (estado.mgAcertos || 0) + 1;
@@ -222,10 +254,29 @@ function mostrarResultado(estrelas, tempoMin, acertosTotal) {
   if (statTempo) statTempo.textContent = `${tempoMin} min`;
 
   const statAcertos = document.getElementById('stat-acertos');
-  if (statAcertos) statAcertos.textContent = acertosTotal;
+  if (statAcertos) statAcertos.textContent = `${acertosTotal} / ${(estado.minigamesLista && estado.minigamesLista.length) || 5}`;
 
   const statNivel = document.getElementById('stat-nivel');
   if (statNivel) statNivel.textContent = estado.nivel || 'Iniciante';
+
+  const listaEl = document.getElementById('resultado-lista-jogos');
+  const sessao = (estado.mgSessaoResultados || []).filter(Boolean);
+  if (listaEl) {
+    if (sessao.length) {
+      listaEl.hidden = false;
+      listaEl.innerHTML = sessao.map((item) => {
+        const ok = !!item.acertou;
+        const nome = escMG(item.nome || nomeMinigame(item.tipo));
+        return `<li class="${ok ? 'mg-item-ok' : 'mg-item-erro'}"><span>${nome}</span><span>${ok ? '✅ Acertou' : '❌ Errou'}</span></li>`;
+      }).join('');
+    } else {
+      listaEl.hidden = true;
+      listaEl.innerHTML = '';
+    }
+  }
+
+  const temErro = sessao.some((item) => !item.acertou);
+  definirVisibilidadeBotao(document.getElementById('btn-refazer-erros'), temErro);
 
   const resultadoAviso = document.getElementById('resultado-aviso');
   if (resultadoAviso) resultadoAviso.classList.add('oculto');
@@ -240,8 +291,8 @@ function finalizarMinigames() {
   const totalJogos = estado.minigamesLista.length || 5;
   estado.minigamesJogados += totalJogos;
 
-  const acertosSessao = Math.min(5, Math.min(totalJogos, Math.max(0, Number(estado.mgAcertos) || 0)));
-  const errosSessao = Math.min(5, Math.max(0, estado.mgErros != null ? Number(estado.mgErros) : (totalJogos - acertosSessao)));
+  const acertosSessao = Math.min(totalJogos, Math.max(0, Number(estado.mgAcertos) || 0));
+  const errosSessao = Math.min(totalJogos, Math.max(0, estado.mgErros != null ? Number(estado.mgErros) : (totalJogos - acertosSessao)));
 
   estado.acertosMG = (Number(estado.acertosMG) || 0) + acertosSessao;
   estado.errosMG = (Number(estado.errosMG) || 0) + errosSessao;
@@ -285,9 +336,35 @@ function embaralhar(arr) {
   return copy;
 }
 
+function refazerMinigamesErrados() {
+  if (typeof verificarPodeJogarMinigame === 'function' && !verificarPodeJogarMinigame()) {
+    if (typeof mostrarModalVidasEsgotadas === 'function') mostrarModalVidasEsgotadas();
+    return;
+  }
+  const erros = (estado.mgSessaoResultados || []).filter((r) => r && !r.acertou);
+  if (!erros.length) {
+    mostrarToast('Você não errou nenhum jogo desta vez! 🌟');
+    return;
+  }
+  const presetsOrig = Array.isArray(estado.minigamesPreset) ? estado.minigamesPreset : [];
+  estado.minigamesLista = erros.map((r) => r.tipo);
+  estado.minigamesPreset = estado.minigamesLista.map((tipo) => {
+    const prev = presetsOrig.find((p) => p && chaveUnicaMinigame(p.tipo) === chaveUnicaMinigame(tipo));
+    return prev || { tipo, pergunta: '' };
+  });
+  estado.minigameAtual = 0;
+  estado.mgAcertos = 0;
+  estado.mgErros = 0;
+  if (typeof iniciarSessaoResultados === 'function') iniciarSessaoResultados();
+  estado.mgReplayErros = true;
+  irParaTela('minigame');
+  renderizarMinigame();
+}
+
 function prepararMinigamesPreset(h) {
   estado.mgAcertos = 0;
   estado.mgErros = 0;
+  if (typeof iniciarSessaoResultados === 'function') iniciarSessaoResultados();
 
   const faixa = h.faixa || (estado.perfil && estado.perfil.faixa) || 1;
   const genero = h.genero || (estado.perfil && estado.perfil.genero) || 'narrativo';
@@ -486,13 +563,17 @@ function aplicarCorDoPar(el, pairId) {
 
 function renderMemoria(fase, h, corpo, spec) {
   const limparTextoPar = (s) => String(s || '').replace(/\s*\(?par\s*\d+\)?/gi, '').replace(/[\s\-_]+$/, '').trim();
+  const maxPares = (typeof configFaixaMinigame === 'function' ? configFaixaMinigame().paresMemoria : 3) || 3;
 
   let pares;
   if (spec && Array.isArray(spec.pares) && spec.pares.length >= 2) {
     pares = enriquecerParesMemoria(spec.pares).map((p, i) => ({ id: i, palavra: limparTextoPar(p.palavra), emoji: p.emoji }));
   }
   if (!pares || pares.length < 2) {
-    const palavras = (h.palavrasChave || []).slice(0, 5);
+    const palavrasFonte = (typeof palavrasRelevantesHistoria === 'function'
+      ? palavrasRelevantesHistoria(h)
+      : (h.palavrasChave || [])).slice(0, Math.max(5, maxPares));
+    const palavras = palavrasFonte.slice(0, Math.max(2, maxPares));
     if (palavras.length < 2) { renderVerdadeiroFalso(fase, h, corpo, null); return; }
     pares = palavras.map((p, i) => {
       const pL = limparTextoPar(p);
@@ -504,7 +585,7 @@ function renderMemoria(fase, h, corpo, spec) {
     });
   }
 
-  pares = paresParaGradeMemoriaFechada(pares);
+  pares = paresParaGradeMemoriaFechada(pares.slice(0, maxPares));
 
   const cards = embaralhar([
     ...pares.map(p => ({ tipo: 'palavra', valor: p.palavra, pairId: p.id })),
@@ -539,7 +620,7 @@ function renderMemoria(fase, h, corpo, spec) {
     el.innerHTML = `
       <div class="mem-inner">
         <div class="mem-frente">?</div>
-        <div class="mem-verso">${card.valor}</div>
+        <div class="mem-verso">${escMG(card.valor)}</div>
       </div>
     `;
     el.addEventListener('click', () => {
@@ -615,12 +696,13 @@ function renderSomPalavra(fase, corpo, spec) {
   const opcoesPreset = spec && Array.isArray(spec.opcoes) && spec.opcoes.length >= 2
     ? spec.opcoes.map(String)
     : null;
-  const distratores = embaralhar(
-    ['estrela', 'nuvem', 'pedra', 'livro', 'vento', 'chuva', 'foguete', 'floresta'].filter(p => p !== alvo)
-  ).slice(0, 3);
-  const opcoes = opcoesPreset
+  const nOpcoes = (typeof configFaixaMinigame === 'function' ? configFaixaMinigame().opcoes : 3) || 3;
+  const distratores = (typeof distratoresForaDaHistoria === 'function'
+    ? distratoresForaDaHistoria(estado.historiaAtual, Math.max(1, nOpcoes - 1), [alvo])
+    : embaralhar(['estrela', 'nuvem', 'pedra', 'livro'].filter(p => p !== alvo)).slice(0, Math.max(1, nOpcoes - 1)));
+  const opcoes = (opcoesPreset
     ? embaralhar(opcoesPreset.includes(alvo) ? opcoesPreset : [alvo, ...opcoesPreset])
-    : embaralhar([alvo, ...distratores]);
+    : embaralhar([alvo, ...distratores])).slice(0, nOpcoes);
 
   const wrap = document.createElement('div');
   wrap.innerHTML = `
@@ -639,12 +721,18 @@ function renderSomPalavra(fase, corpo, spec) {
       </button>
     </div>
     <div class="sp-grid">
-      ${opcoes.map(op => `<button class="sp-btn" data-palavra="${op}" aria-label="${op}">${op}</button>`).join('')}
+      ${opcoes.map(op => `<button class="sp-btn" data-palavra="${escMG(op)}" aria-label="${escMG(op)}">${escMG(op)}</button>`).join('')}
     </div>
   `;
   corpo.appendChild(wrap);
 
-  setTimeout(() => falarTexto(alvo), 400);
+  const ttsSom = setTimeout(() => falarTexto(alvo), 400);
+  if (typeof registrarCleanupMG === 'function') {
+    registrarCleanupMG(() => {
+      clearTimeout(ttsSom);
+      if (window.speechSynthesis) speechSynthesis.cancel();
+    });
+  }
 
   document.getElementById('btnOuvirPalavra').addEventListener('click', () => falarTexto(alvo));
   document.getElementById('btnNaoOuco').addEventListener('click', () => {
@@ -699,200 +787,34 @@ function ehOpcaoGenerica(opcoes) {
 }
 
 function gerarEscolhaPorGenero(h, fase) {
-  const historia = h || estado.historiaAtual || {};
-  const id = historia.id;
-  const genero = String(historia.genero || 'narrativo').toLowerCase();
-  const titulo = historia.titulo || 'a história';
-  const palavras = historia.palavrasChave || [];
-  const p1 = palavras[0] || 'o elemento principal';
-  const p2 = palavras[1] || 'os acontecimentos';
-
-  const PERGUNTAS_PREDEFINIDAS = {
-    n1: {
-      pergunta: 'Qual era o grande segredo de Léo, o leão?',
-      correta: 'Ele tinha medo do escuro quando a noite chegava',
-      distratores: [
-        'Ele não sabia rugir alto com os outros animais',
-        'Ele não gostava de brincar com a zebra e o macaco'
-      ]
-    },
-    n2: {
-      pergunta: 'O que Marina colecionava em seu caderno azul?',
-      correta: 'Desenhos dos formatos curiosos das nuvens que via no céu',
-      distratores: [
-        'Folhas secas e flores coloridas coladas das árvores',
-        'Moedas antigas e carimbos de outros países'
-      ]
-    },
-    n3: {
-      pergunta: 'O que os livros brilhantes guardavam na biblioteca secreta?',
-      correta: 'Histórias verdadeiras que precisavam ser lidas para não desaparecer',
-      distratores: [
-        'Fórmulas científicas para inventar máquinas do futuro',
-        'Mapas antigos de ilhas escondidas com tesouros de piratas'
-      ]
-    },
-    p1: {
-      pergunta: 'No poema "A Chuva Cantando", como o personagem se diverte com a chuva?',
-      correta: 'Saindo de guarda-chuva para pular nas poças de água da rua',
-      distratores: [
-        'Ficando dormindo sob as cobertas até a tempestade passar',
-        'Desenhando a chuva no papel sentado dentro de casa'
-      ]
-    },
-    p2: {
-      pergunta: 'No poema "Palavras que Voam", com o que as palavras lidas são comparadas?',
-      correta: 'Com pássaros que ganham asas ao serem lidas e voam até as casas',
-      distratores: [
-        'Com estrelas que piscam bem alto no céu à noite',
-        'Com peixes coloridos que nadam velozes no oceano'
-      ]
-    },
-    i1: {
-      pergunta: 'Qual é o objetivo principal das instruções para a casinha de pássaros?',
-      correta: 'Construir um lar acolhedor para os passarinhos do jardim',
-      distratores: [
-        'Fazer um brinquedo com rodas para rolar no chão',
-        'Montar um barco de madeira para navegar na lagoa'
-      ]
-    },
-    i2: {
-      pergunta: 'O que é fundamental ao preparar uma cápsula do tempo?',
-      correta: 'Reunir cartas e objetos simbólicos com honestidade para o futuro',
-      distratores: [
-        'Comprar objetos muito caros para mostrar riqueza',
-        'Guardar alimentos perecíveis para provar depois de dez anos'
-      ]
-    },
-    d1: {
-      pergunta: 'Quais detalhes visuais se destacam na descrição do fundo do mar?',
-      correta: 'A luz filtrada pela água e a variedade de corais e peixes vibrantes',
-      distratores: [
-        'Uma rua movimentada cheia de carros e barulho de buzinas',
-        'Uma floresta fria com neve caindo sobre os pinheiros'
-      ]
-    },
-    d2: {
-      pergunta: 'Como o jardim da vovó é caracterizado no texto descritivo?',
-      correta: 'Um ambiente alegre, florido, cheiroso, colorido e tranquilo',
-      distratores: [
-        'Um deserto quente, seco e sem nenhuma flor',
-        'Um galpão escuro cheio de caixas de papelão'
-      ]
-    },
-    inf1: {
-      pergunta: 'Segundo o texto informativo, por que o céu aparece azul durante o dia?',
-      correta: 'Porque a luz azul do Sol é espalhada pelas partículas da atmosfera',
-      distratores: [
-        'Porque a água dos oceanos é refletida diretamente no céu',
-        'Porque as nuvens absorvem a luz amarela e soltam a tinta azul'
-      ]
-    },
-    inf2: {
-      pergunta: 'Por que a Floresta Amazônica é chamada de "pulmão do mundo"?',
-      correta: 'Porque suas árvores absorvem dióxido de carbono e liberam oxigênio',
-      distratores: [
-        'Porque ela sopra ventos fortes para todos os outros continentes',
-        'Porque é o único lugar do planeta onde chove todos os dias'
-      ]
-    }
-  };
-
-  if (id && PERGUNTAS_PREDEFINIDAS[id]) {
-    const item = PERGUNTAS_PREDEFINIDAS[id];
-    const opcoesObj = [
-      { texto: item.correta, correta: true },
-      { texto: item.distratores[0], correta: false },
-      { texto: item.distratores[1], correta: false }
-    ];
-    const emb = embaralhar(opcoesObj);
-    return {
-      pergunta: item.pergunta,
-      opcoes: emb.map(o => o.texto),
-      correta: emb.findIndex(o => o.correta)
-    };
+  const nOpcoes = (typeof configFaixaMinigame === 'function' ? configFaixaMinigame().opcoes : 3) || 3;
+  if (typeof montarEscolhaDaHistoria === 'function') {
+    return montarEscolhaDaHistoria(h || estado.historiaAtual, null, nOpcoes);
   }
-
-  let pergunta = '';
-  let respostaCorreta = '';
-  let distrator1 = '';
-  let distrator2 = '';
-
-  switch (genero) {
-    case 'poetico':
-      pergunta = `Sobre o poema "${titulo}", qual é o sentimento ou imagem poética principal?`;
-      respostaCorreta = `A beleza e o ritmo da linguagem ao tratar de ${p1}`;
-      distrator1 = `Instruções técnicas para montar uma estrutura de madeira`;
-      distrator2 = `Tabelas de dados numéricos sobre finanças urbanas`;
-      break;
-
-    case 'instrucional':
-      pergunta = `Qual é o objetivo principal das instruções do texto "${titulo}"?`;
-      respostaCorreta = `Ensinar passo a passo como realizar ou construir algo com ${p1}`;
-      distrator1 = `Narrar uma conto antigo sobre reinos e fadas mágicas`;
-      distrator2 = `Descrever as ondas e peixes do fundo do oceano`;
-      break;
-
-    case 'descritivo':
-      pergunta = `Quais características sensoriais principais são descritas em "${titulo}"?`;
-      respostaCorreta = `Cores, aromas e detalhes marcantes do ambiente de ${p1}`;
-      distrator1 = `Um diálogo rápido de suspense entre detetives`;
-      distrator2 = `Uma lista de pontuações de jogos esportivos`;
-      break;
-
-    case 'informativo':
-      pergunta = `Qual informação ou explicação factual central é tratada no texto "${titulo}"?`;
-      respostaCorreta = `A explicação clara e factual sobre a importância de ${p1}`;
-      distrator1 = `Uma lenda inventada sobre duendes e magia`;
-      distrator2 = `Um poema rimado sobre cantigas de roda`;
-      break;
-
-    case 'narrativo':
-    default:
-      pergunta = `Na história "${titulo}", qual acontecimento marcou o percurso dos personagens?`;
-      respostaCorreta = `A jornada e as descobertas envolvendo ${p1} e ${p2}`;
-      distrator1 = `A chegada repentina de um disco voador vindo do espaço`;
-      distrator2 = `Uma competição de corrida de fórmula 1 na cidade`;
-      break;
-  }
-
-  const opcoesObj = [
-    { texto: respostaCorreta, correta: true },
-    { texto: distrator1, correta: false },
-    { texto: distrator2, correta: false }
-  ];
-  const emb = embaralhar(opcoesObj);
-  return {
-    pergunta,
-    opcoes: emb.map(o => o.texto),
-    correta: emb.findIndex(o => o.correta)
-  };
+  return { pergunta: 'Qual palavra aparece na história?', opcoes: ['história', 'nuvem'], correta: 0, ok: false };
 }
 
 function renderEscolhaMG(fase, corpo, spec) {
   const h = estado.historiaAtual;
-  let pergunta;
-  let opcoes;
-  let correta;
+  const nOpcoes = (typeof configFaixaMinigame === 'function' ? configFaixaMinigame().opcoes : 3) || 3;
+  const gerado = typeof montarEscolhaDaHistoria === 'function'
+    ? montarEscolhaDaHistoria(h, spec, nOpcoes)
+    : gerarEscolhaPorGenero(h, fase);
 
-  const usarSpec = spec && spec.pergunta && Array.isArray(spec.opcoes) && !ehOpcaoGenerica(spec.opcoes);
-
-  if (usarSpec) {
-    pergunta = spec.pergunta;
-    opcoes = spec.opcoes.map(String);
-    correta = typeof spec.correta === 'number' ? spec.correta : 0;
-  } else {
-    const gerado = gerarEscolhaPorGenero(h, fase);
-    pergunta = gerado.pergunta;
-    opcoes = gerado.opcoes;
-    correta = gerado.correta;
+  if (!gerado || gerado.ok === false) {
+    renderVerdadeiroFalso(fase, h, corpo, spec);
+    return;
   }
+
+  const pergunta = gerado.pergunta;
+  const opcoes = gerado.opcoes;
+  const correta = gerado.correta;
 
   const wrap = document.createElement('div');
   wrap.innerHTML = `
-    <p class="mg-desc">${pergunta}</p>
+    <p class="mg-desc">${escMG(pergunta)}</p>
     <div class="mc-opcoes">
-      ${opcoes.map((op, i) => `<button class="mc-btn" data-idx="${i}">${op}</button>`).join('')}
+      ${opcoes.map((op, i) => `<button class="mc-btn" data-idx="${i}">${escMG(op)}</button>`).join('')}
     </div>
     <div style="text-align:center;margin-top:12px;">
       <button class="btn-desistir-mg" id="btnDesistirEscolha">🏳️ Desistir / Ver Solução</button>
@@ -913,13 +835,13 @@ function renderEscolhaMG(fase, corpo, spec) {
       const bIdx = parseInt(b.dataset.idx, 10);
       if (bIdx === correta) {
         b.classList.add('correta');
-        b.innerHTML = `${opcoes[correta]} ✓`;
+        b.innerHTML = `${escMG(opcoes[correta])} ✓`;
       }
     });
 
     if (clicou && !ok && btnClicado) {
       btnClicado.classList.add('errada');
-      btnClicado.innerHTML = `${opcoes[idx]} ✗`;
+      btnClicado.innerHTML = `${escMG(opcoes[idx])} ✗`;
     }
 
     mostrarFeedbackMG(ok);
@@ -938,7 +860,7 @@ function renderCompletarMG(fase, corpo, spec) {
   const wrap = document.createElement('div');
   wrap.className = 'mg-completar-wrap';
   wrap.innerHTML = `
-    <p class="mg-desc">${dados.instrucao}</p>
+    <p class="mg-desc">${escMG(dados.instrucao)}</p>
     <div class="mg-frase-lacuna" id="mgFraseLacuna">${formatarFraseLacunaHtml(dados.frase)}</div>
     ${dados.dica ? `<p class="mg-completar-dica">💡 Dica: ${dados.dica}</p>` : ''}
     <div class="mg-completar-input-row interacao-input-area">
@@ -1003,12 +925,14 @@ function renderCompletarMG(fase, corpo, spec) {
 }
 
 function renderColorirMG(h, corpo, spec) {
-  const alvo = (spec && Array.isArray(spec.palavrasAlvo) && spec.palavrasAlvo.length
+  const nAlvo = (typeof configFaixaMinigame === 'function' ? configFaixaMinigame().palavrasCaca : 3) || 3;
+  const montado = typeof montarColorirDaHistoria === 'function' ? montarColorirDaHistoria(h, spec, nAlvo) : null;
+  const alvo = (montado && montado.ok ? montado.alvo : (spec && Array.isArray(spec.palavrasAlvo) && spec.palavrasAlvo.length
     ? spec.palavrasAlvo
-    : (h.palavrasChave || []).slice(0, 5));
-  const distratoras = (spec && Array.isArray(spec.distratoras) && spec.distratoras.length
+    : (h.palavrasChave || []))).slice(0, nAlvo);
+  const distratoras = (montado && montado.ok ? montado.distratoras : (spec && Array.isArray(spec.distratoras) && spec.distratoras.length
     ? spec.distratoras
-    : ['castelo', 'peixe', 'janela', 'foguete', 'estrada'])
+    : (typeof distratoresForaDaHistoria === 'function' ? distratoresForaDaHistoria(h, 3, alvo) : ['castelo', 'peixe', 'janela'])))
     .filter((p) => !alvo.includes(p))
     .slice(0, 3);
   const itens = embaralhar([...alvo.map((p) => ({ p, correta: true })), ...distratoras.map((p) => ({ p, correta: false }))]);
@@ -1016,7 +940,7 @@ function renderColorirMG(h, corpo, spec) {
   wrap.innerHTML = `
     <p class="mg-desc">Clique nas palavras que aparecem na história!</p>
     <div class="rima-opcoes-grid">
-      ${itens.map((it, i) => `<button class="rima-opc" data-idx="${i}">${it.p}</button>`).join('')}
+      ${itens.map((it, i) => `<button class="rima-opc" data-idx="${i}">${escMG(it.p)}</button>`).join('')}
     </div>
     <div class="mg-acoes-row">
       <button class="btn-confirmar" id="btnConfColorir" style="flex:1;">✔ Confirmar</button>
@@ -1057,10 +981,10 @@ function renderColorirMG(h, corpo, spec) {
       btn.classList.remove('correta');
       if (itens[idx].correta) {
         btn.classList.add('correta');
-        btn.innerHTML = `${itens[idx].p} ✓`;
+        btn.innerHTML = `${escMG(itens[idx].p)} ✓`;
       } else if (selecionadas.has(idx)) {
         btn.classList.add('errada');
-        btn.innerHTML = `${itens[idx].p} ✗`;
+        btn.innerHTML = `${escMG(itens[idx].p)} ✗`;
       }
     });
 
@@ -1423,7 +1347,7 @@ function renderVerdadeiroFalso(fase, h, corpo, spec) {
   const wrap = document.createElement('div');
   wrap.innerHTML = `
     <p class="mg-desc">Leia a afirmação e diga se é verdadeira ou falsa!</p>
-    <div class="tf-afirmacao">"${item.afirmacao}"</div>
+    <div class="tf-afirmacao">"${escMG(item.afirmacao)}"</div>
     <div class="tf-opcoes">
       <button class="tf-btn tf-v" id="tfV" aria-label="Verdadeiro">✅ Verdadeiro</button>
       <button class="tf-btn tf-f" id="tfF" aria-label="Falso">❌ Falso</button>
@@ -1489,10 +1413,11 @@ function renderCacaPalavras(fase, h, corpo) {
       .filter(p => p.length >= 3 && p.length <= 11)
   )];
 
-  let palavrasAlvo = filtrarPalavras(h.palavrasChave).slice(0, 4);
+  const qtdCaca = (typeof configFaixaMinigame === 'function' ? configFaixaMinigame().palavrasCaca : 4) || 4;
+  let palavrasAlvo = filtrarPalavras(h.palavrasChave).slice(0, qtdCaca);
 
   // Fallback: extrai palavras relevantes do texto da história
-  if (palavrasAlvo.length < 4) {
+  if (palavrasAlvo.length < qtdCaca) {
     const STOPWORDS = new Set(['COM', 'UMA', 'UM', 'QUE', 'NAO', 'PAR', 'SER', 'SEUS', 'SUAS', 'ELE', 'ELA', 'ERA', 'FOI', 'TEM', 'VER', 'MAS', 'ATE', 'POR', 'SOB', 'TER', 'MIM', 'TU', 'NO', 'NA', 'DE', 'DO', 'DA', 'OS', 'AS', 'EM', 'SE', 'AO', 'OU', 'JA']);
     const textoLimpo = obterTextoBaseHistoria(h)
       .replace(/<[^>]+>/g, ' ')
@@ -1504,7 +1429,7 @@ function renderCacaPalavras(fase, h, corpo) {
     ).filter(p => !STOPWORDS.has(p));
     const jaPresentes = new Set(palavrasAlvo);
     for (const p of extraidasTexto) {
-      if (!jaPresentes.has(p) && palavrasAlvo.length < 4) {
+      if (!jaPresentes.has(p) && palavrasAlvo.length < qtdCaca) {
         jaPresentes.add(p);
         palavrasAlvo.push(p);
       }
@@ -1753,13 +1678,17 @@ function renderCacaPalavras(fase, h, corpo) {
     arrastando = false; primeira = null;
   }, { passive: false });
 
-  document.addEventListener('mouseup', () => {
+  const onMouseUpDocCP = () => {
     if (arrastando) {
       limparPreview();
       gridEl.querySelectorAll('.cp-sel').forEach(el => el.classList.remove('cp-sel'));
       arrastando = false; primeira = null;
     }
-  });
+  };
+  document.addEventListener('mouseup', onMouseUpDocCP);
+  if (typeof registrarCleanupMG === 'function') {
+    registrarCleanupMG(() => document.removeEventListener('mouseup', onMouseUpDocCP));
+  }
 
   const finalizarCP = (isDesistir = false) => {
     document.getElementById('btnConfCP').disabled = true;
@@ -1900,6 +1829,7 @@ function renderLigarPontos(fase, h, corpo, spec) {
   const norm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]/g, '');
 
   let pares = [];
+  const qtdPares = (typeof configFaixaMinigame === 'function' ? configFaixaMinigame().paresMemoria : 3) || 3;
 
   // 1. Usar spec.pares se fornecido pela história / IA
   if (spec && Array.isArray(spec.pares) && spec.pares.length >= 2) {
@@ -1913,7 +1843,7 @@ function renderLigarPontos(fase, h, corpo, spec) {
   }
 
   // 2. Extrair palavras diretamente das palavrasChave e do texto da história
-  if (pares.length < 4) {
+  if (pares.length < qtdPares) {
     const palavrasCandidatas = [];
 
     (h.palavrasChave || []).forEach(w => {
@@ -1933,7 +1863,7 @@ function renderLigarPontos(fase, h, corpo, spec) {
     });
 
     palavrasCandidatas.forEach(kw => {
-      if (pares.length >= 4) return;
+      if (pares.length >= qtdPares) return;
       const k = norm(kw);
       if (!pares.find(p => norm(p.palavra) === k)) {
         if (BANCO_DEFS[k]) {
@@ -1949,7 +1879,7 @@ function renderLigarPontos(fase, h, corpo, spec) {
   if (pares.length < 3) {
     const chavesBanco = Object.keys(BANCO_DEFS);
     let i = 0;
-    while (pares.length < 4 && i < chavesBanco.length) {
+    while (pares.length < qtdPares && i < chavesBanco.length) {
       const k = chavesBanco[i];
       if (!pares.find(p => norm(p.palavra) === k)) {
         const palavraFormatada = k.charAt(0).toUpperCase() + k.slice(1);
@@ -1959,7 +1889,7 @@ function renderLigarPontos(fase, h, corpo, spec) {
     }
   }
 
-  pares = pares.slice(0, 4);
+  pares = pares.slice(0, qtdPares);
 
   const esquerda = embaralhar([...pares]);
   const direita = embaralhar([...pares]);
@@ -1975,10 +1905,10 @@ function renderLigarPontos(fase, h, corpo, spec) {
     <p class="mg-desc">Clique em uma <strong>palavra</strong> e depois em sua <strong>definição</strong> para ligar!</p>
     <div class="lp-arena" id="lpArena">
       <div class="lp-col" id="lpEsq">
-        ${esquerda.map((p, i) => `<button class="lp-btn lp-palavra" data-lado="esq" data-i="${i}" data-k="${norm(p.palavra)}">${p.palavra}</button>`).join('')}
+        ${esquerda.map((p, i) => `<button class="lp-btn lp-palavra" data-lado="esq" data-i="${i}" data-k="${escMG(norm(p.palavra))}">${escMG(p.palavra)}</button>`).join('')}
       </div>
       <div class="lp-col" id="lpDir">
-        ${direita.map((p, i) => `<button class="lp-btn lp-def" data-lado="dir" data-i="${i}" data-k="${norm(p.palavra)}">${p.def}</button>`).join('')}
+        ${direita.map((p, i) => `<button class="lp-btn lp-def" data-lado="dir" data-i="${i}" data-k="${escMG(norm(p.palavra))}">${escMG(p.def)}</button>`).join('')}
       </div>
     </div>
     <svg class="lp-svg" id="lpSvg"></svg>
@@ -2492,7 +2422,7 @@ function renderOrdenarPassos(h, corpo, spec) {
 
       let selecionadas = [];
 
-      const QTD_PASSOS = 4; // quantidade ideal de passos sequenciais
+      const QTD_PASSOS = (typeof configFaixaMinigame === 'function' ? configFaixaMinigame().passos : 4) || 4;
 
       if (todasFrases.length >= 3) {
         // Tenta pegar até QTD_PASSOS frases consecutivas
@@ -2533,6 +2463,10 @@ function renderOrdenarPassos(h, corpo, spec) {
 
       passos = selecionadas;
     }
+  }
+  const qtdPassosFaixa = (typeof configFaixaMinigame === 'function' ? configFaixaMinigame().passos : 4) || 4;
+  if (Array.isArray(passos) && passos.length > qtdPassosFaixa) {
+    passos = passos.slice(0, qtdPassosFaixa).map((p, i) => ({ id: i, texto: p.texto }));
   }
   // Embaralha garantindo que o resultado NUNCA seja igual à ordem correta
   const embaralharGarantido = (arr) => {
@@ -2587,7 +2521,7 @@ function renderOrdenarPassos(h, corpo, spec) {
         <li class="op-item ${classStatus}">
           <span class="op-num">${i + 1}</span>
           <div class="op-corpo-item">
-            <span class="op-texto">${passos[stepId].texto}</span>
+            <span class="op-texto">${escMG(passos[stepId].texto)}</span>
             ${gabaritoHtml}
           </div>
           ${!finalizado ? `

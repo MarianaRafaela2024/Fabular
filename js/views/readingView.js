@@ -569,15 +569,14 @@ window.addEventListener('resize', () => {
 
 function atualizarEstrelasAposMinigame() {
   if (!estado.historiaAtual) return;
-  const total = estado.minigamesLista.length || 4;
+  const total = estado.minigamesLista.length || 5;
   const acertos = (estado.acertos || 0) + (estado.mgAcertos || 0);
   registrarEstrelasHistoria(calcularEstrelasPorAcertos(acertos, total));
 }
 
-// 1 estrela por minigame acertado (máximo de 5)
+// 1 estrela por minigame acertado (teto = quantidade da sessão, sempre 5)
 function calcularEstrelasPorAcertos(acertos, total) {
   const a = Math.max(0, Number(acertos) || 0);
-  const t = Math.max(1, Number(total) || 1);
-  // Cada minigame vale 1 estrela — acertou todos os t, ganha t estrelas (max 5)
-  return Math.min(5, a);
+  const t = Math.max(1, Number(total) || 5);
+  return Math.min(t, a);
 }

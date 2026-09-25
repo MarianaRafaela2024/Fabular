@@ -212,6 +212,9 @@
               <button class="btn-icon" id="btn-ouvir-mg" title="Ouvir enunciado"
                 aria-label="Ouvir enunciado">🔊</button>
             </div>
+            <div class="mg-progresso" aria-hidden="true">
+              <div class="mg-progresso-fill" id="mg-progresso-fill"></div>
+            </div>
             <div class="minigame-corpo" id="minigame-corpo"></div>
             <div class="minigame-feedback oculto" id="mg-feedback">
               <div class="feedback-card" id="mg-feedback-card">
@@ -251,9 +254,11 @@
                 <span class="stat-label">Nível</span>
               </div>
             </div>
+            <ul class="resultado-lista-jogos" id="resultado-lista-jogos" hidden></ul>
             <p class="resultado-aviso oculto" id="resultado-aviso">⚠️ Você precisa refazer a atividade e reler a
               história para continuar!</p>
             <div class="resultado-botoes">
+              <button class="btn-refazer oculto" id="btn-refazer-erros" hidden>🔁 Jogar de novo os que errei</button>
               <button class="btn-refazer" id="btn-refazer-atividade">🔄 Refazer Atividade e Reler</button>
               <button class="btn-secundario" id="btn-jogar-novamente">Ler outra história</button>
               <button class="btn-principal" id="btn-ver-progresso">🏆 Ver Progresso</button>
@@ -396,6 +401,8 @@
   <script src="js/views/iaView.js"></script>
   <script src="js/views/libraryView.js"></script>
   <script src="js/views/readingView.js"></script>
+  <script src="js/minigames/shell.js"></script>
+  <script src="js/minigames/content.js"></script>
   <script src="js/views/minigameView.js"></script>
   <script src="js/views/progressView.js"></script>
   <script src="js/controllers/appController.js"></script>

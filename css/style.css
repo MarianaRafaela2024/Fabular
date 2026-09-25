@@ -2063,6 +2063,23 @@ html.alto-contraste .portao-input {
   letter-spacing: .05em;
 }
 
+.mg-progresso {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, .22);
+  overflow: hidden;
+  margin: 0 0 16px;
+}
+
+.mg-progresso-fill {
+  height: 100%;
+  width: 20%;
+  border-radius: inherit;
+  background: var(--grad-btn, linear-gradient(135deg, #f97316, #ea580c));
+  transition: width .35s ease;
+}
+
 .minigame-corpo {
   background: var(--bg-card);
   border-radius: 18px;
@@ -2589,6 +2606,37 @@ html.alto-contraste .portao-input {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: .04em;
+}
+
+.resultado-lista-jogos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.resultado-lista-jogos li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--bg-card);
+  border: 1.5px solid rgba(229, 231, 235, .8);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.resultado-lista-jogos .mg-item-ok {
+  color: #166534;
+}
+
+.resultado-lista-jogos .mg-item-erro {
+  color: #92400E;
 }
 
 .resultado-botoes {
@@ -8943,6 +8991,7 @@ button,
 #tela-resultado .btn-secundario,
 #tela-resultado .btn-principal,
 #tela-resultado #btn-refazer-atividade,
+#tela-resultado #btn-refazer-erros,
 #tela-resultado #btn-jogar-novamente,
 #tela-resultado #btn-ver-progresso {
   font-size: var(--mg-texto, 1rem) !important;
@@ -8967,6 +9016,8 @@ button,
 .btn-refazer.oculto,
 #btn-proximo-mg.oculto,
 #btn-finalizar-mg.oculto,
+#btn-refazer-erros.oculto,
+#btn-refazer-erros[hidden],
 #btn-continuar.oculto,
 .btn-principal[hidden],
 .btn-secundario[hidden],

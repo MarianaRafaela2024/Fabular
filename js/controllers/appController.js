@@ -375,6 +375,7 @@ async function inicializar() {
     if (enunc) ouvirTexto(enunc.textContent);
   });
 
+  bindSeExistir('btn-refazer-erros', 'click', refazerMinigamesErrados);
   bindSeExistir('btn-refazer-atividade', 'click', refazerAtividade);
   bindSeExistir('btn-jogar-novamente', 'click', () => irParaTela('biblioteca'));
   bindSeExistir('btn-ver-progresso', 'click', () => irParaTela('progresso'));

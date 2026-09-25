@@ -253,80 +253,6 @@ async function carregarDetalheHistoriaDaApi(id) {
   };
 }
 
-// Banco de minigames por faixa/gênero
-const MINIGAMES_BANCO = {
-  narrativo: {
-    1: [
-      { tipo: 'sequencia', tipoOriginal: 'sequencia', titulo: '📸 Ordene a História!', enunciado: 'Coloque os eventos na ordem certa:' },
-      { tipo: 'vf', tipoOriginal: 'vf', titulo: '✅ Verdadeiro ou Falso?', enunciado: 'Sobre a história que você leu, diga se é verdadeiro ou falso:' }
-    ],
-    2: [
-      { tipo: 'montafrase', tipoOriginal: 'montafrase', titulo: '🧩 Monta-Frase!', enunciado: 'Organize as palavras para formar uma frase da história:' },
-      { tipo: 'vf', tipoOriginal: 'vf', titulo: '✅ Verdadeiro ou Falso?', enunciado: 'Sobre a história, diga se é verdadeiro ou falso:' }
-    ],
-    3: [
-      { tipo: 'complete', tipoOriginal: 'complete', titulo: '✍️ Complete o Texto!', enunciado: 'Preencha os espaços com as palavras certas:' },
-      { tipo: 'mc', tipoOriginal: 'mc', titulo: '🔎 Detetive do Texto', enunciado: 'Responda sobre os detalhes da história:' }
-    ]
-  },
-  poetico: {
-    1: [
-      { tipo: 'rima', titulo: '🎵 Encontre a Rima!', enunciado: 'Escolha a palavra que rima:' },
-      { tipo: 'vf', titulo: '✅ Verdadeiro ou Falso?', enunciado: 'Sobre o poema, diga verdadeiro ou falso:' }
-    ],
-    2: [
-      { tipo: 'rima', titulo: '🎵 Completa o Verso!', enunciado: 'Qual palavra completa a rima?' },
-      { tipo: 'mc', titulo: '💬 O Que Significa?', enunciado: 'Qual o significado no poema?' }
-    ],
-    3: [
-      { tipo: 'complete', titulo: '✍️ Complete os Versos!', enunciado: 'Preencha os versos do poema:' },
-      { tipo: 'mc', titulo: '🔍 Análise Poética', enunciado: 'Responda sobre os recursos do poema:' }
-    ]
-  },
-  instrucional: {
-    1: [
-      { tipo: 'sequencia', titulo: '📋 Ordene os Passos!', enunciado: 'Coloque as ações na ordem correta:' },
-      { tipo: 'vf', titulo: '✅ Correto ou Errado?', enunciado: 'Essa instrução está correta?' }
-    ],
-    2: [
-      { tipo: 'sequencia', titulo: '📋 Sequência Correta!', enunciado: 'Ordene os passos do procedimento:' },
-      { tipo: 'mc', titulo: '🔧 Qual o Material?', enunciado: 'Sobre os materiais e ingredientes:' }
-    ],
-    3: [
-      { tipo: 'complete', titulo: '✍️ Complete as Instruções!', enunciado: 'Preencha os espaços:' },
-      { tipo: 'mc', titulo: '⚠️ Por Que Esse Passo?', enunciado: 'Qual a razão desse passo?' }
-    ]
-  },
-  descritivo: {
-    1: [
-      { tipo: 'mc', titulo: '🎨 Qual a Cor?', enunciado: 'Como o texto descreveu:' },
-      { tipo: 'vf', titulo: '✅ Verdadeiro ou Falso?', enunciado: 'Essa descrição está correta?' }
-    ],
-    2: [
-      { tipo: 'mc', titulo: '🔍 Palavras do Cenário', enunciado: 'Qual palavra foi usada para descrever?' },
-      { tipo: 'montafrase', titulo: '🧩 Descreva!', enunciado: 'Monte a frase descritiva:' }
-    ],
-    3: [
-      { tipo: 'complete', titulo: '✍️ Complete a Descrição!', enunciado: 'Preencha com as palavras certas:' },
-      { tipo: 'mc', titulo: '🔎 Detalhe do Texto', enunciado: 'Qual detalhe foi descrito?' }
-    ]
-  },
-  informativo: {
-    1: [
-      { tipo: 'vf', titulo: '✅ É Verdade?', enunciado: 'Essa informação é verdadeira?' },
-      { tipo: 'mc', titulo: '💡 O Que Você Aprendeu?', enunciado: 'Responda sobre o texto:' }
-    ],
-    2: [
-      { tipo: 'vf', titulo: '✅ Verdadeiro ou Falso?', enunciado: 'Sobre o que você leu:' },
-      { tipo: 'mc', titulo: '🔎 Destaque a Informação', enunciado: 'Qual a informação correta?' }
-    ],
-    3: [
-      { tipo: 'complete', titulo: '✍️ Complete as Informações!', enunciado: 'Preencha com dados do texto:' },
-      { tipo: 'mc', titulo: '📊 Análise das Informações', enunciado: 'Interprete os dados do texto:' }
-    ]
-  }
-};
-
 const MSGS_ACERTO = [
   'Incrível! Você é demais!',
   'Perfeito! Que resposta esperta!',
@@ -386,14 +312,14 @@ function montarListaMinigamesUnica(tipos, genero, faixa) {
     lista.push(norm);
   });
   const extras = escolherMinigamesTipos(faixa, genero);
-  for (let i = 0; i < extras.length && lista.length < 4; i++) {
+  for (let i = 0; i < extras.length && lista.length < 5; i++) {
     const norm = normalizarTipoMinigame(extras[i]);
     const chave = chaveUnicaMinigame(norm);
     if (vistos.has(chave)) continue;
     vistos.add(chave);
     lista.push(norm);
   }
-  return lista.slice(0, 4);
+  return lista.slice(0, 5);
 }
 
 function extrairPalavrasLista(valor) {
