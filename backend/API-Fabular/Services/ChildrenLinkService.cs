@@ -285,4 +285,153 @@ public class ChildrenLinkService
         await tx.CommitAsync();
         return ApplicationResult<object>.Ok(new { linkedChildren = linked });
     }
+
+    public async Task<ApplicationResult<bool>> DeleteChildAsync(int childId, int responsavelId)
+    {
+        if (childId <= 0 || responsavelId <= 0)
+        {
+            return ApplicationResult<bool>.BadRequest("Identificadores inválidos.");
+        }
+
+        await using var conn = _db.Create();
+        await conn.OpenAsync();
+        await using var tx = await conn.BeginTransactionAsync();
+
+        var vinculo = await conn.QueryFirstOrDefaultAsync<int?>(
+            """
+            SELECT rc.Id
+            FROM Responsavel_Crianca rc
+            WHERE rc.Id_Responsavel = @ResponsavelId AND rc.Id_Crianca = @ChildId
+            """,
+            new { ResponsavelId = responsavelId, ChildId = childId },
+            tx);
+
+        if (!vinculo.HasValue)
+        {
+            return ApplicationResult<bool>.NotFound("Criança não vinculada a este responsável.");
+        }
+
+        var outrosVinculos = await conn.ExecuteScalarAsync<int>(
+            """
+            SELECT COUNT(1)
+            FROM Responsavel_Crianca
+            WHERE Id_Crianca = @ChildId AND Id_Responsavel <> @ResponsavelId
+            """,
+            new { ChildId = childId, ResponsavelId = responsavelId },
+            tx);
+
+        if (outrosVinculos > 0)
+        {
+            await conn.ExecuteAsync(
+                """
+                DELETE FROM Responsavel_Crianca
+                WHERE Id_Crianca = @ChildId AND Id_Responsavel = @ResponsavelId
+                """,
+                new { ChildId = childId, ResponsavelId = responsavelId },
+                tx);
+        }
+        else
+        {
+            await ExcluirDadosDaCriancaAsync(conn, tx, childId);
+        }
+
+        await tx.CommitAsync();
+        return ApplicationResult<bool>.Ok(true);
+    }
+
+    public async Task ExcluirDadosDaCriancaAsync(
+        System.Data.Common.DbConnection conn,
+        System.Data.Common.DbTransaction tx,
+        int childId)
+    {
+        await conn.ExecuteAsync(
+            """
+            IF OBJECT_ID(N'dbo.Evento_Minigame', N'U') IS NOT NULL
+            AND OBJECT_ID(N'dbo.Sessao_Leitura', N'U') IS NOT NULL
+                DELETE em
+                FROM Evento_Minigame em
+                INNER JOIN Sessao_Leitura sl ON sl.Id = em.Id_SessaoLeitura
+                WHERE sl.Id_Crianca = @ChildId
+            """,
+            new { ChildId = childId },
+            tx);
+
+        await conn.ExecuteAsync(
+            """
+            IF OBJECT_ID(N'dbo.Sessao_Leitura', N'U') IS NOT NULL
+                DELETE FROM Sessao_Leitura WHERE Id_Crianca = @ChildId
+            """,
+            new { ChildId = childId },
+            tx);
+
+        var historiasIa = (await conn.QueryAsync<int>(
+            """
+            SELECT DISTINCT Id_Historia
+            FROM IA_Geracao
+            WHERE Id_Crianca = @ChildId AND Id_Historia IS NOT NULL
+            """,
+            new { ChildId = childId },
+            tx)).ToList();
+
+        await conn.ExecuteAsync(
+            "DELETE FROM IA_Geracao WHERE Id_Crianca = @ChildId",
+            new { ChildId = childId },
+            tx);
+
+        foreach (var historiaId in historiasIa)
+        {
+            var aindaReferenciada = await conn.ExecuteScalarAsync<int>(
+                "SELECT COUNT(1) FROM IA_Geracao WHERE Id_Historia = @HistoriaId",
+                new { HistoriaId = historiaId },
+                tx);
+            var origem = await conn.ExecuteScalarAsync<string?>(
+                "SELECT Origem FROM Historia WHERE Id = @HistoriaId",
+                new { HistoriaId = historiaId },
+                tx);
+
+            if (aindaReferenciada == 0 && string.Equals(origem, "ia", StringComparison.OrdinalIgnoreCase))
+            {
+                await conn.ExecuteAsync(
+                    "DELETE FROM Historia WHERE Id = @HistoriaId",
+                    new { HistoriaId = historiaId },
+                    tx);
+            }
+        }
+
+        await conn.ExecuteAsync(
+            "DELETE FROM Relatorio_Crianca WHERE Id_Crianca = @ChildId",
+            new { ChildId = childId },
+            tx);
+
+        await conn.ExecuteAsync(
+            "DELETE FROM Atividade_Diaria WHERE Id_Crianca = @ChildId",
+            new { ChildId = childId },
+            tx);
+
+        await conn.ExecuteAsync(
+            """
+            IF OBJECT_ID(N'dbo.Sincronizacao_Progresso', N'U') IS NOT NULL
+                DELETE FROM dbo.Sincronizacao_Progresso WHERE Id_Crianca = @ChildId
+            """,
+            new { ChildId = childId },
+            tx);
+
+        await conn.ExecuteAsync(
+            """
+            IF OBJECT_ID(N'dbo.Progresso_Snapshot', N'U') IS NOT NULL
+                DELETE FROM dbo.Progresso_Snapshot WHERE Id_Crianca = @ChildId
+            """,
+            new { ChildId = childId },
+            tx);
+
+        await conn.ExecuteAsync(
+            "DELETE FROM Responsavel_Crianca WHERE Id_Crianca = @ChildId",
+            new { ChildId = childId },
+            tx);
+
+        await conn.ExecuteAsync(
+            "DELETE FROM Crianca WHERE Id = @ChildId",
+            new { ChildId = childId },
+            tx);
+    }
 }

@@ -12,14 +12,21 @@ public class ParentAuthService
     private readonly DbConnectionFactory _db;
     private readonly IMemoryCache _memoryCache;
     private readonly BrevoEmailService _emailService;
+    private readonly ChildrenLinkService _childrenLinkService;
     private readonly ILogger<ParentAuthService> _logger;
     private const string ResetPrefix = "reset-code:";
 
-    public ParentAuthService(DbConnectionFactory db, IMemoryCache memoryCache, BrevoEmailService emailService, ILogger<ParentAuthService> logger)
+    public ParentAuthService(
+        DbConnectionFactory db,
+        IMemoryCache memoryCache,
+        BrevoEmailService emailService,
+        ChildrenLinkService childrenLinkService,
+        ILogger<ParentAuthService> logger)
     {
         _db = db;
         _memoryCache = memoryCache;
         _emailService = emailService;
+        _childrenLinkService = childrenLinkService;
         _logger = logger;
     }
 
@@ -261,6 +268,64 @@ public class ParentAuthService
         }
 
         _memoryCache.Remove(cacheKey);
+        return ApplicationResult<bool>.Ok(true);
+    }
+
+    public async Task<ApplicationResult<bool>> DeleteAccountAsync(int responsavelId)
+    {
+        if (responsavelId <= 0)
+        {
+            return ApplicationResult<bool>.BadRequest("Identificador inválido.");
+        }
+
+        await using var conn = _db.Create();
+        await conn.OpenAsync();
+
+        var existe = await conn.QueryFirstOrDefaultAsync<int?>(
+            "SELECT Id FROM Responsavel WHERE Id = @Id",
+            new { Id = responsavelId });
+        if (!existe.HasValue)
+        {
+            return ApplicationResult<bool>.NotFound("Responsável não encontrado.");
+        }
+
+        var childIds = (await conn.QueryAsync<int>(
+            "SELECT Id_Crianca FROM Responsavel_Crianca WHERE Id_Responsavel = @Id",
+            new { Id = responsavelId })).ToList();
+
+        await using var tx = await conn.BeginTransactionAsync();
+        foreach (var childId in childIds)
+        {
+            await _childrenLinkService.ExcluirDadosDaCriancaAsync(conn, tx, childId);
+        }
+
+        await conn.ExecuteAsync(
+            """
+            IF OBJECT_ID(N'dbo.Sincronizacao_Progresso', N'U') IS NOT NULL
+                DELETE FROM dbo.Sincronizacao_Progresso WHERE Id_Responsavel = @Id
+            """,
+            new { Id = responsavelId },
+            tx);
+
+        await conn.ExecuteAsync(
+            """
+            IF OBJECT_ID(N'dbo.Progresso_Snapshot', N'U') IS NOT NULL
+                DELETE FROM dbo.Progresso_Snapshot WHERE Id_Responsavel = @Id
+            """,
+            new { Id = responsavelId },
+            tx);
+
+        await conn.ExecuteAsync(
+            "DELETE FROM Responsavel_Crianca WHERE Id_Responsavel = @Id",
+            new { Id = responsavelId },
+            tx);
+
+        await conn.ExecuteAsync(
+            "DELETE FROM Responsavel WHERE Id = @Id",
+            new { Id = responsavelId },
+            tx);
+
+        await tx.CommitAsync();
         return ApplicationResult<bool>.Ok(true);
     }
 

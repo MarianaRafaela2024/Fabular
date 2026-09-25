@@ -34,15 +34,15 @@
       options.body = JSON.stringify(body);
     }
     const resp = await fetch(`${API_BASE}${path}`, options);
-    if (!resp.ok) {
-      let msg = `Erro ${resp.status}`;
-      try {
-        const data = await resp.json();
-        if (data && data.message) msg = data.message;
-      } catch (_) { }
-      throw new Error(msg);
+    const texto = await resp.text();
+    let data = null;
+    if (texto) {
+      try { data = JSON.parse(texto); } catch (_) { data = null; }
     }
-    return resp.json();
+    if (!resp.ok) {
+      throw new Error((data && data.message) || `Erro ${resp.status}`);
+    }
+    return data;
   }
 
   async function carregarCriancas(responsavelId) {
@@ -467,6 +467,125 @@
     `;
   }
 
+  function limparDadosLocaisCrianca(criancaId) {
+    if (!criancaId) return;
+    const id = String(criancaId);
+    localStorage.removeItem(`mundoHistorias_progresso_${id}`);
+    localStorage.removeItem(`mundoHistorias_estado_crianca_${id}`);
+    localStorage.removeItem(`mundoHistorias_historias_ia_cache_${id}`);
+    try {
+      const estado = carregarJSON(CHAVE_ESTADO, {});
+      const pid = estado?.perfil?.id || estado?.perfil?.Id;
+      if (estado?.perfil && Number(pid) === Number(id)) {
+        localStorage.removeItem(CHAVE_ESTADO);
+      }
+    } catch (_) { }
+    try {
+      const raw = localStorage.getItem('mundoHistorias_vidas_criancas');
+      if (raw) {
+        const mapa = JSON.parse(raw);
+        delete mapa[id];
+        delete mapa[Number(id)];
+        localStorage.setItem('mundoHistorias_vidas_criancas', JSON.stringify(mapa));
+      }
+    } catch (_) { }
+  }
+
+  function fecharModalExclusao() {
+    const modal = document.getElementById('modal-excluir-conta');
+    if (!modal) return;
+    modal.classList.add('oculto');
+    modal.setAttribute('hidden', '');
+    modal.dataset.modo = '';
+    const btn = document.getElementById('modal-excluir-confirmar');
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Excluir';
+    }
+  }
+
+  function abrirModalExclusao({ titulo, descricao, nome, modo }) {
+    const modal = document.getElementById('modal-excluir-conta');
+    if (!modal) return;
+    const tituloEl = document.getElementById('modal-excluir-titulo');
+    const descEl = document.getElementById('modal-excluir-desc');
+    const nomeEl = document.getElementById('modal-excluir-nome');
+    if (tituloEl) tituloEl.textContent = titulo;
+    if (descEl) descEl.textContent = descricao;
+    if (nomeEl) nomeEl.textContent = nome;
+    modal.dataset.modo = modo;
+    modal.classList.remove('oculto');
+    modal.removeAttribute('hidden');
+  }
+
+  async function confirmarExclusaoModal() {
+    const modal = document.getElementById('modal-excluir-conta');
+    const modo = modal?.dataset?.modo;
+    const btn = document.getElementById('modal-excluir-confirmar');
+    const sessao = getSessaoResponsavel();
+    if (!sessao?.responsavelId || !modo) return;
+
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Excluindo...';
+    }
+
+    try {
+      if (modo === 'crianca') {
+        const crianca = obterCriancaSelecionada('config-crianca-select');
+        if (!crianca) {
+          setConfigMsg('Selecione uma criança para excluir.', '');
+          fecharModalExclusao();
+          return;
+        }
+        const criancaId = crianca.id || crianca.Id;
+        await apiRequest(
+          `/api/v1/children/${encodeURIComponent(criancaId)}/excluir`,
+          'POST',
+          { responsavelId: Number(sessao.responsavelId) }
+        );
+        limparDadosLocaisCrianca(criancaId);
+        criancasConfig = criancasConfig.filter((c) => Number(c.id || c.Id) !== Number(criancaId));
+        preencherSelectCriancas(document.getElementById('config-relatorio-crianca'), criancasConfig, 'Nenhuma criança cadastrada');
+        preencherSelectCriancas(document.getElementById('config-crianca-select'), criancasConfig, 'Nenhuma criança cadastrada');
+        if (criancasConfig.length) {
+          const proxima = criancasConfig[0];
+          const selectRel = document.getElementById('config-relatorio-crianca');
+          const selectCri = document.getElementById('config-crianca-select');
+          if (selectRel) selectRel.value = String(proxima.id || proxima.Id);
+          if (selectCri) selectCri.value = String(proxima.id || proxima.Id);
+          preencherFormCriancaConfig(proxima);
+          atualizarPreviasAvatar(proxima);
+          await carregarRelatorioCrianca(sessao.responsavelId, proxima);
+        } else {
+          const nomeEl = document.getElementById('config-crianca-nome');
+          const nascEl = document.getElementById('config-crianca-nascimento');
+          const horarioEl = document.getElementById('config-crianca-horario');
+          if (nomeEl) nomeEl.value = '';
+          if (nascEl) nascEl.value = '';
+          if (horarioEl) horarioEl.value = '';
+          atualizarPreviasAvatar(null);
+          const cont = document.getElementById('config-relatorios-conteudo');
+          if (cont) cont.innerHTML = '<p class="relatorio-estado">Cadastre um perfil infantil para gerar o relatório de acompanhamento.</p>';
+        }
+        fecharModalExclusao();
+        setConfigMsg('', 'O perfil da criança foi excluído.');
+        return;
+      }
+
+      if (modo === 'responsavel') {
+        criancasConfig.forEach((c) => limparDadosLocaisCrianca(c.id || c.Id));
+        await apiRequest(`/api/v1/parents/${encodeURIComponent(sessao.responsavelId)}/excluir`, 'POST');
+        localStorage.removeItem(CHAVE_SESSAO);
+        localStorage.removeItem(CHAVE_ESTADO);
+        window.location.href = 'login.html';
+      }
+    } catch (e) {
+      fecharModalExclusao();
+      setConfigMsg(e.message || 'Não foi possível concluir a exclusão.', '');
+    }
+  }
+
   function configurarAbasConfig() {
     document.querySelectorAll('.config-aba').forEach(btn => {
       btn.onclick = () => {
@@ -627,6 +746,67 @@
         window.location.href = 'login.html';
       };
     }
+
+    const btnExcluirCrianca = document.getElementById('btn-excluir-crianca');
+    if (btnExcluirCrianca) {
+      btnExcluirCrianca.onclick = () => {
+        const crianca = obterCriancaSelecionada('config-crianca-select');
+        if (!crianca) {
+          setConfigMsg('Selecione uma criança para excluir.', '');
+          return;
+        }
+        const nome = crianca.nome || crianca.Nome || 'esta criança';
+        abrirModalExclusao({
+          titulo: 'Excluir criança',
+          descricao: 'Isso apaga o perfil e todos os dados desta criança no banco (progresso, relatórios e histórias de IA). Os outros perfis e a sua conta continuam.',
+          nome,
+          modo: 'crianca'
+        });
+      };
+    }
+
+    const btnExcluirConta = document.getElementById('btn-excluir-conta-responsavel');
+    if (btnExcluirConta) {
+      btnExcluirConta.onclick = () => {
+        const sessao = getSessaoResponsavel();
+        if (!sessao?.responsavelId) {
+          window.location.href = 'login.html';
+          return;
+        }
+        const nomeResp = [
+          document.getElementById('config-resp-nome')?.value.trim(),
+          document.getElementById('config-resp-sobrenome')?.value.trim()
+        ].filter(Boolean).join(' ') || sessao.nome || sessao.Nome || 'sua conta';
+        const nomesCriancas = criancasConfig
+          .map((c) => c.nome || c.Nome)
+          .filter(Boolean);
+        const listaCriancas = nomesCriancas.length
+          ? ` Também serão excluídas: ${nomesCriancas.join(', ')}.`
+          : '';
+        abrirModalExclusao({
+          titulo: 'Excluir minha conta',
+          descricao: `Isso apaga a conta do responsável e todos os dados das crianças associadas no banco.${listaCriancas} Esta ação não pode ser desfeita.`,
+          nome: nomeResp,
+          modo: 'responsavel'
+        });
+      };
+    }
+
+    const btnCancelarExclusao = document.getElementById('modal-excluir-cancelar');
+    if (btnCancelarExclusao) btnCancelarExclusao.onclick = fecharModalExclusao;
+
+    const btnConfirmarExclusao = document.getElementById('modal-excluir-confirmar');
+    if (btnConfirmarExclusao) btnConfirmarExclusao.onclick = confirmarExclusaoModal;
+
+    const modalExclusao = document.getElementById('modal-excluir-conta');
+    if (modalExclusao) {
+      modalExclusao.addEventListener('click', (e) => {
+        if (e.target === modalExclusao) fecharModalExclusao();
+      });
+    }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') fecharModalExclusao();
+    });
   }
 
   async function abrirConfiguracoes() {

@@ -119,6 +119,11 @@
             </div>
           </div>
           <button class="btn-principal" id="btn-salvar-responsavel" type="button" style="margin-top: 12px; align-self: flex-start; max-width: 320px;">Salvar dados do responsável</button>
+          <div class="config-zona-perigo">
+            <p class="config-zona-perigo-titulo">Zona de exclusão</p>
+            <p class="config-zona-perigo-texto">Excluir a conta remove o responsável, todas as crianças vinculadas e os dados delas no banco (progresso, relatórios e histórias geradas por IA).</p>
+            <button class="btn-perigo" id="btn-excluir-conta-responsavel" type="button">Excluir minha conta</button>
+          </div>
         </div>
 
         <div class="config-secao oculto" id="config-secao-crianca" role="tabpanel">
@@ -167,10 +172,28 @@
             </div>
           </div>
           <button class="btn-principal" id="btn-salvar-crianca" type="button" style="margin-top: 12px; align-self: flex-start; max-width: 320px;">Salvar dados da criança</button>
+          <div class="config-zona-perigo">
+            <p class="config-zona-perigo-titulo">Excluir esta criança</p>
+            <p class="config-zona-perigo-texto">Remove só o perfil selecionado e os dados dela no banco. Os outros perfis e a conta do responsável permanecem.</p>
+            <button class="btn-perigo" id="btn-excluir-crianca" type="button">Excluir esta criança</button>
+          </div>
         </div>
 
         <span class="campo-erro oculto" id="config-erro" role="alert"></span>
         <span class="config-sucesso oculto" id="config-sucesso" role="status"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="portao-overlay oculto" id="modal-excluir-conta" hidden>
+    <div class="portao-card config-modal-perigo" role="dialog" aria-modal="true" aria-labelledby="modal-excluir-titulo">
+      <div class="portao-icone" aria-hidden="true">⚠️</div>
+      <h3 class="portao-titulo" id="modal-excluir-titulo">Confirmar exclusão</h3>
+      <p class="portao-desc" id="modal-excluir-desc"></p>
+      <p class="config-modal-nome" id="modal-excluir-nome"></p>
+      <div class="config-modal-acoes">
+        <button class="btn-secundario" id="modal-excluir-cancelar" type="button">Cancelar</button>
+        <button class="btn-perigo" id="modal-excluir-confirmar" type="button">Excluir</button>
       </div>
     </div>
   </div>

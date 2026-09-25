@@ -63,6 +63,19 @@ public class AuthController : ControllerBase
         return Ok(result.Value);
     }
 
+    [HttpDelete("{id:int}")]
+    [HttpPost("{id:int}/excluir")]
+    public async Task<IActionResult> DeleteAccount(int id)
+    {
+        var result = await _authService.DeleteAccountAsync(id);
+        if (!result.Success)
+        {
+            return StatusCode(result.StatusCode, new { message = result.Error });
+        }
+
+        return Ok(new { message = "Conta do responsável e perfis associados foram excluídos." });
+    }
+
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ParentForgotPasswordRequest request)
     {

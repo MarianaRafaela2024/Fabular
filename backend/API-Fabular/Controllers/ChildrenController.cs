@@ -52,6 +52,26 @@ public class ChildrenController : ControllerBase
         return Ok(result.Value);
     }
 
+    [HttpDelete("{id:int}")]
+    public Task<ActionResult> Delete(int id, [FromQuery] int responsavelId)
+        => ExcluirCriancaAsync(id, responsavelId);
+
+    [HttpPost("{id:int}/excluir")]
+    public Task<ActionResult> DeletePost(int id, [FromBody] DeleteChildRequest request)
+        => ExcluirCriancaAsync(id, request?.ResponsavelId ?? 0);
+
+    private async Task<ActionResult> ExcluirCriancaAsync(int id, int responsavelId)
+    {
+        var result = await _childrenLinkService.DeleteChildAsync(id, responsavelId);
+
+        if (!result.Success)
+        {
+            return StatusCode(result.StatusCode, new { message = result.Error });
+        }
+
+        return Ok(new { message = "Perfil da criança excluído." });
+    }
+
     [HttpPost("link-local")]
     public async Task<ActionResult<object>> LinkLocal([FromBody] LinkLocalChildrenRequest request)
     {
