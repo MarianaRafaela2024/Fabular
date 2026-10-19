@@ -1140,6 +1140,26 @@ section {
   min-height: 100px;
 }
 
+.footer-contato-form .campo-erro {
+  color: #EF4444;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.footer-contato-form .campo-erro.oculto {
+  display: none;
+}
+
+.hp-campo {
+  position: absolute;
+  left: -10000px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+}
+
 .footer-contato-form select option {
   color: #1f1f1f;
 }

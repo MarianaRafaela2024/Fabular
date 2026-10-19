@@ -7,7 +7,7 @@ public record ParentProfileResponse(int ResponsavelId, string Nome, string? Sobr
 public record UpdateParentRequest(string Nome, string? Sobrenome, string? Telefone, string? Email, string? SenhaAtual, string? NovaSenha);
 public record UpdateChildRequest(int ResponsavelId, string Nome, DateOnly? DataNascimento, string? Avatar, string? GeneroFavorito, string? HorarioBrincar);
 public record ParentForgotPasswordRequest(string Email);
-public record ParentResetPasswordRequest(string Email, string Codigo, string NovaSenha);
+public record ParentResetPasswordRequest(string Token, string NovaSenha);
 public record ContactMessageRequest(string Nome, string Email, string Assunto, string Mensagem);
 
 public record LocalChildDto(string LocalChildKey, string Nome, int FaixaEtaria, DateOnly? DataNascimento, string? Avatar, string? GeneroFavorito, DateTime? CreatedAt, string? HorarioBrincar = null);

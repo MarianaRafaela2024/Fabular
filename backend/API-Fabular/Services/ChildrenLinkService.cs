@@ -79,6 +79,16 @@ public class ChildrenLinkService
             return ApplicationResult<int>.BadRequest("Data de nascimento é obrigatória.");
         }
 
+        if (!ValidacaoCampos.TentarNormalizarNomeCrianca(request.Nome, out var nomeCrianca))
+        {
+            return ApplicationResult<int>.BadRequest("Informe o nome da criança.");
+        }
+
+        if (!ValidacaoCampos.TentarNormalizarHorarioBrincar(request.HorarioBrincar, out var horarioBrincar))
+        {
+            return ApplicationResult<int>.BadRequest(ValidacaoCampos.MensagemHorarioBrincar);
+        }
+
         var faixaEtaria = FaixaEtariaHelper.Calcular(request.DataNascimento);
 
         await using var conn = _db.Create();
@@ -98,13 +108,13 @@ public class ChildrenLinkService
         """,
             new
             {
-                Nome = request.Nome.Trim(),
+                Nome = nomeCrianca,
                 FaixaEtaria = faixaEtaria,
                 DataNascimento = dataNascParam,
                 request.Avatar,
                 GeneroFavorito = generoSlug ?? request.GeneroFavorito,
                 IdGeneroFavorito = idGeneroFavorito,
-                request.HorarioBrincar
+                HorarioBrincar = horarioBrincar
             });
 
         await conn.ExecuteAsync(
@@ -124,7 +134,7 @@ public class ChildrenLinkService
     }
     public async Task<ApplicationResult<ChildResponse>> UpdateChildAsync(int childId, UpdateChildRequest request)
     {
-        if (childId <= 0 || request.ResponsavelId <= 0 || string.IsNullOrWhiteSpace(request.Nome))
+        if (childId <= 0 || request.ResponsavelId <= 0 || !ValidacaoCampos.TentarNormalizarNomeCrianca(request.Nome, out var nomeCrianca))
         {
             return ApplicationResult<ChildResponse>.BadRequest("Dados inválidos para atualização.");
         }
@@ -132,6 +142,11 @@ public class ChildrenLinkService
         if (!request.DataNascimento.HasValue)
         {
             return ApplicationResult<ChildResponse>.BadRequest("Data de nascimento é obrigatória.");
+        }
+
+        if (!ValidacaoCampos.TentarNormalizarHorarioBrincar(request.HorarioBrincar, out var horarioBrincar))
+        {
+            return ApplicationResult<ChildResponse>.BadRequest(ValidacaoCampos.MensagemHorarioBrincar);
         }
 
         await using var conn = _db.Create();
@@ -170,13 +185,13 @@ public class ChildrenLinkService
             new
             {
                 Id = childId,
-                Nome = request.Nome.Trim(),
+                Nome = nomeCrianca,
                 FaixaEtaria = faixaEtaria,
                 DataNascimento = dataNascParam,
                 request.Avatar,
                 GeneroFavorito = generoSlug ?? request.GeneroFavorito,
                 IdGeneroFavorito = idGeneroFavorito,
-                request.HorarioBrincar
+                HorarioBrincar = horarioBrincar
             });
 
         var updated = await conn.QueryFirstOrDefaultAsync<ChildResponse>(
@@ -232,6 +247,7 @@ public class ChildrenLinkService
             var faixaEtaria = child.DataNascimento.HasValue
                 ? FaixaEtariaHelper.Calcular(child.DataNascimento)
                 : (byte)Math.Clamp(child.FaixaEtaria, 1, 3);
+            ValidacaoCampos.TentarNormalizarHorarioBrincar(child.HorarioBrincar, out var horarioBrincar);
 
             if (existing.HasValue)
             {
@@ -246,7 +262,7 @@ public class ChildrenLinkService
                             HorarioBrincar = COALESCE(@HorarioBrincar, HorarioBrincar)
                         WHERE Id = @Id
                         """,
-                        new { FaixaEtaria = faixaEtaria, child.DataNascimento, HorarioBrincar = child.HorarioBrincar, Id = childId },
+                        new { FaixaEtaria = faixaEtaria, child.DataNascimento, HorarioBrincar = horarioBrincar, Id = childId },
                         tx);
                 }
             }
@@ -267,7 +283,7 @@ public class ChildrenLinkService
                         child.Avatar,
                         GeneroFavorito = generoSlug ?? child.GeneroFavorito,
                         IdGeneroFavorito = idGeneroFavorito,
-                        child.HorarioBrincar,
+                        HorarioBrincar = horarioBrincar,
                         child.LocalChildKey
                     },
                     tx);

@@ -85,7 +85,7 @@ public class AuthController : ControllerBase
             return StatusCode(result.StatusCode, new { message = result.Error });
         }
 
-        return Ok(new { message = "Se o e-mail estiver cadastrado, enviamos um código de recuperação." });
+        return Ok(new { message = "Se o e-mail estiver cadastrado, enviaremos um link" });
     }
 
     [HttpPost("reset-password")]

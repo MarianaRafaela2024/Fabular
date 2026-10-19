@@ -121,8 +121,14 @@
     const emailEl = document.getElementById('config-resp-email');
     if (nomeEl) nomeEl.value = data.nome || data.Nome || '';
     if (sobrenomeEl) sobrenomeEl.value = data.sobrenome || data.Sobrenome || '';
-    if (telefoneEl) telefoneEl.value = data.telefone || data.Telefone || '';
+    if (telefoneEl) {
+      const bruto = data.telefone || data.Telefone || '';
+      telefoneEl.value = window.FabularValidacao
+        ? window.FabularValidacao.mascararTelefone(bruto)
+        : bruto;
+    }
     if (emailEl) emailEl.value = data.email || data.Email || '';
+    atualizarBotaoSalvarResp();
   }
 
   function selecionarGeneroConfig(genero) {
@@ -198,8 +204,14 @@
       || crianca.nome || crianca.Nome;
     const dataNascimento = document.getElementById('config-crianca-nascimento')?.value
       || formatarDataInput(crianca.dataNascimento || crianca.DataNascimento);
-    const horarioBrincar = document.getElementById('config-crianca-horario')?.value
-      || crianca.horarioBrincar || crianca.HorarioBrincar || null;
+    const horarioBrincar = (window.FabularValidacao
+      ? window.FabularValidacao.validarHorarioBrincar(
+        document.getElementById('config-crianca-horario')?.value
+        || crianca.horarioBrincar || crianca.HorarioBrincar
+      )
+      : { ok: true, valor: document.getElementById('config-crianca-horario')?.value
+        || crianca.horarioBrincar || crianca.HorarioBrincar || null });
+    if (!horarioBrincar.ok) return;
 
     if (!nome || !dataNascimento) return;
 
@@ -213,7 +225,7 @@
           dataNascimento,
           avatar: av,
           generoFavorito: criancaConfigEdit.genero,
-          horarioBrincar
+          horarioBrincar: horarioBrincar.valor
         }
       );
       const idx = criancasConfig.findIndex(c => Number(c.id || c.Id) === Number(criancaId));
@@ -242,10 +254,118 @@
     const horarioEl = document.getElementById('config-crianca-horario');
     if (nomeEl) nomeEl.value = crianca.nome || crianca.Nome || '';
     if (nascEl) nascEl.value = formatarDataInput(crianca.dataNascimento || crianca.DataNascimento);
-    if (horarioEl) horarioEl.value = crianca.horarioBrincar || crianca.HorarioBrincar || '';
+    if (horarioEl) {
+      horarioEl.value = window.FabularValidacao
+        ? window.FabularValidacao.obterHorarioBrincar(crianca)
+        : (crianca.horarioBrincar || crianca.HorarioBrincar || '');
+    }
     selecionarGeneroConfig(crianca.generoFavorito || crianca.GeneroFavorito || 'narrativo');
     selecionarAvatarConfig(crianca.avatar || crianca.Avatar || 'midia/user/sapo.png');
     atualizarPreviasAvatar(crianca);
+    atualizarBotaoSalvarCrianca();
+  }
+
+  function validarHorarioConfig(mostrarErro) {
+    const horarioEl = document.getElementById('config-crianca-horario');
+    const erroEl = document.getElementById('erro-config-horario');
+    const V = window.FabularValidacao;
+    const resultado = V
+      ? V.validarHorarioBrincar(horarioEl && horarioEl.value)
+      : {
+        ok: !!(horarioEl && horarioEl.value),
+        mensagem: 'Selecione o horário de brincar',
+        valor: (horarioEl && horarioEl.value) || ''
+      };
+    if (V) V.definirErroCampo(erroEl, mostrarErro && !resultado.ok ? resultado.mensagem : '');
+    else if (erroEl && mostrarErro) {
+      erroEl.textContent = resultado.ok ? '' : resultado.mensagem;
+      erroEl.classList.toggle('oculto', resultado.ok);
+    }
+    return resultado;
+  }
+
+  function validarTelefoneConfig(mostrarErro) {
+    const telEl = document.getElementById('config-resp-telefone');
+    const erroEl = document.getElementById('erro-config-resp-telefone');
+    const V = window.FabularValidacao;
+    const resultado = V
+      ? V.validarTelefone(telEl && telEl.value)
+      : { ok: false, mensagem: 'Telefone inválido. Use DDD + 9 dígitos.', valor: '' };
+    if (V) V.definirErroCampo(erroEl, mostrarErro && !resultado.ok ? resultado.mensagem : '');
+    return resultado;
+  }
+
+  function validarEmailConfig(mostrarErro) {
+    const emailEl = document.getElementById('config-resp-email');
+    const erroEl = document.getElementById('erro-config-resp-email');
+    const V = window.FabularValidacao;
+    const resultado = V
+      ? V.validarEmail(emailEl && emailEl.value)
+      : { ok: false, mensagem: 'Digite um e-mail válido.', valor: '' };
+    if (V) V.definirErroCampo(erroEl, mostrarErro && !resultado.ok ? resultado.mensagem : '');
+    return resultado;
+  }
+
+  function validarNovaSenhaConfig(mostrarErro) {
+    const novaEl = document.getElementById('config-resp-nova-senha');
+    const confirmarEl = document.getElementById('config-resp-confirmar-senha');
+    const atualEl = document.getElementById('config-resp-senha-atual');
+    const erroNova = document.getElementById('erro-config-nova-senha');
+    const erroConf = document.getElementById('erro-config-confirmar-senha');
+    const lista = document.getElementById('config-nova-senha-requisitos');
+    const V = window.FabularValidacao;
+    const nova = novaEl ? novaEl.value : '';
+    const confirmar = confirmarEl ? confirmarEl.value : '';
+    const atual = atualEl ? atualEl.value : '';
+
+    if (!nova && !confirmar) {
+      if (V) {
+        V.definirErroCampo(erroNova, '');
+        V.definirErroCampo(erroConf, '');
+        V.atualizarRequisitosSenha(lista, V.requisitosSenha(''));
+      }
+      return { ok: true, valor: null };
+    }
+
+    const resultado = V ? V.validarSenha(nova) : { ok: false, mensagem: '', valor: nova };
+    if (V) {
+      V.atualizarRequisitosSenha(lista, resultado.requisitos || V.requisitosSenha(nova));
+      V.definirErroCampo(erroNova, mostrarErro && !resultado.ok ? resultado.mensagem : '');
+    }
+    const conf = V ? V.validarConfirmacaoSenha(nova, confirmar) : { ok: nova === confirmar, mensagem: 'As senhas não coincidem.' };
+    if (V) V.definirErroCampo(erroConf, mostrarErro && !conf.ok ? conf.mensagem : '');
+    const atualOk = !!atual;
+    if (mostrarErro && resultado.ok && conf.ok && !atualOk) {
+      if (V) V.definirErroCampo(erroNova, 'Informe a senha atual para alterá-la.');
+    }
+    return { ok: resultado.ok && conf.ok && atualOk, valor: nova };
+  }
+
+  function validarNomeRespConfig(mostrarErro) {
+    const nomeEl = document.getElementById('config-resp-nome');
+    const erroEl = document.getElementById('erro-config-resp-nome');
+    const V = window.FabularValidacao;
+    const resultado = V
+      ? V.validarNome(nomeEl && nomeEl.value)
+      : { ok: !!(nomeEl && nomeEl.value.trim().length >= 2), mensagem: 'Informe um nome com pelo menos 2 caracteres.', valor: '' };
+    if (V) V.definirErroCampo(erroEl, mostrarErro && !resultado.ok ? resultado.mensagem : '');
+    return resultado;
+  }
+
+  function atualizarBotaoSalvarResp() {
+    const btn = document.getElementById('btn-salvar-responsavel');
+    const valido = !!(validarNomeRespConfig(false).ok && validarTelefoneConfig(false).ok && validarEmailConfig(false).ok && validarNovaSenhaConfig(false).ok);
+    if (window.FabularValidacao) window.FabularValidacao.atualizarBotaoEnviar(btn, valido);
+    else if (btn) btn.disabled = !valido;
+  }
+
+  function atualizarBotaoSalvarCrianca() {
+    const btn = document.getElementById('btn-salvar-crianca');
+    const nome = document.getElementById('config-crianca-nome')?.value.trim();
+    const dataNascimento = document.getElementById('config-crianca-nascimento')?.value;
+    const valido = !!(nome && dataNascimento && validarHorarioConfig(false).ok);
+    if (window.FabularValidacao) window.FabularValidacao.atualizarBotaoEnviar(btn, valido);
+    else if (btn) btn.disabled = !valido;
   }
 
   function obterCriancaSelecionada(selectId) {
@@ -564,6 +684,9 @@
           if (nomeEl) nomeEl.value = '';
           if (nascEl) nascEl.value = '';
           if (horarioEl) horarioEl.value = '';
+          const erroHorario = document.getElementById('erro-config-horario');
+          if (window.FabularValidacao) window.FabularValidacao.definirErroCampo(erroHorario, '');
+          atualizarBotaoSalvarCrianca();
           atualizarPreviasAvatar(null);
           const cont = document.getElementById('config-relatorios-conteudo');
           if (cont) cont.innerHTML = '<p class="relatorio-estado">Cadastre um perfil infantil para gerar o relatório de acompanhamento.</p>';
@@ -659,15 +782,20 @@
         if (!sessao?.responsavelId) return;
         setConfigMsg('', '');
 
-        const nome = document.getElementById('config-resp-nome')?.value.trim();
+        const nomeVal = validarNomeRespConfig(true);
+        const nome = nomeVal.valor;
         const sobrenome = document.getElementById('config-resp-sobrenome')?.value.trim();
-        const telefone = document.getElementById('config-resp-telefone')?.value.trim();
-        const email = document.getElementById('config-resp-email')?.value.trim().toLowerCase();
-        const senhaAtual = document.getElementById('config-resp-senha-atual')?.value.trim();
-        const novaSenha = document.getElementById('config-resp-nova-senha')?.value.trim();
+        const senhaAtual = document.getElementById('config-resp-senha-atual')?.value || '';
+        const senhaVal = validarNovaSenhaConfig(true);
+        const telVal = validarTelefoneConfig(true);
+        const emailVal = validarEmailConfig(true);
 
-        if (!nome || !email) {
-          setConfigMsg('Nome e e-mail são obrigatórios.', '');
+        if (!nomeVal.ok) {
+          atualizarBotaoSalvarResp();
+          return;
+        }
+        if (!telVal.ok || !emailVal.ok || !senhaVal.ok) {
+          atualizarBotaoSalvarResp();
           return;
         }
 
@@ -675,18 +803,51 @@
           const atualizado = await apiRequest(
             `/api/v1/parents/${encodeURIComponent(sessao.responsavelId)}`,
             'PUT',
-            { nome, sobrenome, telefone, email, senhaAtual: senhaAtual || null, novaSenha: novaSenha || null }
+            { nome, sobrenome, telefone: telVal.valor, email: emailVal.valor, senhaAtual: senhaVal.valor ? senhaAtual : null, novaSenha: senhaVal.valor }
           );
-          const novoEmail = atualizado.email || atualizado.Email || email;
+          const novoEmail = atualizado.email || atualizado.Email || emailVal.valor;
           salvarJSON(CHAVE_SESSAO, { ...sessao, email: novoEmail });
           document.getElementById('config-resp-senha-atual').value = '';
           document.getElementById('config-resp-nova-senha').value = '';
+          const confirmarEl = document.getElementById('config-resp-confirmar-senha');
+          if (confirmarEl) confirmarEl.value = '';
+          validarNovaSenhaConfig(false);
           setConfigMsg('', 'Pronto, salvamos seus dados.');
         } catch (e) {
-          setConfigMsg(e.message || 'Falha ao salvar dados do responsável.', '');
+          const msg = e.message || 'Falha ao salvar dados do responsável.';
+          const V = window.FabularValidacao;
+          if (V && msg === V.MSG_EMAIL_DUPLICADO) V.definirErroCampo(document.getElementById('erro-config-resp-email'), V.MSG_EMAIL_DUPLICADO);
+          else if (V && msg === V.MSG_TELEFONE) V.definirErroCampo(document.getElementById('erro-config-resp-telefone'), V.MSG_TELEFONE);
+          else if (V && msg === V.MSG_EMAIL) V.definirErroCampo(document.getElementById('erro-config-resp-email'), V.MSG_EMAIL);
+          else if (V && (msg === V.MSG_SENHA || msg === V.MSG_SENHA_COMUM)) V.definirErroCampo(document.getElementById('erro-config-nova-senha'), msg);
+          else setConfigMsg(msg, '');
         }
       };
     }
+
+    const telConfigEl = document.getElementById('config-resp-telefone');
+    if (window.FabularValidacao && telConfigEl) {
+      window.FabularValidacao.aplicarMascaraTelefone(telConfigEl);
+    }
+    if (window.FabularValidacao) {
+      window.FabularValidacao.aplicarOlhoSenha(document.getElementById('config-resp-senha-atual'));
+      window.FabularValidacao.aplicarOlhoSenha(document.getElementById('config-resp-nova-senha'));
+      window.FabularValidacao.aplicarOlhoSenha(document.getElementById('config-resp-confirmar-senha'));
+    }
+    ['config-resp-nome', 'config-resp-telefone', 'config-resp-email', 'config-resp-senha-atual', 'config-resp-nova-senha', 'config-resp-confirmar-senha'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('input', () => {
+        if (id === 'config-resp-nome') validarNomeRespConfig(true);
+        if (id === 'config-resp-telefone') validarTelefoneConfig(true);
+        if (id === 'config-resp-email') validarEmailConfig(true);
+        if (id === 'config-resp-nova-senha' || id === 'config-resp-confirmar-senha' || id === 'config-resp-senha-atual') {
+          validarNovaSenhaConfig(true);
+        }
+        atualizarBotaoSalvarResp();
+      });
+    });
+    atualizarBotaoSalvarResp();
 
     const btnSalvarCrianca = document.getElementById('btn-salvar-crianca');
     if (btnSalvarCrianca) {
@@ -701,10 +862,16 @@
 
         const nome = document.getElementById('config-crianca-nome')?.value.trim();
         const dataNascimento = document.getElementById('config-crianca-nascimento')?.value;
-        const horarioBrincar = document.getElementById('config-crianca-horario')?.value || null;
+        const horarioVal = validarHorarioConfig(true);
 
         if (!nome || !dataNascimento) {
           setConfigMsg('Nome e data de nascimento são obrigatórios.', '');
+          atualizarBotaoSalvarCrianca();
+          return;
+        }
+
+        if (!horarioVal.ok) {
+          atualizarBotaoSalvarCrianca();
           return;
         }
 
@@ -719,7 +886,7 @@
               dataNascimento,
               avatar: criancaConfigEdit.avatar,
               generoFavorito: criancaConfigEdit.genero,
-              horarioBrincar
+              horarioBrincar: horarioVal.valor
             }
           );
           const idx = criancasConfig.findIndex(c => Number(c.id || c.Id) === Number(criancaId));
@@ -735,10 +902,27 @@
           await carregarRelatorioCrianca(sessao.responsavelId, atualizado);
           setConfigMsg('', 'Pronto, salvamos o perfil da criança.');
         } catch (e) {
-          setConfigMsg(e.message || 'Falha ao salvar dados da criança.', '');
+          const msg = e.message || 'Falha ao salvar dados da criança.';
+          if (msg.indexOf('horário') !== -1) {
+            validarHorarioConfig(true);
+          }
+          setConfigMsg(msg, '');
         }
       };
     }
+
+    ['config-crianca-nome', 'config-crianca-nascimento', 'config-crianca-horario'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('input', () => {
+        if (id === 'config-crianca-horario') validarHorarioConfig(true);
+        atualizarBotaoSalvarCrianca();
+      });
+      el.addEventListener('change', () => {
+        if (id === 'config-crianca-horario') validarHorarioConfig(true);
+        atualizarBotaoSalvarCrianca();
+      });
+    });
 
     const btnVoltar = document.getElementById('btn-voltar-perfis-config');
     if (btnVoltar) {

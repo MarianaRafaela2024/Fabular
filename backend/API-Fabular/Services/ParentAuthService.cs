@@ -3,28 +3,28 @@ using System.Text;
 using API_Fabular.Contracts;
 using API_Fabular.Infra;
 using Dapper;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.AspNetCore.Identity;
 
 namespace API_Fabular.Services;
 
 public class ParentAuthService
 {
     private readonly DbConnectionFactory _db;
-    private readonly IMemoryCache _memoryCache;
+    private readonly IConfiguration _configuration;
     private readonly BrevoEmailService _emailService;
     private readonly ChildrenLinkService _childrenLinkService;
     private readonly ILogger<ParentAuthService> _logger;
-    private const string ResetPrefix = "reset-code:";
+    private readonly PasswordHasher<object> _passwordHasher = new();
 
     public ParentAuthService(
         DbConnectionFactory db,
-        IMemoryCache memoryCache,
+        IConfiguration configuration,
         BrevoEmailService emailService,
         ChildrenLinkService childrenLinkService,
         ILogger<ParentAuthService> logger)
     {
         _db = db;
-        _memoryCache = memoryCache;
+        _configuration = configuration;
         _emailService = emailService;
         _childrenLinkService = childrenLinkService;
         _logger = logger;
@@ -32,23 +32,36 @@ public class ParentAuthService
 
     public async Task<ApplicationResult<ParentAuthResponse>> RegisterAsync(ParentRegisterRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Senha) || string.IsNullOrWhiteSpace(request.Nome) || string.IsNullOrWhiteSpace(request.Telefone))
+        if (!ValidacaoCampos.TentarNormalizarNome(request.Nome, out var nomeLimpo))
         {
-            return ApplicationResult<ParentAuthResponse>.BadRequest("Nome, telefone, email e senha são obrigatórios.");
+            return ApplicationResult<ParentAuthResponse>.BadRequest(ValidacaoCampos.MensagemNome);
         }
 
-        var telefone = new string(request.Telefone.Where(char.IsDigit).ToArray());
-        if (telefone.Length < 10 || telefone.Length > 11)
+        if (!ValidacaoCampos.TentarNormalizarSobrenome(request.Sobrenome, out var sobrenomeLimpo))
         {
-            return ApplicationResult<ParentAuthResponse>.BadRequest("Informe um telefone válido com DDD.");
+            return ApplicationResult<ParentAuthResponse>.BadRequest("Sobrenome muito longo.");
+        }
+
+        if (!ValidacaoCampos.SenhaAtendeRegras(request.Senha, out var erroSenha))
+        {
+            return ApplicationResult<ParentAuthResponse>.BadRequest(erroSenha ?? ValidacaoCampos.MensagemSenha);
+        }
+
+        if (!ValidacaoCampos.TentarNormalizarTelefone(request.Telefone, out var telefone))
+        {
+            return ApplicationResult<ParentAuthResponse>.BadRequest(ValidacaoCampos.MensagemTelefone);
+        }
+
+        if (!ValidacaoCampos.TentarNormalizarEmail(request.Email, out var email))
+        {
+            return ApplicationResult<ParentAuthResponse>.BadRequest(ValidacaoCampos.MensagemEmail);
         }
 
         await using var conn = _db.Create();
-        var email = request.Email.Trim().ToLowerInvariant();
         var existing = await conn.QueryFirstOrDefaultAsync<int?>("SELECT Id FROM Responsavel WHERE Email = @Email", new { Email = email });
         if (existing.HasValue)
         {
-            return ApplicationResult<ParentAuthResponse>.Conflict("E-mail já cadastrado.");
+            return ApplicationResult<ParentAuthResponse>.BadRequest(ValidacaoCampos.MensagemEmailDuplicado);
         }
 
         var sql = """
@@ -56,14 +69,14 @@ public class ParentAuthService
                   OUTPUT INSERTED.Id
                   VALUES (@Nome, @Sobrenome, @Telefone, @Email, @SenhaHash);
                   """;
-        var cleanName = request.Nome.Trim();
+        var cleanName = nomeLimpo!;
         var id = await conn.QuerySingleAsync<int>(sql, new
         {
             Nome = cleanName,
-            Sobrenome = request.Sobrenome?.Trim(),
+            Sobrenome = sobrenomeLimpo,
             Telefone = telefone,
             Email = email,
-            SenhaHash = Hash(request.Senha)
+            SenhaHash = HashSenha(request.Senha)
         });
 
         return ApplicationResult<ParentAuthResponse>.Ok(new ParentAuthResponse(id, email, cleanName));
@@ -71,20 +84,31 @@ public class ParentAuthService
 
     public async Task<ApplicationResult<ParentAuthResponse>> LoginAsync(ParentLoginRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Senha))
+        if (string.IsNullOrWhiteSpace(request.Senha))
         {
             return ApplicationResult<ParentAuthResponse>.BadRequest("Email e senha são obrigatórios.");
         }
 
+        if (!ValidacaoCampos.TentarNormalizarEmail(request.Email, out var email))
+        {
+            return ApplicationResult<ParentAuthResponse>.BadRequest(ValidacaoCampos.MensagemEmail);
+        }
+
         await using var conn = _db.Create();
-        var email = request.Email.Trim().ToLowerInvariant();
         var row = await conn.QueryFirstOrDefaultAsync<(int Id, string Nome, string SenhaHash)>(
             "SELECT Id, Nome, SenhaHash FROM Responsavel WHERE Email = @Email",
             new { Email = email });
 
-        if (row.Id == 0 || row.SenhaHash != Hash(request.Senha))
+        if (row.Id == 0 || !SenhaConfere(row.SenhaHash, request.Senha, out var precisaRehash))
         {
             return ApplicationResult<ParentAuthResponse>.Unauthorized("Credenciais inválidas.");
+        }
+
+        if (precisaRehash)
+        {
+            await conn.ExecuteAsync(
+                "UPDATE Responsavel SET SenhaHash = @SenhaHash WHERE Id = @Id",
+                new { SenhaHash = HashSenha(request.Senha), row.Id });
         }
 
         return ApplicationResult<ParentAuthResponse>.Ok(new ParentAuthResponse(row.Id, email, row.Nome));
@@ -92,52 +116,61 @@ public class ParentAuthService
 
     public async Task<ApplicationResult<bool>> RequestPasswordResetAsync(ParentForgotPasswordRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Email))
+        if (!ValidacaoCampos.TentarNormalizarEmail(request.Email, out var email))
         {
-            return ApplicationResult<bool>.BadRequest("Email é obrigatório.");
+            return ApplicationResult<bool>.BadRequest(ValidacaoCampos.MensagemEmail);
         }
 
-        var email = request.Email.Trim().ToLowerInvariant();
         await using var conn = _db.Create();
-        var exists = await conn.QueryFirstOrDefaultAsync<int?>("SELECT Id FROM Responsavel WHERE Email = @Email", new { Email = email });
-        if (!exists.HasValue)
+        await conn.OpenAsync();
+        await GarantirTabelaRecuperacaoAsync(conn);
+
+        var responsavelId = await conn.QueryFirstOrDefaultAsync<int?>(
+            "SELECT Id FROM Responsavel WHERE Email = @Email",
+            new { Email = email });
+
+        if (!responsavelId.HasValue)
         {
-            // Retorna sucesso para não expor se email existe ou não.
             return ApplicationResult<bool>.Ok(true);
         }
 
-        if (!_emailService.IsConfigured())
-        {
-            _logger.LogError("Tentativa de recuperação sem Brevo SMTP configurado para {Email}", email);
-            return ApplicationResult<bool>.InternalError("Serviço de recuperação indisponível no momento.");
-        }
+        var token = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
+        var tokenHash = HashCodigo(token);
+        var expiraEm = DateTime.UtcNow.AddMinutes(30);
 
-        var codigo = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
+        await conn.ExecuteAsync(
+            """
+            UPDATE Recuperacao_Senha
+            SET UsadoEm = SYSUTCDATETIME()
+            WHERE Id_Responsavel = @Id AND UsadoEm IS NULL
+            """,
+            new { Id = responsavelId.Value });
 
-        _logger.LogInformation(
-            "Código gerado para {Email}: {Codigo}",
-            email,
-            codigo);
-
-        _memoryCache.Set(
-            GetResetKey(email),
-            Hash(codigo),
-            TimeSpan.FromMinutes(10));
+        await conn.ExecuteAsync(
+            """
+            INSERT INTO Recuperacao_Senha (Id_Responsavel, TokenHash, ExpiraEm)
+            VALUES (@Id, @TokenHash, @ExpiraEm)
+            """,
+            new { Id = responsavelId.Value, TokenHash = tokenHash, ExpiraEm = expiraEm });
 
         try
         {
-            await _emailService.SendPasswordResetCodeAsync(email, codigo);
-            return ApplicationResult<bool>.Ok(true);
+            if (!_emailService.IsConfigured())
+            {
+                _logger.LogError("Recuperação pedida sem Brevo configurado.");
+                return ApplicationResult<bool>.Ok(true);
+            }
+
+            var baseUrl = (_configuration["Frontend:BaseUrl"] ?? "http://127.0.0.1:5500").TrimEnd('/');
+            var link = $"{baseUrl}/login.html?reset={token}";
+            await _emailService.SendPasswordResetLinkAsync(email!, link);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex,
-                "Falha ao enviar e-mail de recuperação para {Email}",
-                email);
-
-            return ApplicationResult<bool>.InternalError(
-                ex.ToString());
+            _logger.LogError(ex, "Falha ao enviar e-mail de recuperação.");
         }
+
+        return ApplicationResult<bool>.Ok(true);
     }
 
     public async Task<ApplicationResult<ParentProfileResponse>> GetProfileAsync(int responsavelId)
@@ -163,9 +196,19 @@ public class ParentAuthService
 
     public async Task<ApplicationResult<ParentProfileResponse>> UpdateProfileAsync(int responsavelId, UpdateParentRequest request)
     {
-        if (responsavelId <= 0 || string.IsNullOrWhiteSpace(request.Nome))
+        if (responsavelId <= 0)
         {
             return ApplicationResult<ParentProfileResponse>.BadRequest("Nome é obrigatório.");
+        }
+
+        if (!ValidacaoCampos.TentarNormalizarNome(request.Nome, out var nomeLimpo))
+        {
+            return ApplicationResult<ParentProfileResponse>.BadRequest(ValidacaoCampos.MensagemNome);
+        }
+
+        if (!ValidacaoCampos.TentarNormalizarSobrenome(request.Sobrenome, out var sobrenomeLimpo))
+        {
+            return ApplicationResult<ParentProfileResponse>.BadRequest("Sobrenome muito longo.");
         }
 
         await using var conn = _db.Create();
@@ -178,18 +221,19 @@ public class ParentAuthService
             return ApplicationResult<ParentProfileResponse>.NotFound("Responsável não encontrado.");
         }
 
-        var novoEmail = string.IsNullOrWhiteSpace(request.Email)
-            ? row.Email
-            : request.Email.Trim().ToLowerInvariant();
+        if (!ValidacaoCampos.TentarNormalizarEmail(request.Email, out var novoEmail))
+        {
+            return ApplicationResult<ParentProfileResponse>.BadRequest(ValidacaoCampos.MensagemEmail);
+        }
 
-        if (!string.IsNullOrWhiteSpace(request.Email) && novoEmail != row.Email)
+        if (novoEmail != row.Email)
         {
             var emailEmUso = await conn.QueryFirstOrDefaultAsync<int?>(
                 "SELECT Id FROM Responsavel WHERE Email = @Email AND Id <> @Id",
                 new { Email = novoEmail, Id = responsavelId });
             if (emailEmUso.HasValue)
             {
-                return ApplicationResult<ParentProfileResponse>.Conflict("E-mail já cadastrado.");
+                return ApplicationResult<ParentProfileResponse>.BadRequest(ValidacaoCampos.MensagemEmailDuplicado);
             }
         }
 
@@ -201,21 +245,22 @@ public class ParentAuthService
                 return ApplicationResult<ParentProfileResponse>.BadRequest("Informe a senha atual para alterá-la.");
             }
 
-            if (row.SenhaHash != Hash(request.SenhaAtual))
+            if (!ValidacaoCampos.SenhaAtendeRegras(request.NovaSenha, out var erroNovaSenha))
+            {
+                return ApplicationResult<ParentProfileResponse>.BadRequest(erroNovaSenha ?? ValidacaoCampos.MensagemSenha);
+            }
+
+            if (!SenhaConfere(row.SenhaHash, request.SenhaAtual, out _))
             {
                 return ApplicationResult<ParentProfileResponse>.Unauthorized("Senha atual incorreta.");
             }
 
-            novaSenhaHash = Hash(request.NovaSenha);
+            novaSenhaHash = HashSenha(request.NovaSenha);
         }
 
-        var telefone = string.IsNullOrWhiteSpace(request.Telefone)
-            ? null
-            : new string(request.Telefone.Where(char.IsDigit).ToArray());
-
-        if (telefone is not null && telefone.Length > 0 && (telefone.Length < 10 || telefone.Length > 11))
+        if (!ValidacaoCampos.TentarNormalizarTelefone(request.Telefone, out var telefone))
         {
-            return ApplicationResult<ParentProfileResponse>.BadRequest("Informe um telefone válido com DDD.");
+            return ApplicationResult<ParentProfileResponse>.BadRequest(ValidacaoCampos.MensagemTelefone);
         }
 
         await conn.ExecuteAsync(
@@ -231,43 +276,61 @@ public class ParentAuthService
             new
             {
                 Id = responsavelId,
-                Nome = request.Nome.Trim(),
-                Sobrenome = request.Sobrenome?.Trim(),
+                Nome = nomeLimpo,
+                Sobrenome = sobrenomeLimpo,
                 Telefone = telefone,
                 Email = novoEmail,
                 SenhaHash = novaSenhaHash
             });
 
         return ApplicationResult<ParentProfileResponse>.Ok(
-            new ParentProfileResponse(responsavelId, request.Nome.Trim(), request.Sobrenome?.Trim(), telefone, novoEmail));
+            new ParentProfileResponse(responsavelId, nomeLimpo!, sobrenomeLimpo, telefone, novoEmail));
     }
 
     public async Task<ApplicationResult<bool>> ResetPasswordAsync(ParentResetPasswordRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Email) ||
-            string.IsNullOrWhiteSpace(request.Codigo) ||
-            string.IsNullOrWhiteSpace(request.NovaSenha))
+        if (string.IsNullOrWhiteSpace(request.Token))
         {
-            return ApplicationResult<bool>.BadRequest("Email, código e nova senha são obrigatórios.");
+            return ApplicationResult<bool>.BadRequest("Link inválido ou expirado.");
         }
 
-        var email = request.Email.Trim().ToLowerInvariant();
-        var cacheKey = GetResetKey(email);
-        if (!_memoryCache.TryGetValue(cacheKey, out string? codigoHash) || codigoHash != Hash(request.Codigo.Trim()))
+        if (!ValidacaoCampos.SenhaAtendeRegras(request.NovaSenha, out var erroSenhaReset))
         {
-            return ApplicationResult<bool>.BadRequest("Código inválido ou expirado.");
+            return ApplicationResult<bool>.BadRequest(erroSenhaReset ?? ValidacaoCampos.MensagemSenha);
         }
 
+        var tokenHash = HashCodigo(request.Token.Trim());
         await using var conn = _db.Create();
-        var rows = await conn.ExecuteAsync(
-            "UPDATE Responsavel SET SenhaHash = @SenhaHash WHERE Email = @Email",
-            new { Email = email, SenhaHash = Hash(request.NovaSenha) });
-        if (rows <= 0)
+        await conn.OpenAsync();
+        await GarantirTabelaRecuperacaoAsync(conn);
+        await using var tx = await conn.BeginTransactionAsync();
+
+        var row = await conn.QueryFirstOrDefaultAsync<(int Id, int IdResponsavel, DateTime ExpiraEm, DateTime? UsadoEm)>(
+            """
+            SELECT Id, Id_Responsavel AS IdResponsavel, ExpiraEm, UsadoEm
+            FROM Recuperacao_Senha
+            WHERE TokenHash = @TokenHash
+            """,
+            new { TokenHash = tokenHash },
+            tx);
+
+        if (row.Id == 0 || row.UsadoEm.HasValue || row.ExpiraEm <= DateTime.UtcNow)
         {
-            return ApplicationResult<bool>.NotFound("Responsável não encontrado.");
+            await tx.RollbackAsync();
+            return ApplicationResult<bool>.BadRequest("Link inválido ou expirado.");
         }
 
-        _memoryCache.Remove(cacheKey);
+        await conn.ExecuteAsync(
+            "UPDATE Responsavel SET SenhaHash = @SenhaHash WHERE Id = @Id",
+            new { Id = row.IdResponsavel, SenhaHash = HashSenha(request.NovaSenha) },
+            tx);
+
+        await conn.ExecuteAsync(
+            "UPDATE Recuperacao_Senha SET UsadoEm = SYSUTCDATETIME() WHERE Id = @Id",
+            new { row.Id },
+            tx);
+
+        await tx.CommitAsync();
         return ApplicationResult<bool>.Ok(true);
     }
 
@@ -329,9 +392,62 @@ public class ParentAuthService
         return ApplicationResult<bool>.Ok(true);
     }
 
-    private static string GetResetKey(string email) => $"{ResetPrefix}{email}";
+    private async Task GarantirTabelaRecuperacaoAsync(System.Data.Common.DbConnection conn)
+    {
+        await conn.ExecuteAsync(
+            """
+            IF OBJECT_ID(N'dbo.Recuperacao_Senha', N'U') IS NULL
+            BEGIN
+                CREATE TABLE dbo.Recuperacao_Senha (
+                    Id INT IDENTITY(1,1) PRIMARY KEY,
+                    Id_Responsavel INT NOT NULL,
+                    TokenHash CHAR(64) NOT NULL,
+                    ExpiraEm DATETIME2 NOT NULL,
+                    UsadoEm DATETIME2 NULL,
+                    CriadoEm DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+                    CONSTRAINT FK_RecuperacaoSenha_Responsavel
+                        FOREIGN KEY (Id_Responsavel) REFERENCES dbo.Responsavel (Id) ON DELETE CASCADE
+                );
+                CREATE UNIQUE INDEX UX_Recuperacao_Senha_TokenHash ON dbo.Recuperacao_Senha (TokenHash);
+            END
+            """);
+    }
 
-    private static string Hash(string value)
+    private string HashSenha(string senha) => _passwordHasher.HashPassword(new object(), senha);
+
+    private bool SenhaConfere(string? storedHash, string senha, out bool precisaRehash)
+    {
+        precisaRehash = false;
+        if (string.IsNullOrWhiteSpace(storedHash))
+            return false;
+
+        try
+        {
+            var resultado = _passwordHasher.VerifyHashedPassword(new object(), storedHash, senha);
+            if (resultado == PasswordVerificationResult.SuccessRehashNeeded)
+            {
+                precisaRehash = true;
+                return true;
+            }
+
+            if (resultado == PasswordVerificationResult.Success)
+                return true;
+        }
+        catch (FormatException)
+        {
+            // Hash legado (SHA-256 em hexadecimal).
+        }
+
+        if (string.Equals(storedHash, HashCodigo(senha), StringComparison.OrdinalIgnoreCase))
+        {
+            precisaRehash = true;
+            return true;
+        }
+
+        return false;
+    }
+
+    private static string HashCodigo(string value)
     {
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(value));
         return Convert.ToHexString(bytes);

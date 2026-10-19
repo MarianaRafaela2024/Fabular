@@ -48,20 +48,20 @@ public class BrevoService
                 }
             },
 
-            subject = $"Contato: {assunto}",
+            subject = $"Contato: {ValidacaoCampos.EscaparHtml(assunto)}",
 
             htmlContent = $@"
                 <h2>Novo contato</h2>
 
-                <p><b>Nome:</b> {nome}</p>
+                <p><b>Nome:</b> {ValidacaoCampos.EscaparHtml(nome)}</p>
 
-                <p><b>Email:</b> {email}</p>
+                <p><b>Email:</b> {ValidacaoCampos.EscaparHtml(email)}</p>
 
-                <p><b>Assunto:</b> {assunto}</p>
+                <p><b>Assunto:</b> {ValidacaoCampos.EscaparHtml(assunto)}</p>
 
                 <p><b>Mensagem:</b></p>
 
-                <p>{mensagem}</p>
+                <p>{ValidacaoCampos.EscaparHtml(mensagem).Replace("\n", "<br/>")}</p>
             "
         };
 

@@ -411,11 +411,13 @@
               <span>Segunda a sexta, 8h às 18h</span>
             </div>
           </div>
-          <form class="footer-contato-form" id="footer-contato-form">
+          <form class="footer-contato-form" id="footer-contato-form" style="position:relative">
             <label for="contato-nome">Nome</label>
-            <input id="contato-nome" type="text" name="name" placeholder="Seu nome completo" required>
+            <input id="contato-nome" type="text" name="name" placeholder="Seu nome completo" required maxlength="80">
+            <span class="campo-erro oculto" id="erro-contato-nome" role="alert">Informe um nome com pelo menos 2 caracteres.</span>
             <label for="contato-email">Email</label>
-            <input id="contato-email" type="email" name="email" placeholder="seuemail@exemplo.com" required>
+            <input id="contato-email" type="email" name="email" placeholder="seuemail@exemplo.com" required maxlength="160">
+            <span class="campo-erro oculto" id="erro-contato-email" role="alert">Digite um e-mail válido.</span>
             <label for="contato-assunto">Assunto</label>
             <select id="contato-assunto" name="subject" required>
               <option value="duvida-geral">Dúvida geral</option>
@@ -425,7 +427,12 @@
               <option value="outro">Outro</option>
             </select>
             <label for="contato-mensagem">Mensagem</label>
-            <textarea id="contato-mensagem" name="message" placeholder="Como podemos ajudar?" required></textarea>
+            <textarea id="contato-mensagem" name="message" placeholder="Como podemos ajudar?" required minlength="10" maxlength="2000"></textarea>
+            <span class="campo-erro oculto" id="erro-contato-mensagem" role="alert">A mensagem precisa ter entre 10 e 2000 caracteres.</span>
+            <div class="hp-campo" aria-hidden="true">
+              <label for="contato-website">Website</label>
+              <input id="contato-website" type="text" name="website" tabindex="-1" autocomplete="off">
+            </div>
             <button type="submit" class="footer-btn-enviar">Enviar mensagem</button>
             <p id="contato-feedback" class="contato-feedback" aria-live="polite"></p>
           </form>
@@ -454,6 +461,7 @@
     </div>
   </footer>
 
+  <script src="js/utils/validacao.js"></script>
   <script src="js/script.js"></script>
 </body>
 

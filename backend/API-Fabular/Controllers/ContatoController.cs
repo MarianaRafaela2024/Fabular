@@ -20,23 +20,50 @@ public class ContatoController : ControllerBase
     public async Task<IActionResult> Enviar(
         [FromBody] ContatoRequest request)
     {
+        if (ValidacaoCampos.HoneypotPreenchido(request.Website))
+        {
+            return Ok(new { sucesso = true });
+        }
+
+        if (!ValidacaoCampos.TentarNormalizarNome(request.Nome, out var nome))
+        {
+            return BadRequest(new { message = ValidacaoCampos.MensagemNome });
+        }
+
+        if (!ValidacaoCampos.TentarNormalizarEmail(request.Email, out var email))
+        {
+            return BadRequest(new { message = ValidacaoCampos.MensagemEmail });
+        }
+
+        if (!ValidacaoCampos.TentarNormalizarAssuntoContato(request.Assunto, out var assunto))
+        {
+            return BadRequest(new { message = ValidacaoCampos.MensagemAssunto });
+        }
+
+        if (!ValidacaoCampos.TentarNormalizarMensagemContato(request.Mensagem, out var mensagem))
+        {
+            return BadRequest(new { message = ValidacaoCampos.MensagemContato });
+        }
+
         try
         {
             var sucesso =
                 await _brevoService.EnviarContato(
-                    request.Nome,
-                    request.Email,
-                    request.Assunto,
-                    request.Mensagem);
+                    nome!,
+                    email!,
+                    assunto!,
+                    mensagem!);
 
-            return Ok(new
+            if (!sucesso)
             {
-                sucesso
-            });
+                return StatusCode(500, new { message = "Não foi possível enviar sua mensagem agora." });
+            }
+
+            return Ok(new { sucesso });
         }
-        catch (Exception ex)
+        catch
         {
-            return BadRequest(ex.ToString());
+            return StatusCode(500, new { message = "Não foi possível enviar sua mensagem agora." });
         }
     }
 }

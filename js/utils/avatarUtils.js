@@ -102,4 +102,6 @@ function renderizarElementoAvatar(container, avatar, extraClass = '', altText = 
 if (typeof window !== 'undefined') {
   window.AVATAR_PADRAO = AVATAR_PADRAO;
   window.normalizarCaminhoAvatar = normalizarCaminhoAvatar;
+  window.renderizarAvatarHTML = renderizarAvatarHTML;
+  window.renderizarElementoAvatar = renderizarElementoAvatar;
 }

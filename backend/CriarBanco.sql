@@ -21,6 +21,7 @@ IF OBJECT_ID('Atividade_Diaria') IS NOT NULL DROP TABLE Atividade_Diaria;
 IF OBJECT_ID('Responsavel_Crianca') IS NOT NULL DROP TABLE Responsavel_Crianca;
 IF OBJECT_ID('Historia') IS NOT NULL DROP TABLE Historia;
 IF OBJECT_ID('Crianca') IS NOT NULL DROP TABLE Crianca;
+IF OBJECT_ID('Recuperacao_Senha') IS NOT NULL DROP TABLE Recuperacao_Senha;
 IF OBJECT_ID('Responsavel') IS NOT NULL DROP TABLE Responsavel;
 IF OBJECT_ID('Genero') IS NOT NULL DROP TABLE Genero;
 
@@ -41,6 +42,18 @@ CREATE TABLE Responsavel (
     CriadoEm DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
 );
 
+CREATE TABLE Recuperacao_Senha (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    Id_Responsavel INT NOT NULL,
+    TokenHash CHAR(64) NOT NULL,
+    ExpiraEm DATETIME2 NOT NULL,
+    UsadoEm DATETIME2 NULL,
+    CriadoEm DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    CONSTRAINT FK_RecuperacaoSenha_Responsavel
+        FOREIGN KEY (Id_Responsavel) REFERENCES Responsavel(Id) ON DELETE CASCADE
+);
+CREATE UNIQUE INDEX UX_Recuperacao_Senha_TokenHash ON Recuperacao_Senha (TokenHash);
+
 CREATE TABLE Crianca (
     Id INT IDENTITY(1,1) PRIMARY KEY,
     Nome NVARCHAR(80) NOT NULL,
@@ -49,7 +62,7 @@ CREATE TABLE Crianca (
     Avatar VARCHAR(32) NULL,
     GeneroFavorito VARCHAR(32) NULL,
     Id_GeneroFavorito INT NULL,
-    HorarioBrincar VARCHAR(10) NULL,
+    HorarioBrincar VARCHAR(10) NULL, -- app exige valor; NULL só por cadastros antigos. Para NOT NULL, ver 013_horario_brincar_obrigatorio.up.sql
     Estrela SMALLINT NOT NULL DEFAULT 0,
     LocalChildKey VARCHAR(80) NULL,
     CriadoEm DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),

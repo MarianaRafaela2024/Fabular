@@ -36,10 +36,9 @@ public class BrevoEmailService
         return !string.IsNullOrWhiteSpace(_options.ApiKey);
     }
 
-    public async Task SendPasswordResetCodeAsync(
-        string email,
-        string codigo)
+    public async Task SendPasswordResetLinkAsync(string email, string link)
     {
+        var linkSeguro = System.Net.WebUtility.HtmlEncode(link);
         var body = new
         {
             sender = new
@@ -59,10 +58,11 @@ public class BrevoEmailService
             subject = "Recuperação de Senha - FABULAR",
 
             htmlContent = $@"
-                <h2>Recuperação de Senha</h2>
-                <p>Seu código de recuperação é:</p>
-                <h1>{codigo}</h1>
-                <p>O código expira em 10 minutos.</p>"
+                <h2>Recuperação de senha</h2>
+                <p>Recebemos um pedido para redefinir a senha da sua conta no Fabular.</p>
+                <p><a href=""{linkSeguro}"">Clique aqui para criar uma nova senha</a></p>
+                <p>Este link expira em 30 minutos e só pode ser usado uma vez.</p>
+                <p>Se você não pediu isso, ignore este e-mail.</p>"
         };
 
         await SendEmailAsync(body);

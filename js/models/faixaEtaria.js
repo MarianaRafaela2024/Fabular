@@ -36,7 +36,10 @@ function normalizarPerfilCrianca(perfil) {
     : (p.avatar || 'midia/user/sapo.png');
   p.genero = p.genero || p.generoFavorito || 'narrativo';
   p.dataNascimento = p.dataNascimento || null;
-  p.horarioBrincar = p.horarioBrincar || p.horario || null;
+  var horarioBruto = p.horarioBrincar || p.HorarioBrincar || p.horario || '';
+  p.horarioBrincar = typeof FabularValidacao !== 'undefined'
+    ? (FabularValidacao.normalizarHorarioBrincar(horarioBruto) || null)
+    : (horarioBruto || null);
   p.faixa = calcularFaixaEtaria(p.dataNascimento);
   return p;
 }

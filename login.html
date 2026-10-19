@@ -82,7 +82,7 @@
         <!-- Nome -->
         <div class="campo-grupo">
           <label class="campo-label" for="input-nome">Seu nome ou apelido</label>
-          <input type="text" id="input-nome" class="campo-input" placeholder="Ex: Lulú, Bento, Ana..." maxlength="20"
+          <input type="text" id="input-nome" class="campo-input" placeholder="Ex: Lulú, Bento, Ana..." maxlength="80"
             autocomplete="given-name" aria-required="true" />
           <span class="campo-erro oculto" id="erro-nome" role="alert">Escreva seu nome para a gente te conhecer.</span>
         </div>
@@ -133,7 +133,9 @@
         </div>
         <div class="campo-grupo">
           <label class="campo-label" for="input-horario">Qual horário você mais gosta de ler no Fabular?</label>
-          <input type="time" id="input-horario" class="campo-input" aria-label="Horário preferido para jogar" />
+          <input type="time" id="input-horario" class="campo-input" aria-label="Horário preferido para jogar"
+            aria-required="true" required />
+          <span class="campo-erro oculto" id="erro-horario" role="alert">Selecione o horário de brincar</span>
         </div>
 
         <button class="btn-principal btn-entrar" id="btn-iniciar" aria-label="Começar a ler">
@@ -148,28 +150,46 @@
           <div id="resp-campos-cadastro" class="oculto">
             <div class="campo-grupo">
               <label class="campo-label" for="resp-nome">Nome</label>
-              <input type="text" id="resp-nome" class="campo-input" placeholder="Nome do responsável" />
+              <input type="text" id="resp-nome" class="campo-input" placeholder="Nome do responsável" maxlength="80" />
+              <span class="campo-erro oculto" id="erro-resp-nome" role="alert">Informe um nome com pelo menos 2 caracteres.</span>
             </div>
             <div class="campo-grupo">
               <label class="campo-label" for="resp-sobrenome">Sobrenome</label>
-              <input type="text" id="resp-sobrenome" class="campo-input" placeholder="Sobrenome" />
+              <input type="text" id="resp-sobrenome" class="campo-input" placeholder="Sobrenome" maxlength="80" />
             </div>
             <div class="campo-grupo">
               <label class="campo-label" for="resp-telefone">Telefone</label>
-              <input type="tel" id="resp-telefone" class="campo-input" placeholder="(11) 99999-9999" maxlength="15" />
+              <input type="tel" id="resp-telefone" class="campo-input" placeholder="(19) 99999-8888" maxlength="15"
+                inputmode="numeric" autocomplete="tel" />
+              <span class="campo-erro oculto" id="erro-resp-telefone" role="alert">Telefone inválido. Use DDD + 9 dígitos.</span>
             </div>
           </div>
           <div class="campo-grupo">
             <label class="campo-label" for="resp-email">E-mail</label>
-            <input type="email" id="resp-email" class="campo-input" placeholder="email@exemplo.com" />
+            <input type="email" id="resp-email" class="campo-input" placeholder="email@exemplo.com" maxlength="160"
+              autocomplete="email" />
+            <span class="campo-erro oculto" id="erro-resp-email" role="alert">Digite um e-mail válido.</span>
           </div>
           <div class="campo-grupo">
             <label class="campo-label" for="resp-senha">Senha</label>
-            <input type="password" id="resp-senha" class="campo-input" placeholder="••••••••" />
+            <input type="password" id="resp-senha" class="campo-input" placeholder="••••••••" maxlength="128"
+              autocomplete="current-password" />
+            <span class="campo-erro oculto" id="erro-resp-senha" role="alert"></span>
+            <ul class="senha-requisitos oculto" id="resp-senha-requisitos" aria-live="polite">
+              <li data-req="tamanho">Mínimo de 8 caracteres</li>
+              <li data-req="maiuscula">1 letra maiúscula</li>
+              <li data-req="minuscula">1 letra minúscula</li>
+              <li data-req="numero">1 número</li>
+              <li data-req="especial">1 caractere especial</li>
+              <li data-req="semEspaco">Sem espaços</li>
+              <li data-req="comum">Não usar senha comum</li>
+            </ul>
           </div>
           <div id="resp-campo-confirmar-senha" class="campo-grupo oculto">
             <label class="campo-label" for="resp-confirmar-senha">Confirmar senha</label>
-            <input type="password" id="resp-confirmar-senha" class="campo-input" placeholder="••••••••" />
+            <input type="password" id="resp-confirmar-senha" class="campo-input" placeholder="••••••••" maxlength="128"
+              autocomplete="new-password" />
+            <span class="campo-erro oculto" id="erro-resp-confirmar-senha" role="alert">As senhas não coincidem.</span>
           </div>
           <button class="btn-principal" id="btn-resp-continuar">Continuar</button>
           <p class="resp-link-texto" id="resp-link-esqueci"><button class="link-inline" id="btn-esqueci-senha"
@@ -177,21 +197,39 @@
           <p class="resp-link-texto" id="resp-link-alterar"></p>
         </div>
         <div id="resp-recuperar-box" class="oculto">
-          <div class="campo-grupo">
-            <label class="campo-label" for="resp-email-reset">E-mail</label>
-            <input type="email" id="resp-email-reset" class="campo-input" placeholder="email@exemplo.com" />
-            <button class="btn-secundario" id="btn-enviar-codigo" type="button">Enviar código por e-mail</button>
+          <div id="resp-pedido-reset">
+            <div class="campo-grupo">
+              <label class="campo-label" for="resp-email-reset">E-mail</label>
+              <input type="email" id="resp-email-reset" class="campo-input" placeholder="email@exemplo.com" maxlength="160" />
+              <span class="campo-erro oculto" id="erro-resp-email-reset" role="alert">Digite um e-mail válido.</span>
+              <button class="btn-secundario" id="btn-enviar-codigo" type="button">Enviar link por e-mail</button>
+            </div>
           </div>
-          <div class="campo-grupo">
-            <label class="campo-label" for="resp-codigo-reset">Código recebido no e-mail</label>
-            <input type="text" id="resp-codigo-reset" class="campo-input" placeholder="Ex: 123456" maxlength="6" />
-          </div>
+          <input type="hidden" id="resp-reset-token" value="" />
+          <div id="resp-redefinir-box" class="oculto">
           <div class="campo-grupo">
             <label class="campo-label" for="resp-nova-senha">Nova senha</label>
-            <input type="password" id="resp-nova-senha" class="campo-input" placeholder="Digite a nova senha" />
+            <input type="password" id="resp-nova-senha" class="campo-input" placeholder="Digite a nova senha" maxlength="128"
+              autocomplete="new-password" />
+            <span class="campo-erro oculto" id="erro-resp-nova-senha" role="alert"></span>
+            <ul class="senha-requisitos" id="resp-nova-senha-requisitos" aria-live="polite">
+              <li data-req="tamanho">Mínimo de 8 caracteres</li>
+              <li data-req="maiuscula">1 letra maiúscula</li>
+              <li data-req="minuscula">1 letra minúscula</li>
+              <li data-req="numero">1 número</li>
+              <li data-req="especial">1 caractere especial</li>
+              <li data-req="semEspaco">Sem espaços</li>
+              <li data-req="comum">Não usar senha comum</li>
+            </ul>
           </div>
-
+          <div class="campo-grupo">
+            <label class="campo-label" for="resp-confirmar-nova-senha">Confirmar nova senha</label>
+            <input type="password" id="resp-confirmar-nova-senha" class="campo-input" placeholder="Repita a nova senha"
+              maxlength="128" autocomplete="new-password" />
+            <span class="campo-erro oculto" id="erro-resp-confirmar-nova-senha" role="alert">As senhas não coincidem.</span>
+          </div>
           <button class="btn-principal" id="btn-resetar-senha" type="button">Redefinir senha</button>
+          </div>
           <button class="link-inline" id="btn-cancelar-reset" type="button">Voltar para login</button>
         </div>
         <span class="campo-erro oculto" id="resp-erro" role="alert"></span>
@@ -232,6 +270,7 @@
   </div>
 
   <script src="js/models/faixaEtaria.js"></script>
+  <script src="js/utils/validacao.js"></script>
   <script src="js/utils/avatarUtils.js"></script>
   <script src="js/portaoParental.js"></script>
   <script src="js/login.js"></script>

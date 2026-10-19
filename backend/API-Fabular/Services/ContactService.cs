@@ -24,27 +24,24 @@ public class ContactService
 
     public async Task<ApplicationResult<bool>> SendMessageAsync(ContactMessageRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Nome) ||
-            string.IsNullOrWhiteSpace(request.Email) ||
-            string.IsNullOrWhiteSpace(request.Assunto) ||
-            string.IsNullOrWhiteSpace(request.Mensagem))
+        if (!ValidacaoCampos.TentarNormalizarNome(request.Nome, out var nome))
         {
-            return ApplicationResult<bool>.BadRequest("Preencha nome, e-mail, assunto e mensagem.");
+            return ApplicationResult<bool>.BadRequest(ValidacaoCampos.MensagemNome);
         }
 
-        var nome = request.Nome.Trim();
-        var email = request.Email.Trim().ToLowerInvariant();
-        var assunto = request.Assunto.Trim().ToLowerInvariant();
-        var mensagem = request.Mensagem.Trim();
-
-        if (!AssuntosPermitidos.Contains(assunto))
+        if (!ValidacaoCampos.TentarNormalizarEmail(request.Email, out var email))
         {
-            return ApplicationResult<bool>.BadRequest("Assunto de contato inválido.");
+            return ApplicationResult<bool>.BadRequest(ValidacaoCampos.MensagemEmail);
         }
 
-        if (mensagem.Length < 10)
+        if (!ValidacaoCampos.TentarNormalizarAssuntoContato(request.Assunto, out var assunto))
         {
-            return ApplicationResult<bool>.BadRequest("A mensagem precisa ter ao menos 10 caracteres.");
+            return ApplicationResult<bool>.BadRequest(ValidacaoCampos.MensagemAssunto);
+        }
+
+        if (!ValidacaoCampos.TentarNormalizarMensagemContato(request.Mensagem, out var mensagem))
+        {
+            return ApplicationResult<bool>.BadRequest(ValidacaoCampos.MensagemContato);
         }
 
         if (!_brevoEmailService.IsConfigured())

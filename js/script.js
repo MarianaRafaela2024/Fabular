@@ -152,23 +152,83 @@ window.addEventListener('load', () => {
 // ===== CONTATO (BREVO CRM + BACKEND API) =====
 const form = document.getElementById("footer-contato-form");
 const feedback = document.getElementById("contato-feedback");
+const contatoNomeEl = document.getElementById("contato-nome");
+const contatoEmailEl = document.getElementById("contato-email");
+const contatoMensagemEl = document.getElementById("contato-mensagem");
+const contatoWebsiteEl = document.getElementById("contato-website");
+const erroContatoNome = document.getElementById("erro-contato-nome");
+const erroContatoEmail = document.getElementById("erro-contato-email");
+const erroContatoMensagem = document.getElementById("erro-contato-mensagem");
+const btnContatoEnviar = form ? form.querySelector('button[type="submit"]') : null;
+const V = window.FabularValidacao;
+
+function validarNomeContato(mostrarErro) {
+  const resultado = V
+    ? V.validarNome(contatoNomeEl && contatoNomeEl.value)
+    : { ok: false, mensagem: "Informe um nome com pelo menos 2 caracteres.", valor: "" };
+  if (V) V.definirErroCampo(erroContatoNome, mostrarErro && !resultado.ok ? resultado.mensagem : "");
+  return resultado;
+}
+
+function validarEmailContato(mostrarErro) {
+  const resultado = V
+    ? V.validarEmail(contatoEmailEl && contatoEmailEl.value)
+    : { ok: false, mensagem: "Digite um e-mail válido.", valor: "" };
+  if (V) V.definirErroCampo(erroContatoEmail, mostrarErro && !resultado.ok ? resultado.mensagem : "");
+  return resultado;
+}
+
+function validarMensagemContato(mostrarErro) {
+  const resultado = V
+    ? V.validarMensagemContato(contatoMensagemEl && contatoMensagemEl.value)
+    : { ok: false, mensagem: "A mensagem precisa ter entre 10 e 2000 caracteres.", valor: "" };
+  if (V) V.definirErroCampo(erroContatoMensagem, mostrarErro && !resultado.ok ? resultado.mensagem : "");
+  return resultado;
+}
+
+function formularioContatoValido() {
+  return validarNomeContato(false).ok && validarEmailContato(false).ok && validarMensagemContato(false).ok;
+}
+
+function atualizarBotaoContato() {
+  if (V) V.atualizarBotaoEnviar(btnContatoEnviar, formularioContatoValido());
+  else if (btnContatoEnviar) btnContatoEnviar.disabled = !formularioContatoValido();
+}
+
+[contatoNomeEl, contatoEmailEl, contatoMensagemEl].forEach((el) => {
+  if (!el) return;
+  el.addEventListener("input", () => {
+    if (el === contatoNomeEl) validarNomeContato(true);
+    if (el === contatoEmailEl) validarEmailContato(true);
+    if (el === contatoMensagemEl) validarMensagemContato(true);
+    atualizarBotaoContato();
+  });
+});
+atualizarBotaoContato();
 
 if (form) {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
+    const nomeVal = validarNomeContato(true);
+    const emailVal = validarEmailContato(true);
+    const mensagemVal = validarMensagemContato(true);
+    atualizarBotaoContato();
+    if (!nomeVal.ok || !emailVal.ok || !mensagemVal.ok) return;
+
     const dados = {
-      nome: document.getElementById("contato-nome").value,
-      email: document.getElementById("contato-email").value,
+      nome: nomeVal.valor,
+      email: emailVal.valor,
       assunto: document.getElementById("contato-assunto").value,
-      mensagem: document.getElementById("contato-mensagem").value
+      mensagem: mensagemVal.valor,
+      website: contatoWebsiteEl ? contatoWebsiteEl.value : ""
     };
 
     try {
       if (feedback) feedback.textContent = "Enviando...";
-
+      const apiBase = (window.API_BASE_URL || "http://localhost:5275").replace(/\/$/, "");
       const resposta = await fetch(
-        "https://localhost:7157/api/contato",
+        `${apiBase}/api/contato`,
         {
           method: "POST",
           headers: {
@@ -179,15 +239,30 @@ if (form) {
       );
 
       if (!resposta.ok) {
-        throw new Error("Erro ao enviar");
+        let msg = "Erro ao enviar";
+        try {
+          const data = await resposta.json();
+          if (data && data.message) msg = data.message;
+        } catch (_) { }
+        throw new Error(msg);
       }
 
       if (feedback) feedback.textContent = "Mensagem enviada com sucesso!";
       form.reset();
+      if (V) {
+        V.definirErroCampo(erroContatoNome, "");
+        V.definirErroCampo(erroContatoEmail, "");
+        V.definirErroCampo(erroContatoMensagem, "");
+      }
+      atualizarBotaoContato();
     }
     catch (erro) {
       console.error(erro);
-      if (feedback) feedback.textContent = "Não foi possível enviar a mensagem.";
+      const msg = erro && erro.message ? erro.message : "Não foi possível enviar a mensagem.";
+      if (V && msg === V.MSG_EMAIL) V.definirErroCampo(erroContatoEmail, V.MSG_EMAIL);
+      else if (V && msg === V.MSG_NOME) V.definirErroCampo(erroContatoNome, V.MSG_NOME);
+      else if (V && msg === V.MSG_MENSAGEM) V.definirErroCampo(erroContatoMensagem, V.MSG_MENSAGEM);
+      else if (feedback) feedback.textContent = msg === "Erro ao enviar" ? "Não foi possível enviar a mensagem." : msg;
     }
   });
 }

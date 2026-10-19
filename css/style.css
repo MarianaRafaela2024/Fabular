@@ -479,6 +479,51 @@ input:-webkit-autofill:active {
   font-weight: 700;
 }
 
+.campo-senha-wrap {
+  position: relative;
+}
+
+.campo-senha-wrap .campo-input {
+  padding-right: 44px;
+}
+
+.btn-olho-senha {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.15rem;
+  line-height: 1;
+  padding: 4px;
+}
+
+.senha-requisitos {
+  list-style: none;
+  margin: .4rem 0 0;
+  padding: 0;
+  font-size: .8rem;
+  font-weight: 700;
+}
+
+.senha-requisitos li {
+  color: #9CA3AF;
+}
+
+.senha-requisitos li::before {
+  content: '○ ';
+}
+
+.senha-requisitos li.ok {
+  color: #059669;
+}
+
+.senha-requisitos li.ok::before {
+  content: '✓ ';
+}
+
 /* Avatar grid */
 .avatar-grid {
   display: grid;

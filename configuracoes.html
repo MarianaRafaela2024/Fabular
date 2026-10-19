@@ -95,27 +95,49 @@
           <div class="config-grid-2col">
             <div class="campo-grupo">
               <label class="campo-label" for="config-resp-nome">Nome</label>
-              <input type="text" id="config-resp-nome" class="campo-input" />
+              <input type="text" id="config-resp-nome" class="campo-input" maxlength="80" />
+              <span class="campo-erro oculto" id="erro-config-resp-nome" role="alert">Informe um nome com pelo menos 2 caracteres.</span>
             </div>
             <div class="campo-grupo">
               <label class="campo-label" for="config-resp-sobrenome">Sobrenome</label>
-              <input type="text" id="config-resp-sobrenome" class="campo-input" />
+              <input type="text" id="config-resp-sobrenome" class="campo-input" maxlength="80" />
             </div>
             <div class="campo-grupo">
               <label class="campo-label" for="config-resp-telefone">Telefone</label>
-              <input type="tel" id="config-resp-telefone" class="campo-input" maxlength="15" />
+              <input type="tel" id="config-resp-telefone" class="campo-input" maxlength="15" inputmode="numeric"
+                placeholder="(19) 99999-8888" />
+              <span class="campo-erro oculto" id="erro-config-resp-telefone" role="alert">Telefone inválido. Use DDD + 9 dígitos.</span>
             </div>
             <div class="campo-grupo">
               <label class="campo-label" for="config-resp-email">E-mail</label>
-              <input type="email" id="config-resp-email" class="campo-input" />
+              <input type="email" id="config-resp-email" class="campo-input" maxlength="160" />
+              <span class="campo-erro oculto" id="erro-config-resp-email" role="alert">Digite um e-mail válido.</span>
             </div>
             <div class="campo-grupo">
               <label class="campo-label" for="config-resp-senha-atual">Senha atual (opcional)</label>
-              <input type="password" id="config-resp-senha-atual" class="campo-input" placeholder="Para alterar a senha" />
+              <input type="password" id="config-resp-senha-atual" class="campo-input" placeholder="Para alterar a senha"
+                maxlength="128" autocomplete="current-password" />
             </div>
             <div class="campo-grupo">
               <label class="campo-label" for="config-resp-nova-senha">Nova senha</label>
-              <input type="password" id="config-resp-nova-senha" class="campo-input" placeholder="Deixe em branco para manter" />
+              <input type="password" id="config-resp-nova-senha" class="campo-input" placeholder="Deixe em branco para manter"
+                maxlength="128" autocomplete="new-password" />
+              <span class="campo-erro oculto" id="erro-config-nova-senha" role="alert"></span>
+              <ul class="senha-requisitos" id="config-nova-senha-requisitos" aria-live="polite">
+                <li data-req="tamanho">Mínimo de 8 caracteres</li>
+                <li data-req="maiuscula">1 letra maiúscula</li>
+                <li data-req="minuscula">1 letra minúscula</li>
+                <li data-req="numero">1 número</li>
+                <li data-req="especial">1 caractere especial</li>
+                <li data-req="semEspaco">Sem espaços</li>
+                <li data-req="comum">Não usar senha comum</li>
+              </ul>
+            </div>
+            <div class="campo-grupo">
+              <label class="campo-label" for="config-resp-confirmar-senha">Confirmar nova senha</label>
+              <input type="password" id="config-resp-confirmar-senha" class="campo-input" placeholder="Repita a nova senha"
+                maxlength="128" autocomplete="new-password" />
+              <span class="campo-erro oculto" id="erro-config-confirmar-senha" role="alert">As senhas não coincidem.</span>
             </div>
           </div>
           <button class="btn-principal" id="btn-salvar-responsavel" type="button" style="margin-top: 12px; align-self: flex-start; max-width: 320px;">Salvar dados do responsável</button>
@@ -137,7 +159,7 @@
             </div>
             <div class="campo-grupo">
               <label class="campo-label" for="config-crianca-nome">Nome ou apelido</label>
-              <input type="text" id="config-crianca-nome" class="campo-input" maxlength="20" />
+              <input type="text" id="config-crianca-nome" class="campo-input" maxlength="80" />
             </div>
             <div class="campo-grupo">
               <label class="campo-label" for="config-crianca-nascimento">Data de nascimento</label>
@@ -145,7 +167,8 @@
             </div>
             <div class="campo-grupo">
               <label class="campo-label" for="config-crianca-horario">Horário preferido para brincar</label>
-              <input type="time" id="config-crianca-horario" class="campo-input" />
+              <input type="time" id="config-crianca-horario" class="campo-input" aria-required="true" required />
+              <span class="campo-erro oculto" id="erro-config-horario" role="alert">Selecione o horário de brincar</span>
             </div>
           </div>
           <div class="campo-grupo" style="margin-top: 10px;">
@@ -216,6 +239,7 @@
   </div>
 
   <script src="js/models/faixaEtaria.js"></script>
+  <script src="js/utils/validacao.js"></script>
   <script src="js/utils/avatarUtils.js"></script>
   <script src="js/portaoParental.js"></script>
   <script src="js/configuracoes.js"></script>
