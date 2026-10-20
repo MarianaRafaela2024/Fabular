@@ -139,7 +139,6 @@ d:\Ds_2026\TCC\tcc\Fabular\backend\API-Fabular\bin\Debug\net8.0\runtimes\win-x86
 d:\Ds_2026\TCC\tcc\Fabular\backend\API-Fabular\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll
 d:\Ds_2026\TCC\tcc\Fabular\backend\API-Fabular\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.Security.Cryptography.Pkcs.dll
 d:\Ds_2026\TCC\tcc\Fabular\backend\API-Fabular\obj\Debug\net8.0\API-Fabular.csproj.AssemblyReference.cache
-d:\Ds_2026\TCC\tcc\Fabular\backend\API-Fabular\obj\Debug\net8.0\rpswa.dswa.cache.json
 d:\Ds_2026\TCC\tcc\Fabular\backend\API-Fabular\obj\Debug\net8.0\API-Fabular.GeneratedMSBuildEditorConfig.editorconfig
 d:\Ds_2026\TCC\tcc\Fabular\backend\API-Fabular\obj\Debug\net8.0\API-Fabular.AssemblyInfoInputs.cache
 d:\Ds_2026\TCC\tcc\Fabular\backend\API-Fabular\obj\Debug\net8.0\API-Fabular.AssemblyInfo.cs
@@ -147,15 +146,11 @@ d:\Ds_2026\TCC\tcc\Fabular\backend\API-Fabular\obj\Debug\net8.0\API-Fabular.cspr
 d:\Ds_2026\TCC\tcc\Fabular\backend\API-Fabular\obj\Debug\net8.0\API-Fabular.MvcApplicationPartsAssemblyInfo.cs
 d:\Ds_2026\TCC\tcc\Fabular\backend\API-Fabular\obj\Debug\net8.0\API-Fabular.MvcApplicationPartsAssemblyInfo.cache
 d:\Ds_2026\TCC\tcc\Fabular\backend\API-Fabular\obj\Debug\net8.0\API-Fabular.sourcelink.json
-d:\Ds_2026\TCC\tcc\Fabular\backend\API-Fabular\obj\Debug\net8.0\rjimswa.dswa.cache.json
-d:\Ds_2026\TCC\tcc\Fabular\backend\API-Fabular\obj\Debug\net8.0\rjsmrazor.dswa.cache.json
-d:\Ds_2026\TCC\tcc\Fabular\backend\API-Fabular\obj\Debug\net8.0\rjsmcshtml.dswa.cache.json
 d:\Ds_2026\TCC\tcc\Fabular\backend\API-Fabular\obj\Debug\net8.0\scopedcss\bundle\API-Fabular.styles.css
 d:\Ds_2026\TCC\tcc\Fabular\backend\API-Fabular\obj\Debug\net8.0\staticwebassets.build.json
 d:\Ds_2026\TCC\tcc\Fabular\backend\API-Fabular\obj\Debug\net8.0\staticwebassets.build.json.cache
 d:\Ds_2026\TCC\tcc\Fabular\backend\API-Fabular\obj\Debug\net8.0\staticwebassets.development.json
 d:\Ds_2026\TCC\tcc\Fabular\backend\API-Fabular\obj\Debug\net8.0\staticwebassets.build.endpoints.json
-d:\Ds_2026\TCC\tcc\Fabular\backend\API-Fabular\obj\Debug\net8.0\swae.build.ex.cache
 d:\Ds_2026\TCC\tcc\Fabular\backend\API-Fabular\obj\Debug\net8.0\API-Fabu.3A924C82.Up2Date
 d:\Ds_2026\TCC\tcc\Fabular\backend\API-Fabular\obj\Debug\net8.0\API-Fabular.dll
 d:\Ds_2026\TCC\tcc\Fabular\backend\API-Fabular\obj\Debug\net8.0\refint\API-Fabular.dll
@@ -175,3 +170,4 @@ d:\Ds_2026\TCC\tcc\Fabular\backend\_buildcheck\API-Fabular.deps.json
 d:\Ds_2026\TCC\tcc\Fabular\backend\_buildcheck\API-Fabular.runtimeconfig.json
 d:\Ds_2026\TCC\tcc\Fabular\backend\_buildcheck\API-Fabular.dll
 d:\Ds_2026\TCC\tcc\Fabular\backend\_buildcheck\API-Fabular.pdb
+D:\Ds_2026\TCC\tcc\Fabular\backend\API-Fabular\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

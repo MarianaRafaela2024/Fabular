@@ -479,17 +479,44 @@ input:-webkit-autofill:active {
   font-weight: 700;
 }
 
-.campo-senha-wrap {
-  position: relative;
+.campo-sucesso {
+  color: #059669;
+  font-size: .85rem;
+  font-weight: 700;
 }
 
-.campo-senha-wrap .campo-input {
-  padding-right: 44px;
+.campo-input.campo-invalido,
+input.campo-invalido,
+select.campo-invalido,
+textarea.campo-invalido {
+  border-color: #EF4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18) !important;
+  animation: shakeCampo 0.28s ease-in-out;
+}
+
+@keyframes shakeCampo {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.campo-senha-wrap {
+  position: relative;
+  width: 100%;
+  display: block;
+}
+
+.campo-senha-wrap .campo-input,
+.campo-senha-wrap input {
+  width: 100% !important;
+  display: block;
+  box-sizing: border-box;
+  padding-right: 46px !important;
 }
 
 .btn-olho-senha {
   position: absolute;
-  right: 10px;
+  right: 12px;
   top: 50%;
   transform: translateY(-50%);
   border: 0;
@@ -498,6 +525,27 @@ input:-webkit-autofill:active {
   font-size: 1.15rem;
   line-height: 1;
   padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #6B7280;
+  z-index: 2;
+  user-select: none;
+  transition: opacity .2s, transform .15s ease;
+}
+
+.btn-olho-senha:hover {
+  opacity: .8;
+  transform: translateY(-50%) scale(1.08);
+}
+
+.btn-olho-senha:focus {
+  outline: none;
+}
+
+.btn-olho-senha:focus-visible {
+  outline: 2px solid var(--cor-primaria, #FF6B35);
+  border-radius: 4px;
 }
 
 .senha-requisitos {

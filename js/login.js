@@ -183,45 +183,53 @@
   atualizarBotaoIniciar();
 
   async function tentarEntrar() {
-    const nome = document.getElementById('input-nome').value.trim();
-    const dataNascimento = document.getElementById('input-nascimento').value;
+    const nomeEl = document.getElementById('input-nome');
+    const nascEl = document.getElementById('input-nascimento');
+    const nome = nomeEl ? nomeEl.value.trim() : '';
+    const dataNascimento = nascEl ? nascEl.value : '';
     const erroEl = document.getElementById('erro-nome');
     const erroNascimento = document.getElementById('erro-nascimento');
     const horarioVal = validarHorarioFormulario(true);
+    const V = window.FabularValidacao;
+
+    let formValido = true;
+    let primeiroInvalido = null;
 
     if (!nome) {
-      if (erroEl) erroEl.classList.remove('oculto');
-      document.getElementById('input-nome').focus();
-      atualizarBotaoIniciar();
-      return;
+      if (V) V.definirErroCampo(erroEl, 'Escreva seu nome para a gente te conhecer.', nomeEl);
+      else if (erroEl) erroEl.classList.remove('oculto');
+      formValido = false;
+      primeiroInvalido = primeiroInvalido || nomeEl;
+    } else {
+      if (V) V.definirErroCampo(erroEl, '', nomeEl);
+      else if (erroEl) erroEl.classList.add('oculto');
     }
-    if (erroEl) erroEl.classList.add('oculto');
 
     if (!dataNascimento) {
-      if (erroNascimento) erroNascimento.classList.remove('oculto');
-      document.getElementById('input-nascimento').focus();
-      atualizarBotaoIniciar();
-      return;
-    }
-
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-    const nasc = new Date(dataNascimento + 'T12:00:00');
-    if (nasc > hoje) {
-      if (erroNascimento) {
-        erroNascimento.textContent = 'A data de nascimento não pode ser no futuro.';
-        erroNascimento.classList.remove('oculto');
+      if (V) V.definirErroCampo(erroNascimento, 'Informe a data de nascimento.', nascEl);
+      else if (erroNascimento) erroNascimento.classList.remove('oculto');
+      formValido = false;
+      primeiroInvalido = primeiroInvalido || nascEl;
+    } else {
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      const nasc = new Date(dataNascimento + 'T12:00:00');
+      if (nasc > hoje) {
+        if (V) V.definirErroCampo(erroNascimento, 'A data de nascimento não pode ser no futuro.', nascEl);
+        formValido = false;
+        primeiroInvalido = primeiroInvalido || nascEl;
+      } else {
+        if (V) V.definirErroCampo(erroNascimento, '', nascEl);
       }
-      document.getElementById('input-nascimento').focus();
-      return;
-    }
-    if (erroNascimento) {
-      erroNascimento.classList.add('oculto');
-      erroNascimento.textContent = 'Informe a data de nascimento.';
     }
 
     if (!horarioVal.ok) {
-      if (inputHorarioEl) inputHorarioEl.focus();
+      formValido = false;
+      primeiroInvalido = primeiroInvalido || inputHorarioEl;
+    }
+
+    if (!formValido) {
+      if (primeiroInvalido) primeiroInvalido.focus();
       atualizarBotaoIniciar();
       return;
     }
@@ -300,7 +308,103 @@
      PARTE 2 — RESPONSÁVEL + PERFIS
   ───────────────────────────────────────── */
 
-  function mostrarCard(id) {
+  let atualizarCamposResponsavelFn = null;
+  let alternarRecuperacaoFn = null;
+  let setErroFn = null;
+  let mostrarTelaResetComTokenFn = null;
+  let atualizarBotaoRespFn = null;
+
+  function limparFormularioCrianca() {
+    ['input-nome', 'input-nascimento', 'input-horario'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.value = '';
+        el.classList.remove('campo-invalido');
+        el.removeAttribute('aria-invalid');
+      }
+    });
+
+    const preview = document.getElementById('faixa-preview');
+    if (preview) preview.textContent = '';
+
+    ['erro-nome', 'erro-nascimento', 'erro-horario'].forEach(id => {
+      const err = document.getElementById(id);
+      if (err) {
+        err.textContent = '';
+        err.classList.add('oculto');
+      }
+    });
+
+    document.querySelectorAll('.avatar-btn').forEach(b => {
+      const isSapo = b.dataset.av === 'midia/user/sapo.png';
+      b.classList.toggle('ativo', isSapo);
+      b.setAttribute('aria-pressed', isSapo ? 'true' : 'false');
+    });
+    perfil.avatar = 'midia/user/sapo.png';
+
+    document.querySelectorAll('#genero-grupo .chip').forEach(b => {
+      const isNarrativo = b.dataset.genero === 'narrativo';
+      b.classList.toggle('ativo', isNarrativo);
+      b.setAttribute('aria-pressed', isNarrativo ? 'true' : 'false');
+    });
+    perfil.genero = 'narrativo';
+
+    if (typeof atualizarBotaoIniciar === 'function') {
+      atualizarBotaoIniciar();
+    }
+  }
+
+  function limparFormularioResponsavel() {
+    ['resp-nome', 'resp-sobrenome', 'resp-telefone', 'resp-email', 'resp-senha', 'resp-confirmar-senha', 'resp-email-reset', 'resp-nova-senha', 'resp-confirmar-nova-senha'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.value = '';
+        el.classList.remove('campo-invalido');
+        el.removeAttribute('aria-invalid');
+      }
+    });
+
+    const tokenResetEl = document.getElementById('resp-reset-token');
+    if (tokenResetEl) tokenResetEl.value = '';
+
+    ['erro-resp-nome', 'erro-resp-telefone', 'erro-resp-email', 'erro-resp-senha', 'erro-resp-confirmar-senha', 'erro-resp-email-reset', 'erro-resp-nova-senha', 'erro-resp-confirmar-nova-senha', 'resp-erro'].forEach(id => {
+      const err = document.getElementById(id);
+      if (err) {
+        err.textContent = '';
+        err.classList.add('oculto');
+        err.classList.remove('campo-sucesso');
+      }
+    });
+
+    const V = window.FabularValidacao;
+    if (V) {
+      V.atualizarRequisitosSenha(document.getElementById('resp-senha-requisitos'), V.requisitosSenha(''));
+      V.atualizarRequisitosSenha(document.getElementById('resp-nova-senha-requisitos'), V.requisitosSenha(''));
+    }
+    if (typeof atualizarBotaoRespFn === 'function') {
+      atualizarBotaoRespFn();
+    }
+  }
+
+  function irParaLoginResponsavel() {
+    responsavelModo = 'login';
+    limparFormularioResponsavel();
+    if (typeof alternarRecuperacaoFn === 'function') alternarRecuperacaoFn(false);
+    if (typeof mostrarTelaResetComTokenFn === 'function') mostrarTelaResetComTokenFn('');
+    if (typeof atualizarCamposResponsavelFn === 'function') atualizarCamposResponsavelFn();
+    if (typeof setErroFn === 'function') setErroFn('');
+    if (typeof atualizarBotaoRespFn === 'function') atualizarBotaoRespFn();
+    mostrarCard('#responsavel-card', false);
+  }
+
+  function mostrarCard(id, limpar = true) {
+    if (limpar) {
+      if (id === '#crianca-card') {
+        limparFormularioCrianca();
+      } else if (id === '#responsavel-card') {
+        limparFormularioResponsavel();
+      }
+    }
     ['#crianca-card', '#responsavel-card', '#perfis-card'].forEach(sel => {
       const el = document.querySelector(sel);
       if (!el) return;
@@ -341,11 +445,27 @@
         if (isCadastro) {
           linkAlternar.innerHTML = 'Já tem uma conta? <button class="link-inline" id="btn-ir-login" type="button">Entrar</button>';
           const btnIrLogin = document.getElementById('btn-ir-login');
-          if (btnIrLogin) btnIrLogin.onclick = () => { responsavelModo = 'login'; atualizarCamposPorModo(); setErro(''); atualizarBotaoResp(); };
+          if (btnIrLogin) {
+            btnIrLogin.onclick = () => {
+              responsavelModo = 'login';
+              limparFormularioResponsavel();
+              atualizarCamposPorModo();
+              setErro('');
+              atualizarBotaoResp();
+            };
+          }
         } else {
           linkAlternar.innerHTML = 'Não tem uma conta? <button class="link-inline" id="btn-ir-cadastro" type="button">Criar conta</button>';
           const btnIrCad = document.getElementById('btn-ir-cadastro');
-          if (btnIrCad) btnIrCad.onclick = () => { responsavelModo = 'cadastro'; atualizarCamposPorModo(); setErro(''); atualizarBotaoResp(); };
+          if (btnIrCad) {
+            btnIrCad.onclick = () => {
+              responsavelModo = 'cadastro';
+              limparFormularioResponsavel();
+              atualizarCamposPorModo();
+              setErro('');
+              atualizarBotaoResp();
+            };
+          }
         }
       }
     }
@@ -357,16 +477,22 @@
       recuperarBox.classList.toggle('oculto', !visivel);
     }
 
-    function setErro(msg) {
+    function setErro(msg, isSucesso) {
       if (!erro) return;
       if (!msg) {
         erro.textContent = '';
         erro.classList.add('oculto');
+        erro.classList.remove('campo-sucesso');
         return;
       }
       erro.textContent = msg;
       erro.classList.remove('oculto');
+      erro.classList.toggle('campo-sucesso', !!isSucesso);
     }
+
+    atualizarCamposResponsavelFn = atualizarCamposPorModo;
+    alternarRecuperacaoFn = alternarRecuperacao;
+    setErroFn = setErro;
 
     const V = window.FabularValidacao;
     const telefoneEl = document.getElementById('resp-telefone');
@@ -420,21 +546,34 @@
     function validarSenhaResp(mostrarErro) {
       const senha = senhaEl ? senhaEl.value : '';
       if (responsavelModo !== 'cadastro') {
+        const ok = !!senha;
+        const msg = !ok ? 'Informe sua senha.' : '';
         if (V) {
-          V.definirErroCampo(erroSenhaEl, '');
-          V.definirErroCampo(erroConfirmarEl, '');
+          V.definirErroCampo(erroSenhaEl, mostrarErro ? msg : '', senhaEl);
+          V.definirErroCampo(erroConfirmarEl, '', confirmarEl);
         }
-        return { ok: !!senha, valor: senha };
+        return { ok: ok, mensagem: msg, valor: senha };
       }
       const resultado = V ? V.validarSenha(senha) : { ok: senha.length >= 8, mensagem: '', valor: senha, requisitos: {} };
       if (V) {
         V.atualizarRequisitosSenha(requisitosSenhaEl, resultado.requisitos || V.requisitosSenha(senha));
-        V.definirErroCampo(erroSenhaEl, mostrarErro && !resultado.ok ? resultado.mensagem : '');
+        const msgSenha = !senha ? 'Informe uma senha segura.' : resultado.mensagem;
+        V.definirErroCampo(erroSenhaEl, mostrarErro && !resultado.ok ? msgSenha : '', senhaEl);
       }
       const confirmar = confirmarEl ? confirmarEl.value : '';
-      const conf = V ? V.validarConfirmacaoSenha(senha, confirmar) : { ok: senha === confirmar, mensagem: 'As senhas não coincidem.' };
-      if (V) V.definirErroCampo(erroConfirmarEl, mostrarErro && !conf.ok ? conf.mensagem : '');
-      return { ok: resultado.ok && conf.ok, valor: senha };
+      let confOk = false;
+      let confMsg = '';
+      if (!confirmar) {
+        confOk = false;
+        confMsg = 'Confirme sua senha.';
+      } else if (senha !== confirmar) {
+        confOk = false;
+        confMsg = V ? V.MSG_SENHA_CONFIRMACAO : 'As senhas não coincidem.';
+      } else {
+        confOk = true;
+      }
+      if (V) V.definirErroCampo(erroConfirmarEl, mostrarErro && !confOk ? confMsg : '', confirmarEl);
+      return { ok: resultado.ok && confOk, valor: senha };
     }
 
     function formularioRespValido() {
@@ -448,6 +587,7 @@
       if (V) V.atualizarBotaoEnviar(btnContinuar, formularioRespValido());
       else if (btnContinuar) btnContinuar.disabled = !formularioRespValido();
     }
+    atualizarBotaoRespFn = atualizarBotaoResp;
 
     [nomeEl, telefoneEl, emailEl, senhaEl, confirmarEl].forEach((el) => {
       if (!el || el.dataset.validacaoResp === '1') return;
@@ -480,16 +620,16 @@
 
     if (btnEsqueciSenha) {
       btnEsqueciSenha.onclick = () => {
+        limparFormularioResponsavel();
         alternarRecuperacao(true);
+        mostrarTelaResetComToken('');
         setErro('');
       };
     }
 
     if (btnCancelarReset) {
       btnCancelarReset.onclick = () => {
-        mostrarTelaResetComToken('');
-        alternarRecuperacao(false);
-        setErro('');
+        irParaLoginResponsavel();
         if (window.history && window.history.replaceState) {
           window.history.replaceState({}, document.title, window.location.pathname);
         }
@@ -501,16 +641,19 @@
         const inputEmailReset = document.getElementById('resp-email-reset');
         const emailVal = V ? V.validarEmail(inputEmailReset && inputEmailReset.value) : { ok: false, valor: '' };
         const erroEmailReset = document.getElementById('erro-resp-email-reset');
-        if (V) V.definirErroCampo(erroEmailReset, emailVal.ok ? '' : (V.MSG_EMAIL || 'Digite um e-mail válido.'));
-        if (!emailVal.ok) return;
+        if (V) V.definirErroCampo(erroEmailReset, emailVal.ok ? '' : (V.MSG_EMAIL || 'Digite um e-mail válido.'), inputEmailReset);
+        if (!emailVal.ok) {
+          if (inputEmailReset) inputEmailReset.focus();
+          return;
+        }
 
         try {
-          setErro('Enviando link...');
+          setErro('Enviando link...', false);
           await apiRequest('/api/v1/parents/forgot-password', 'POST', { email: emailVal.valor });
-          setErro('Se o e-mail estiver cadastrado, enviaremos um link');
+          setErro('Se o e-mail estiver cadastrado, enviaremos um link por e-mail.', true);
         } catch (e) {
           console.error(e);
-          setErro('Se o e-mail estiver cadastrado, enviaremos um link');
+          setErro('Se o e-mail estiver cadastrado, enviaremos um link por e-mail.', true);
         }
       };
     }
@@ -520,19 +663,30 @@
         const sobrenomeEl = document.getElementById('resp-sobrenome');
         const nomeVal = validarNomeResp(true);
         const sobrenome = sobrenomeEl ? sobrenomeEl.value.trim() : '';
-        const senhaVal = validarSenhaResp(true);
         const emailVal = validarEmailResp(true);
         const telVal = validarTelefoneResp(true);
+        const senhaVal = validarSenhaResp(true);
 
-        if (!emailVal.ok) {
-          atualizarBotaoResp();
-          return;
-        }
-        if (!senhaVal.ok || (responsavelModo === 'cadastro' && !nomeVal.ok)) {
-          atualizarBotaoResp();
-          return;
-        }
-        if (responsavelModo === 'cadastro' && !telVal.ok) {
+        const isCadastro = responsavelModo === 'cadastro';
+        const formValido = isCadastro
+          ? (nomeVal.ok && telVal.ok && emailVal.ok && senhaVal.ok)
+          : (emailVal.ok && senhaVal.ok);
+
+        if (!formValido) {
+          if (isCadastro && !nomeVal.ok && nomeEl) {
+            nomeEl.focus();
+          } else if (isCadastro && !telVal.ok && telefoneEl) {
+            telefoneEl.focus();
+          } else if (!emailVal.ok && emailEl) {
+            emailEl.focus();
+          } else if (!senhaVal.ok) {
+            if (senhaEl && (!senhaEl.value || (V && !V.validarSenha(senhaEl.value).ok))) {
+              senhaEl.focus();
+            } else if (confirmarEl) {
+              confirmarEl.focus();
+            }
+          }
+          setErro('Preencha os campos obrigatórios destacados acima.');
           atualizarBotaoResp();
           return;
         }
@@ -589,12 +743,23 @@
       const resultado = V ? V.validarSenha(senha) : { ok: senha.length >= 8, mensagem: '', valor: senha, requisitos: {} };
       if (V) {
         V.atualizarRequisitosSenha(requisitosNovaEl, resultado.requisitos || V.requisitosSenha(senha));
-        V.definirErroCampo(erroNovaSenhaEl, mostrarErro && !resultado.ok ? resultado.mensagem : '');
+        const msgSenha = !senha ? 'Informe uma nova senha segura.' : resultado.mensagem;
+        V.definirErroCampo(erroNovaSenhaEl, mostrarErro && !resultado.ok ? msgSenha : '', novaSenhaEl);
       }
       const confirmar = confirmarNovaSenhaEl ? confirmarNovaSenhaEl.value : '';
-      const conf = V ? V.validarConfirmacaoSenha(senha, confirmar) : { ok: senha === confirmar };
-      if (V) V.definirErroCampo(erroConfirmarNovaEl, mostrarErro && !conf.ok ? conf.mensagem : '');
-      return { ok: resultado.ok && conf.ok, valor: senha };
+      let confOk = false;
+      let confMsg = '';
+      if (!confirmar) {
+        confOk = false;
+        confMsg = 'Confirme sua senha.';
+      } else if (senha !== confirmar) {
+        confOk = false;
+        confMsg = V ? V.MSG_SENHA_CONFIRMACAO : 'As senhas não coincidem.';
+      } else {
+        confOk = true;
+      }
+      if (V) V.definirErroCampo(erroConfirmarNovaEl, mostrarErro && !confOk ? confMsg : '', confirmarNovaSenhaEl);
+      return { ok: resultado.ok && confOk, valor: senha };
     }
 
     function tokenResetAtual() {
@@ -607,6 +772,7 @@
       if (redefinirBoxEl) redefinirBoxEl.classList.toggle('oculto', !token);
       atualizarBotaoResetarSenha();
     }
+    mostrarTelaResetComTokenFn = mostrarTelaResetComToken;
 
     function atualizarBotaoResetarSenha() {
       const senhaOk = validarNovaSenhaReset(false).ok;
@@ -638,6 +804,13 @@
         const senhaVal = validarNovaSenhaReset(true);
         if (!token || !senhaVal.ok) {
           if (!token) setErro('Link inválido ou expirado.');
+          if (!senhaVal.ok) {
+            if (novaSenhaEl && (!novaSenhaEl.value || (V && !V.validarSenha(novaSenhaEl.value).ok))) {
+              novaSenhaEl.focus();
+            } else if (confirmarNovaSenhaEl) {
+              confirmarNovaSenhaEl.focus();
+            }
+          }
           atualizarBotaoResetarSenha();
           return;
         }
@@ -663,7 +836,7 @@
             window.history.replaceState({}, document.title, window.location.pathname);
           }
 
-          setErro('Senha redefinida com sucesso. Agora faça login.');
+          setErro('Senha redefinida com sucesso. Agora faça login.', true);
         } catch (e) {
           console.error(e);
           const msg = e.message || 'Não foi possível redefinir a senha.';
@@ -732,16 +905,7 @@
     const btnAdd = document.getElementById('btn-add-crianca');
     if (btnAdd) {
       btnAdd.onclick = () => {
-        const inputN = document.getElementById('input-nome');
-        const inputD = document.getElementById('input-nascimento');
-        if (inputN) inputN.value = '';
-        if (inputD) inputD.value = '';
-        const preview = document.getElementById('faixa-preview');
-        if (preview) preview.textContent = '';
-        const errNome = document.getElementById('erro-nome');
-        if (errNome) errNome.classList.add('oculto');
-        const errNasc = document.getElementById('erro-nascimento');
-        if (errNasc) errNasc.classList.add('oculto');
+        limparFormularioCrianca();
         mostrarCard('#crianca-card');
       };
     }
@@ -756,7 +920,7 @@
           document.documentElement.style.fontSize = '';
           document.documentElement.style.removeProperty('--fonte-base');
         } catch (_) {}
-        mostrarCard('#responsavel-card');
+        irParaLoginResponsavel();
       };
     }
 
@@ -843,19 +1007,20 @@
   const btnVoltarPerfis = document.getElementById('btn-voltar-perfis');
   if (btnVoltarPerfis) {
     btnVoltarPerfis.addEventListener('click', () => {
+      limparFormularioCrianca();
       const sessao = getSessaoResponsavel();
       if (sessao && sessao.email && sessao.responsavelId) abrirSelecaoPerfis();
-      else mostrarCard('#responsavel-card');
+      else irParaLoginResponsavel();
     });
   }
 
   const sessaoInicial = getSessaoResponsavel();
   if (tokenResetUrl) {
-    mostrarCard('#responsavel-card');
+    mostrarCard('#responsavel-card', false);
   } else if (sessaoInicial && sessaoInicial.email && sessaoInicial.responsavelId) {
     abrirSelecaoPerfis();
   } else {
-    mostrarCard('#responsavel-card');
+    irParaLoginResponsavel();
   }
 
   window.addEventListener('pageshow', (evento) => {

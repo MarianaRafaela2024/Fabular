@@ -857,6 +857,10 @@
           "mensagem": {
             "type": "string",
             "nullable": true
+          },
+          "website": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -1151,11 +1155,7 @@
       "ParentResetPasswordRequest": {
         "type": "object",
         "properties": {
-          "email": {
-            "type": "string",
-            "nullable": true
-          },
-          "codigo": {
+          "token": {
             "type": "string",
             "nullable": true
           },

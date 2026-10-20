@@ -4,15 +4,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddHttpClient();
-builder.Services.AddScoped<BrevoService>();
-builder.Services.AddScoped<BrevoEmailService>();
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 builder.Services.Configure<API_Fabular.Services.BrevoEmailOptions>(builder.Configuration.GetSection("Brevo"));
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<API_Fabular.Infra.DbConnectionFactory>();
-builder.Services.AddScoped<API_Fabular.Services.BrevoEmailService>();
+builder.Services.AddScoped<API_Fabular.Services.BrevoService>();
+builder.Services.AddScoped<API_Fabular.Services.BrevoEmailService>();  // único registro
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<API_Fabular.Services.StoryGeneratorService>(); // deprecated: geração no JS
 builder.Services.AddScoped<API_Fabular.Services.ParentAuthService>();
 builder.Services.AddScoped<API_Fabular.Services.ChildrenLinkService>();

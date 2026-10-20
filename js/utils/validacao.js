@@ -136,13 +136,16 @@
     btn.className = 'btn-olho-senha';
     btn.setAttribute('aria-label', 'Mostrar senha');
     btn.setAttribute('aria-pressed', 'false');
+    btn.title = 'Mostrar senha';
     btn.textContent = '👁';
     wrap.appendChild(btn);
     btn.addEventListener('click', function () {
       var visivel = input.type === 'text';
       input.type = visivel ? 'password' : 'text';
-      btn.setAttribute('aria-label', visivel ? 'Mostrar senha' : 'Ocultar senha');
+      var label = visivel ? 'Mostrar senha' : 'Ocultar senha';
+      btn.setAttribute('aria-label', label);
       btn.setAttribute('aria-pressed', visivel ? 'false' : 'true');
+      btn.title = label;
     });
   }
 
@@ -175,7 +178,7 @@
     return { ok: true, mensagem: '', valor: email };
   }
 
-  function definirErroCampo(erroEl, mensagem) {
+  function definirErroCampo(erroEl, mensagem, inputEl) {
     if (!erroEl) return;
     if (mensagem) {
       erroEl.textContent = mensagem;
@@ -184,11 +187,26 @@
       erroEl.textContent = '';
       erroEl.classList.add('oculto');
     }
+    var campo = inputEl;
+    if (!campo && erroEl.parentElement) {
+      campo = erroEl.parentElement.querySelector('input, select, textarea');
+    }
+    if (campo) {
+      if (mensagem) {
+        campo.classList.add('campo-invalido');
+        campo.setAttribute('aria-invalid', 'true');
+      } else {
+        campo.classList.remove('campo-invalido');
+        campo.removeAttribute('aria-invalid');
+      }
+    }
   }
 
   function atualizarBotaoEnviar(botao, valido) {
     if (!botao) return;
-    botao.disabled = !valido;
+    botao.removeAttribute('disabled');
+    botao.setAttribute('aria-disabled', valido ? 'false' : 'true');
+    botao.classList.toggle('btn-incompleto', !valido);
   }
 
   global.FabularValidacao = {

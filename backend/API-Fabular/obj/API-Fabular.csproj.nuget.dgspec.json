@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "d:\\Ds_2026\\TCC\\tcc\\Fabular\\backend\\API-Fabular\\API-Fabular.csproj": {}
+    "D:\\Ds_2026\\TCC\\tcc\\Fabular\\backend\\API-Fabular\\API-Fabular.csproj": {}
   },
   "projects": {
-    "d:\\Ds_2026\\TCC\\tcc\\Fabular\\backend\\API-Fabular\\API-Fabular.csproj": {
+    "D:\\Ds_2026\\TCC\\tcc\\Fabular\\backend\\API-Fabular\\API-Fabular.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "d:\\Ds_2026\\TCC\\tcc\\Fabular\\backend\\API-Fabular\\API-Fabular.csproj",
+        "projectUniqueName": "D:\\Ds_2026\\TCC\\tcc\\Fabular\\backend\\API-Fabular\\API-Fabular.csproj",
         "projectName": "API-Fabular",
-        "projectPath": "d:\\Ds_2026\\TCC\\tcc\\Fabular\\backend\\API-Fabular\\API-Fabular.csproj",
-        "packagesPath": "C:\\Users\\195222024\\AppData\\Local\\Temp\\cursor-sandbox-cache\\79b1acae7e125e5955bd47163f94801f\\nuget",
-        "outputPath": "d:\\Ds_2026\\TCC\\tcc\\Fabular\\backend\\API-Fabular\\obj\\",
+        "projectPath": "D:\\Ds_2026\\TCC\\tcc\\Fabular\\backend\\API-Fabular\\API-Fabular.csproj",
+        "packagesPath": "C:\\Users\\User\\.nuget\\packages\\",
+        "outputPath": "D:\\Ds_2026\\TCC\\tcc\\Fabular\\backend\\API-Fabular\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\195222024\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\User\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -31,7 +31,6 @@
         },
         "frameworks": {
           "net8.0": {
-            "framework": "net8.0",
             "targetAlias": "net8.0",
             "projectReferences": {}
           }
@@ -46,11 +45,10 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "10.0.300"
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0": {
-          "framework": "net8.0",
           "targetAlias": "net8.0",
           "dependencies": {
             "Dapper": {
@@ -85,7 +83,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.301/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

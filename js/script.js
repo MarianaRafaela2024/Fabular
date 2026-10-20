@@ -213,8 +213,12 @@ if (form) {
     const nomeVal = validarNomeContato(true);
     const emailVal = validarEmailContato(true);
     const mensagemVal = validarMensagemContato(true);
-    atualizarBotaoContato();
-    if (!nomeVal.ok || !emailVal.ok || !mensagemVal.ok) return;
+    if (!nomeVal.ok || !emailVal.ok || !mensagemVal.ok) {
+      if (!nomeVal.ok && contatoNomeEl) contatoNomeEl.focus();
+      else if (!emailVal.ok && contatoEmailEl) contatoEmailEl.focus();
+      else if (!mensagemVal.ok && contatoMensagemEl) contatoMensagemEl.focus();
+      return;
+    }
 
     const dados = {
       nome: nomeVal.valor,

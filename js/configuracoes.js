@@ -730,6 +730,27 @@
           }
         });
         setConfigMsg('', '');
+        ['erro-config-resp-nome', 'erro-config-resp-telefone', 'erro-config-resp-email', 'erro-config-nova-senha', 'erro-config-confirmar-senha', 'erro-config-crianca-nome', 'erro-config-crianca-nasc', 'erro-config-horario'].forEach(id => {
+          const err = document.getElementById(id);
+          if (err) {
+            err.textContent = '';
+            err.classList.add('oculto');
+          }
+        });
+        document.querySelectorAll('.campo-invalido').forEach(el => {
+          el.classList.remove('campo-invalido');
+          el.removeAttribute('aria-invalid');
+        });
+        ['config-resp-senha-atual', 'config-resp-nova-senha', 'config-resp-confirmar-senha'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.value = '';
+        });
+        if (window.FabularValidacao) {
+          window.FabularValidacao.atualizarRequisitosSenha(document.getElementById('config-nova-senha-requisitos'), window.FabularValidacao.requisitosSenha(''));
+        }
+        if (typeof atualizarBotaoSalvarResp === 'function') atualizarBotaoSalvarResp();
+        if (typeof atualizarBotaoSalvarCrianca === 'function') atualizarBotaoSalvarCrianca();
+
         if (secao === 'relatorios') {
           const crianca = obterCriancaSelecionada('config-relatorio-crianca');
           atualizarPreviasAvatar(crianca);
@@ -790,11 +811,16 @@
         const telVal = validarTelefoneConfig(true);
         const emailVal = validarEmailConfig(true);
 
-        if (!nomeVal.ok) {
-          atualizarBotaoSalvarResp();
-          return;
-        }
-        if (!telVal.ok || !emailVal.ok || !senhaVal.ok) {
+        const formValido = nomeVal.ok && telVal.ok && emailVal.ok && senhaVal.ok;
+        if (!formValido) {
+          if (!nomeVal.ok) document.getElementById('config-resp-nome')?.focus();
+          else if (!telVal.ok) document.getElementById('config-resp-telefone')?.focus();
+          else if (!emailVal.ok) document.getElementById('config-resp-email')?.focus();
+          else if (!senhaVal.ok) {
+            if (!senhaAtual && senhaVal.valor) document.getElementById('config-resp-senha-atual')?.focus();
+            else document.getElementById('config-resp-nova-senha')?.focus();
+          }
+          setConfigMsg('Preencha os campos obrigatórios destacados acima.', '');
           atualizarBotaoSalvarResp();
           return;
         }
@@ -860,17 +886,47 @@
         }
         setConfigMsg('', '');
 
-        const nome = document.getElementById('config-crianca-nome')?.value.trim();
-        const dataNascimento = document.getElementById('config-crianca-nascimento')?.value;
+        const nomeEl = document.getElementById('config-crianca-nome');
+        const nascEl = document.getElementById('config-crianca-nascimento');
+        const erroNome = document.getElementById('erro-config-crianca-nome');
+        const erroNasc = document.getElementById('erro-config-crianca-nasc');
+        const V = window.FabularValidacao;
+
+        const nome = nomeEl?.value.trim() || '';
+        const dataNascimento = nascEl?.value || '';
         const horarioVal = validarHorarioConfig(true);
 
-        if (!nome || !dataNascimento) {
-          setConfigMsg('Nome e data de nascimento são obrigatórios.', '');
-          atualizarBotaoSalvarCrianca();
-          return;
+        let formValido = true;
+        let primeiroInvalido = null;
+
+        if (!nome) {
+          if (V) V.definirErroCampo(erroNome, 'Informe o nome da criança.', nomeEl);
+          else if (erroNome) erroNome.classList.remove('oculto');
+          formValido = false;
+          primeiroInvalido = primeiroInvalido || nomeEl;
+        } else {
+          if (V) V.definirErroCampo(erroNome, '', nomeEl);
+          else if (erroNome) erroNome.classList.add('oculto');
+        }
+
+        if (!dataNascimento) {
+          if (V) V.definirErroCampo(erroNasc, 'Informe a data de nascimento.', nascEl);
+          else if (erroNasc) erroNasc.classList.remove('oculto');
+          formValido = false;
+          primeiroInvalido = primeiroInvalido || nascEl;
+        } else {
+          if (V) V.definirErroCampo(erroNasc, '', nascEl);
+          else if (erroNasc) erroNasc.classList.add('oculto');
         }
 
         if (!horarioVal.ok) {
+          formValido = false;
+          primeiroInvalido = primeiroInvalido || document.getElementById('config-crianca-horario');
+        }
+
+        if (!formValido) {
+          if (primeiroInvalido) primeiroInvalido.focus();
+          setConfigMsg('Preencha os campos obrigatórios destacados acima.', '');
           atualizarBotaoSalvarCrianca();
           return;
         }

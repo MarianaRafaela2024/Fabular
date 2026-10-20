@@ -124,6 +124,7 @@ public class ParentAuthService
         await using var conn = _db.Create();
         await conn.OpenAsync();
         await GarantirTabelaRecuperacaoAsync(conn);
+        await LimparTokensExpiradosAsync(conn);
 
         var responsavelId = await conn.QueryFirstOrDefaultAsync<int?>(
             "SELECT Id FROM Responsavel WHERE Email = @Email",
@@ -303,6 +304,7 @@ public class ParentAuthService
         await using var conn = _db.Create();
         await conn.OpenAsync();
         await GarantirTabelaRecuperacaoAsync(conn);
+        await LimparTokensExpiradosAsync(conn);
         await using var tx = await conn.BeginTransactionAsync();
 
         var row = await conn.QueryFirstOrDefaultAsync<(int Id, int IdResponsavel, DateTime ExpiraEm, DateTime? UsadoEm)>(
@@ -445,6 +447,28 @@ public class ParentAuthService
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Remove tokens de recuperação já usados ou expirados há mais de 24 h.
+    /// Executado oportunisticamente em cada pedido de reset para evitar acúmulo.
+    /// </summary>
+    private static async Task LimparTokensExpiradosAsync(System.Data.Common.DbConnection conn)
+    {
+        try
+        {
+            await conn.ExecuteAsync(
+                """
+                IF OBJECT_ID(N'dbo.Recuperacao_Senha', N'U') IS NOT NULL
+                    DELETE FROM dbo.Recuperacao_Senha
+                    WHERE UsadoEm IS NOT NULL
+                       OR ExpiraEm < DATEADD(HOUR, -24, SYSUTCDATETIME())
+                """);
+        }
+        catch
+        {
+            // Limpeza opcional — falha silenciosa para não bloquear o fluxo principal.
+        }
     }
 
     private static string HashCodigo(string value)
