@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <style>
+    html.alto-contraste,
+    html.alto-contraste body,
+    html.alto-contraste .login-bg,
+    html.alto-contraste body.login-body,
+    html.alto-contraste .app-header,
+    html.alto-contraste .sidebar,
+    html.alto-contraste .app-main,
+    html.alto-contraste .app-layout {
+      background-color: #0D1117 !important;
+      background: #0D1117 !important;
+      color: #E6EDF3 !important;
+    }
+  </style>
+  <script>
+    (function() {
+      try {
+        if (localStorage.getItem('mundoHistorias_modoNoturno') === '1') {
+          document.documentElement.classList.add('alto-contraste');
+          document.documentElement.style.backgroundColor = '#0D1117';
+        }
+        var f = localStorage.getItem('mundoHistorias_tamanhoFonte');
+        if (f) {
+          document.documentElement.style.fontSize = f + 'px';
+          document.documentElement.style.setProperty('--fonte-base', f + 'px');
+        }
+      } catch(e) {}
+    })();
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Criar histórias - Fabular</title>
+  <link rel="icon" type="image/png" href="midia/iconeRaposa.png">
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/components/minigames.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700;800&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+
+  <div id="app-shell">
+
+    <!-- HEADER -->
+    <header class="app-header">
+      <div class="header-esq">
+        <div id="avatar-display" class="header-avatar"></div>
+        <div class="header-info">
+          <span class="header-nome" id="header-nome"></span>
+          <span class="header-nivel" id="header-nivel"></span>
+        </div>
+      </div>
+      <div class="header-dir">
+        <div class="moedas-badge badge-vidas-header" id="badge-vidas" title="Vidas disponíveis">
+          <span aria-hidden="true" class="icone-vidas-header" id="icone-vidas-header">❤️</span>
+          <span id="total-vidas">5/5</span>
+        </div>
+        <div class="header-mais-wrap" id="header-mais-wrap">
+          <button class="btn-icon btn-header-mais" id="btn-header-mais" title="Mais opções" aria-label="Mais opções"
+            aria-expanded="false">
+            <img src="midia/menu/menu.png" alt="Mais opções" class="menu-icon">
+          </button>
+          <div class="header-mais-menu" id="header-mais-menu" aria-hidden="true">
+            <button class="btn-icon" id="btn-contraste" title="Alternar alto contraste"
+              aria-label="Alternar alto contraste">
+              <img src="midia/menu/half.png" alt="" class="menu-icon">
+              <span class="menu-label">Contraste</span>
+            </button>
+            <button class="btn-icon" id="btn-fonte-mais" title="Aumentar fonte" aria-label="Aumentar fonte">
+              <img src="midia/menu/plus.png" alt="" class="menu-icon">
+              <span class="menu-label">Fonte +</span>
+            </button>
+            <button class="btn-icon" id="btn-fonte-menos" title="Diminuir fonte" aria-label="Diminuir fonte">
+              <img src="midia/menu/minus.png" alt="" class="menu-icon">
+              <span class="menu-label">Fonte -</span>
+            </button>
+            <button class="btn-icon btn-ir-config" id="btn-ir-configuracoes" title="Configurações"
+              aria-label="Configurações">
+              <img src="midia/menu/settings.png" alt="" class="menu-icon">
+              <span class="menu-label">Configurações</span>
+            </button>
+            <button class="btn-icon btn-sair" id="btn-sair" title="Sair" aria-label="Sair e voltar ao login">
+              <img src="midia/menu/log-out.png" alt="" class="menu-icon">
+              <span class="menu-label">Sair</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- LAYOUT -->
+    <div class="app-layout">
+
+      <!-- SIDEBAR -->
+      <nav class="sidebar" id="sidebar" role="navigation" aria-label="Menu principal">
+        <div class="sidebar-logo" aria-hidden="true">
+          <img src="midia/IconeRaposa.png">
+        </div>
+        <button class="nav-item" data-tela="biblioteca">
+          <span class="icon home"></span>
+          <span class="nav-label">Início</span>
+        </button>
+        <button class="nav-item" data-tela="leitura">
+          <span class="icon icon-book"></span>
+          <span class="nav-label">História</span>
+        </button>
+        <button class="nav-item" data-tela="progresso">
+          <span class="icon award"></span>
+          <span class="nav-label">Progresso</span>
+        </button>
+        <button class="nav-item" data-tela="responsavel">
+          <span class="icon award"></span>
+          <span class="nav-label">Área do Responsável</span>
+        </button>
+        <button class="nav-item ativo" data-tela="bot-ia">
+          <span class="icon bot"></span>
+          <span class="nav-label">Criar histórias</span>
+        </button>
+      </nav>
+
+      <!-- MAIN -->
+      <main class="app-main" id="app-main">
+
+        <!-- BIBLIOTECA -->
+        <section id="tela-biblioteca" class="tela-app">
+          <div class="tela-header">
+            <h2>Biblioteca</h2>
+            <p class="tela-sub">A Lumi está por aqui. Qual história vamos ler?</p>
+          </div>
+          <div class="filtros-bar">
+            <div class="filtro-grupo">
+              <label class="filtro-label">Gênero:</label>
+              <div class="chip-grupo" id="filtro-genero">
+                <button class="chip chip-sm ativo" data-filtro-genero="todos">Todos</button>
+                <button class="chip chip-sm" data-filtro-genero="narrativo">Narrativo</button>
+                <button class="chip chip-sm" data-filtro-genero="poetico">Poético</button>
+                <button class="chip chip-sm" data-filtro-genero="cotidiano">Cotidiano</button>
+                <button class="chip chip-sm" data-filtro-genero="descritivo">Descritivo</button>
+                <button class="chip chip-sm" data-filtro-genero="informativo">Informativo</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="historias-grid" id="historias-grid"></div>
+        </section>
+
+        <!-- LEITURA -->
+        <section id="tela-leitura" class="tela-app">
+          <div class="leitura-container">
+            <div class="leitura-header">
+              <button class="btn-voltar" id="btn-voltar-biblioteca" aria-label="Voltar à biblioteca">← Biblioteca</button>
+              <div class="leitura-info"></div>
+              <div class="leitura-acoes">
+                <button class="btn-icon" id="btn-ouvir" title="Ouvir história em voz alta"
+                  aria-label="Ouvir história em voz alta">🔊</button>
+                <button class="btn-icon" id="btn-destaque" title="Destacar palavras-chave"
+                  aria-label="Destacar palavras-chave">🔍</button>
+              </div>
+            </div>
+
+            <article class="cartao-livro-leitura" id="cartao-livro-leitura">
+              <div class="historia-imagem-area" id="historia-imagem-area">
+                <div class="historia-emoji-cena" id="historia-emoji-cena">🌲🏡🌸</div>
+              </div>
+              <h2 class="leitura-titulo-badge" id="leitura-titulo-badge">Título</h2>
+              <div class="historia-texto" id="historia-texto"></div>
+              <div class="livro-navegacao-paginas" id="livro-navegacao-paginas" style="display:none">
+                <button class="btn-virar-pagina btn-pagina-anterior" id="btn-pagina-anterior" disabled aria-label="Página anterior">
+                  <span class="seta">←</span> <span class="btn-texto-completo">Anterior</span><span class="btn-texto-curto">Anterior</span>
+                </button>
+                <div class="livro-nav-centro">
+                  <div class="livro-paginacao-dots" id="livro-paginacao-dots"></div>
+                  <span class="livro-pagina-indicador" id="livro-pagina-indicador">1 / 1</span>
+                </div>
+                <button class="btn-virar-pagina btn-proxima-pagina" id="btn-proxima-pagina" aria-label="Próxima página">
+                  <span class="btn-texto-completo">Próxima</span><span class="btn-texto-curto">Próxima</span> <span class="seta">→</span>
+                </button>
+              </div>
+            </article>
+
+            <div class="interacao-area oculto" id="interacao-area" style="display:none"></div>
+            <div class="feedback-area oculto" id="feedback-area">
+              <div class="feedback-card" id="feedback-card">
+                <div class="feedback-emoji" id="feedback-emoji">🎉</div>
+                <p class="feedback-msg" id="feedback-msg">Muito bem!</p>
+              </div>
+            </div>
+
+            <div class="leitura-rodape">
+              <button class="btn-secundario" id="btn-pular-fase" style="display:none">Pular fase →</button>
+              <button class="btn-principal" id="btn-continuar" style="display:none">Vamos Jogar!</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- MINIGAME -->
+        <section id="tela-minigame" class="tela-app">
+          <div class="minigame-container">
+            <div class="minigame-topo">
+              <span class="minigame-tipo-badge" id="mg-tipo-badge">Minigame</span>
+              <span class="mg-contador" id="mg-contador">1 / 5</span>
+              <button class="btn-icon" id="btn-ouvir-mg" title="Ouvir pergunta" aria-label="Ouvir pergunta">🔊</button>
+            </div>
+            <div class="mg-progresso" aria-hidden="true">
+              <div class="mg-progresso-fill" id="mg-progresso-fill"></div>
+            </div>
+            <div class="minigame-corpo" id="minigame-corpo"></div>
+            <div class="minigame-feedback oculto" id="mg-feedback">
+              <div class="feedback-card" id="mg-feedback-card">
+                <div class="feedback-emoji" id="mg-feedback-emoji">⭐</div>
+                <p id="mg-feedback-msg">Parabéns!</p>
+              </div>
+            </div>
+            <div class="minigame-rodape">
+              <button class="btn-principal oculto" id="btn-proximo-mg" hidden>Próximo Jogo →</button>
+              <button class="btn-principal oculto" id="btn-finalizar-mg" hidden>Ver Resultado 🏆</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- RESULTADO -->
+        <section id="tela-resultado" class="tela-app">
+          <div class="resultado-container">
+            <div class="resultado-topo">
+              <div class="resultado-estrelas" id="resultado-estrelas"></div>
+              <h2 class="resultado-titulo" id="resultado-titulo">Incrível!</h2>
+              <p class="resultado-msg" id="resultado-msg">Você completou a história!</p>
+            </div>
+            <div class="resultado-stats">
+              <div class="stat-card">
+                <span class="stat-icon">⏱️</span>
+                <span class="stat-valor" id="stat-tempo">0 min</span>
+                <span class="stat-label">Tempo</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-icon">✅</span>
+                <span class="stat-valor" id="stat-acertos">0</span>
+                <span class="stat-label">Acertos</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-icon">💪</span>
+                <span class="stat-valor" id="stat-nivel">Iniciante</span>
+                <span class="stat-label">Nível</span>
+              </div>
+            </div>
+            <ul class="resultado-lista-jogos" id="resultado-lista-jogos" hidden></ul>
+            <p class="resultado-aviso oculto" id="resultado-aviso">⚠️ Você precisa refazer a atividade e reler a
+              história para continuar!</p>
+            <div class="resultado-botoes">
+              <button class="btn-refazer oculto" id="btn-refazer-erros" hidden>🔁 Jogar de novo os que errei</button>
+              <button class="btn-refazer" id="btn-refazer-atividade">🔄 Refazer Atividade e Reler</button>
+              <button class="btn-secundario" id="btn-jogar-novamente">Ler outra história</button>
+              <button class="btn-principal" id="btn-ver-progresso">🏆 Ver Progresso</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- PROGRESSO -->
+        <section id="tela-progresso" class="tela-app">
+          <div class="tela-header">
+            <h2>Meu Progresso</h2>
+            <p class="tela-sub" id="progresso-sub">A Lumi está por aqui. Vamos ver como vai a aventura?</p>
+            <p class="progresso-sub-stats" id="progresso-sub-stats" aria-live="polite"></p>
+          </div>
+
+          <div class="progresso-secoes">
+            <div class="progresso-secao">
+              <div class="raposa-evolucao-card" id="raposa-evolucao-card">
+                <div class="raposa-imagem-wrapper">
+                  <img id="raposa-img" src="midia/raposa/raposa1.png" alt="Lumi — Filhote" class="raposa-img" />
+                </div>
+                <div class="raposa-detalhes">
+                  <div class="raposa-fase-badge" id="raposa-fase-badge">Lumi — Filhote</div>
+                  <p class="raposa-mensagem" id="raposa-mensagem">A Lumi acabou de nascer! Continue lendo histórias e
+                    completando minigames para ajudá-la a crescer.</p>
+                  <div class="raposa-progresso-bar-wrap">
+                    <div class="raposa-progresso-info">
+                      <span class="raposa-estrelas-atual" id="raposa-estrelas-texto">0 / 10 <img src="midia/estrela.png" alt="" class="prog-ico" width="14" height="14"></span>
+                      <span class="raposa-proximo-estagio" id="raposa-proximo-texto">Faltam 10 <img src="midia/estrela.png" alt="" class="prog-ico" width="14" height="14"> para Lumi — Jovem</span>
+                    </div>
+                    <div class="raposa-bar-track">
+                      <div class="raposa-bar-fill" id="raposa-bar-fill"></div>
+                    </div>
+                  </div>
+                  <div class="raposa-estagios-mini">
+                    <div class="raposa-estagio-step ativo" id="res-filhote" title="Lumi — Filhote (0+ estrelas)">
+                      <img class="raposa-estagio-thumb" src="midia/trophy-menu.png" alt="Conquistado" width="36" height="36" />
+                      <span class="res-nome">Filhote</span>
+                    </div>
+                    <div class="raposa-estagio-linha"></div>
+                    <div class="raposa-estagio-step" id="res-jovem" title="Lumi — Jovem (10+ estrelas)">
+                      <img class="raposa-estagio-thumb bloqueado" src="midia/question.svg" alt="Ainda não conquistado" width="36" height="36" />
+                      <span class="res-nome">Jovem</span>
+                    </div>
+                    <div class="raposa-estagio-linha"></div>
+                    <div class="raposa-estagio-step" id="res-aventureira" title="Lumi — Aventureira (25+ estrelas)">
+                      <img class="raposa-estagio-thumb bloqueado" src="midia/question.svg" alt="Ainda não conquistado" width="36" height="36" />
+                      <span class="res-nome">Aventureira</span>
+                    </div>
+                    <div class="raposa-estagio-linha"></div>
+                    <div class="raposa-estagio-step" id="res-mestre" title="Lumi — Mestre (45+ estrelas)">
+                      <img class="raposa-estagio-thumb bloqueado" src="midia/question.svg" alt="Ainda não conquistado" width="36" height="36" />
+                      <span class="res-nome">Mestre</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- CONQUISTAS -->
+            <div class="progresso-secao progresso-secao-conquistas">
+              <div class="conquistas-header-bar">
+                <div class="conquistas-header-info">
+                  <h3 class="prog-secao-titulo"><img src="midia/trophy-menu.png" alt="" class="prog-ico prog-ico--titulo" width="22" height="22"> Conquistas</h3>
+                  <p class="conquistas-fio-lumi">Medalhas da sua aventura de leitura</p>
+                </div>
+              </div>
+
+              <div class="conquistas-grid" id="conquistas-grid"></div>
+            </div>
+
+            <div class="progresso-secao progresso-secao-historias">
+              <h3 class="prog-secao-titulo"><img src="midia/book-menu.png" alt="" class="prog-ico prog-ico--titulo" width="22" height="22"> Histórias Concluídas</h3>
+              <div class="progresso-historias-layout">
+                <div class="historias-concluidas-wrap">
+                  <div class="historias-concluidas" id="historias-concluidas"></div>
+                </div>
+                <aside class="calendario-atividade" id="calendario-atividade"
+                  aria-label="Calendário de atividade de leitura"></aside>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- BOT IA -->
+        <section id="tela-bot-ia" class="tela-app ativa">
+          <div class="tela-header">
+            <h2>Criar Histórias</h2>
+          </div>
+          <div class="bot-ia-wrap">
+            <div class="bot-ia-card">
+              <div class="bot-chat">
+                <div class="bot-chat-msg bot-chat-msg-ai">
+                  <span class="bot-chat-avatar">
+                    <img src="midia/IconeRaposa.png" alt="Lumi — Assistente de IA">
+                  </span>
+                  <div class="bot-chat-bubble">
+                    Oi! Sou a Lumi! 🦊 Me conte sua ideia e eu crio uma história completa para você.
+                  </div>
+                </div>
+                <div class="bot-chat-msg bot-chat-msg-ai">
+                  <span class="bot-chat-avatar">
+                    <img src="midia/IconeRaposa.png" alt="Lumi — Assistente de IA">
+                  </span>
+                  <div class="bot-chat-bubble">
+                    Escolha o gênero textual para começar:
+                  </div>
+                </div>
+              </div>
+
+              <label class="bot-ia-label" id="label-bot-ia-genero">Gênero textual</label>
+              <div class="chip-grupo bot-ia-genero-grupo" id="bot-ia-genero-grupo" role="radiogroup"
+                aria-labelledby="label-bot-ia-genero">
+                <button type="button" class="chip ativo" data-genero="narrativo" aria-pressed="true">Narrativo</button>
+                <button type="button" class="chip" data-genero="poetico" aria-pressed="false">Poético</button>
+                <button type="button" class="chip" data-genero="instrucional" aria-pressed="false">Instrucional</button>
+                <button type="button" class="chip" data-genero="descritivo" aria-pressed="false">Descritivo</button>
+                <button type="button" class="chip" data-genero="informativo" aria-pressed="false">Informativo</button>
+              </div>
+
+              <label class="bot-ia-label" for="bot-ia-prompt">Tema ou ideia da história</label>
+              <textarea id="bot-ia-prompt" class="bot-ia-textarea" rows="4" maxlength="700"
+                placeholder="Ex.: um coelho que aprende a colaborar com os amigos para montar uma horta..."></textarea>
+              <button type="button" class="btn-principal bot-ia-btn" id="btn-bot-ia-gerar">Criar história</button>
+              <p id="bot-ia-erro" class="bot-ia-erro oculto" role="alert"></p>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <script src="js/models/faixaEtaria.js"></script>
+  <script src="js/models/stories.js"></script>
+  <script src="js/models/state.js"></script>
+  <script src="js/models/vidas.js"></script>
+  <script src="js/utils/avatarUtils.js"></script>
+  <script src="js/views/accessibilityView.js"></script>
+  <script src="js/views/iaView.js"></script>
+  <script src="js/views/libraryView.js"></script>
+  <script src="js/views/readingView.js"></script>
+  <script src="js/minigames/shell.js"></script>
+  <script src="js/minigames/content.js"></script>
+  <script src="js/views/minigameView.js"></script>
+  <script src="js/views/progressView.js"></script>
+  <script src="js/portaoParental.js"></script>
+  <script src="js/controllers/appController.js"></script>
+</body>
+
+</html>

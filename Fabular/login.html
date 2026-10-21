@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <style>
+    html.alto-contraste,
+    html.alto-contraste body,
+    html.alto-contraste .login-bg,
+    html.alto-contraste body.login-body,
+    html.alto-contraste .app-header,
+    html.alto-contraste .sidebar,
+    html.alto-contraste .app-main,
+    html.alto-contraste .app-layout {
+      background-color: #0D1117 !important;
+      background: #0D1117 !important;
+      color: #E6EDF3 !important;
+    }
+  </style>
+  <script>
+    (function () {
+      try {
+        if (localStorage.getItem('mundoHistorias_modoNoturno') === '1') {
+          document.documentElement.classList.add('alto-contraste');
+          document.documentElement.style.backgroundColor = '#0D1117';
+        }
+        var f = localStorage.getItem('mundoHistorias_tamanhoFonte');
+        if (f) {
+          document.documentElement.style.fontSize = f + 'px';
+          document.documentElement.style.setProperty('--fonte-base', f + 'px');
+        }
+      } catch (e) { }
+    })();
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Fabular</title>
+  <link rel="icon" type="image/png" href="midia/iconeRaposa.png">
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700;800&display=swap"
+    rel="stylesheet">
+</head>
+
+<body class="login-body">
+
+  <!-- ═══════════ LOGIN ═══════════ -->
+  <div class="login-bg">
+    <div class="login-orbs" aria-hidden="true">
+      <span class="login-orb login-orb--lg login-orb--laranja"></span>
+      <span class="login-orb login-orb--md login-orb--teal"></span>
+      <span class="login-orb login-orb--md login-orb--ouro"></span>
+      <span class="login-orb login-orb--md login-orb--terracota"></span>
+      <span class="login-orb login-orb--sm login-orb--teal"></span>
+      <span class="login-orb login-orb--sm login-orb--laranja"></span>
+      <span class="login-orb login-orb--xs login-orb--ouro"></span>
+      <span class="login-orb login-orb--xs login-orb--terracota"></span>
+    </div>
+
+    <div class="estrelas-bg" aria-hidden="true">
+      <span class="estrela-flutuante" style="--d:0s;  --x:8%;  --y:12%">⭐</span>
+      <span class="estrela-flutuante" style="--d:1.2s;--x:82%; --y:10%">✨</span>
+      <span class="estrela-flutuante" style="--d:2s;  --x:55%; --y:75%">⭐</span>
+      <span class="estrela-flutuante" style="--d:.6s; --x:22%; --y:82%">✨</span>
+      <span class="estrela-flutuante" style="--d:1.7s;--x:72%; --y:58%">⭐</span>
+      <span class="estrela-flutuante" style="--d:3s;  --x:92%; --y:45%">✨</span>
+      <span class="estrela-flutuante" style="--d:.3s; --x:38%; --y:20%">🌟</span>
+      <span class="estrela-flutuante" style="--d:2.4s;--x:15%; --y:50%">✨</span>
+    </div>
+
+    <div class="login-wrapper">
+
+      <div class="login-logo" aria-label="Mundo das Histórias">
+        <img class="login-logo-icon" src="midia/iconeRaposa.png" alt="Logo Raposa">
+        <h1 class="login-titulo">Fabular</h1>
+        <p class="login-subtitulo">A Lumi te espera. Vamos ler?</p>
+      </div>
+
+      <div class="login-card oculto" id="crianca-card" role="main">
+        <h2 class="login-card-titulo">Quem vai ler hoje?</h2>
+
+        <!-- Nome -->
+        <div class="campo-grupo">
+          <label class="campo-label" for="input-nome">Seu nome ou apelido</label>
+          <input type="text" id="input-nome" class="campo-input" placeholder="Ex: Lulú, Bento, Ana..." maxlength="80"
+            autocomplete="given-name" aria-required="true" />
+          <span class="campo-erro oculto" id="erro-nome" role="alert">Escreva seu nome para a gente te conhecer.</span>
+        </div>
+
+        <!-- Avatar -->
+        <div class="campo-grupo">
+          <label class="campo-label" id="label-avatar">Escolha seu avatar</label>
+          <div class="avatar-grid" id="avatar-grid" role="radiogroup" aria-labelledby="label-avatar">
+
+            <button class="avatar-btn ativo" data-av="midia/user/sapo.png" aria-label="Sapo" aria-pressed="true"
+              role="radio"><img src="midia/user/sapo.png" alt="sapo"></button>
+            <button class="avatar-btn" data-av="midia/user/unicornio.png" aria-label="Unicórnio" aria-pressed="false"
+              role="radio"><img src="midia/user/unicornio.png" alt="unicornio"></button>
+            <button class="avatar-btn" data-av="midia/user/jacare.png" aria-label="Jacare" aria-pressed="false"
+              role="radio"><img src="midia/user/jacare.png" alt="jacare"></button>
+            <button class="avatar-btn" data-av="midia/user/tubarao.png" aria-label="Tubarão" aria-pressed="false"
+              role="radio"><img src="midia/user/tubarao.png" alt="tubarao"></button>
+            <button class="avatar-btn" data-av="midia/user/porco.png" aria-label="Porco" aria-pressed="false"
+              role="radio"><img src="midia/user/porco.png" alt="porco"></button>
+            <button class="avatar-btn" data-av="midia/user/pato.png" aria-label="Pato" aria-pressed="false"
+              role="radio"><img src="midia/user/pato.png" alt="pato"></button>
+            <button class="avatar-btn" data-av="midia/user/gato.png" aria-label="Gato" aria-pressed="false"
+              role="radio"><img src="midia/user/gato.png" alt="gato"></button>
+            <button class="avatar-btn" data-av="midia/user/urso.png" aria-label="Urso" aria-pressed="false"
+              role="radio"><img src="midia/user/urso.png" alt="urso"></button>
+          </div>
+        </div>
+
+        <!-- Data de nascimento -->
+        <div class="campo-grupo">
+          <label class="campo-label" for="input-nascimento">Data de nascimento</label>
+          <input type="date" id="input-nascimento" class="campo-input" aria-label="Data de nascimento"
+            aria-required="true" required />
+          <span class="campo-erro oculto" id="erro-nascimento" role="alert">Informe a data de nascimento.</span>
+          <p class="tela-sub" id="faixa-preview" style="margin-top:.35rem;font-size:.85rem;" aria-live="polite"></p>
+        </div>
+
+        <!-- Gênero favorito -->
+        <div class="campo-grupo">
+          <label class="campo-label" id="label-genero">Gênero de história favorito</label>
+          <div class="chip-grupo" id="genero-grupo" role="radiogroup" aria-labelledby="label-genero">
+            <button class="chip ativo" data-genero="narrativo" aria-pressed="true">Narrativo</button>
+            <button class="chip" data-genero="poetico" aria-pressed="false">Poético</button>
+            <button class="chip" data-genero="instrucional" aria-pressed="false">Instrucional</button>
+            <button class="chip" data-genero="descritivo" aria-pressed="false">Descritivo</button>
+            <button class="chip" data-genero="informativo" aria-pressed="false">Informativo</button>
+          </div>
+        </div>
+        <div class="campo-grupo">
+          <label class="campo-label" for="input-horario">Qual horário você mais gosta de ler no Fabular?</label>
+          <input type="time" id="input-horario" class="campo-input" aria-label="Horário preferido para jogar"
+            aria-required="true" required />
+          <span class="campo-erro oculto" id="erro-horario" role="alert">Selecione o horário de brincar</span>
+        </div>
+
+        <button class="btn-principal btn-entrar" id="btn-iniciar" aria-label="Começar a ler">
+          Começar a ler
+        </button>
+        <button class="btn-secundario" id="btn-voltar-perfis" type="button">← Voltar para seleção de perfil</button>
+      </div>
+
+      <div class="login-card" id="responsavel-card" role="region" aria-label="Login do responsável">
+        <h2 class="login-card-titulo" id="resp-titulo">Entrar</h2>
+        <div id="resp-auth-box">
+          <div id="resp-campos-cadastro" class="oculto">
+            <div class="campo-grupo">
+              <label class="campo-label" for="resp-nome">Nome</label>
+              <input type="text" id="resp-nome" class="campo-input" placeholder="Nome do responsável" maxlength="80" />
+              <span class="campo-erro oculto" id="erro-resp-nome" role="alert">Informe um nome com pelo menos 2 caracteres.</span>
+            </div>
+            <div class="campo-grupo">
+              <label class="campo-label" for="resp-sobrenome">Sobrenome</label>
+              <input type="text" id="resp-sobrenome" class="campo-input" placeholder="Sobrenome" maxlength="80" />
+            </div>
+            <div class="campo-grupo">
+              <label class="campo-label" for="resp-telefone">Telefone</label>
+              <input type="tel" id="resp-telefone" class="campo-input" placeholder="(19) 99999-8888" maxlength="15"
+                inputmode="numeric" autocomplete="tel" />
+              <span class="campo-erro oculto" id="erro-resp-telefone" role="alert">Telefone inválido. Use DDD + 9 dígitos.</span>
+            </div>
+          </div>
+          <div class="campo-grupo">
+            <label class="campo-label" for="resp-email">E-mail</label>
+            <input type="email" id="resp-email" class="campo-input" placeholder="email@exemplo.com" maxlength="160"
+              autocomplete="email" />
+            <span class="campo-erro oculto" id="erro-resp-email" role="alert">Digite um e-mail válido.</span>
+          </div>
+          <div class="campo-grupo">
+            <label class="campo-label" for="resp-senha">Senha</label>
+            <input type="password" id="resp-senha" class="campo-input" placeholder="••••••••" maxlength="128"
+              autocomplete="current-password" />
+            <span class="campo-erro oculto" id="erro-resp-senha" role="alert"></span>
+            <ul class="senha-requisitos oculto" id="resp-senha-requisitos" aria-live="polite">
+              <li data-req="tamanho">Mínimo de 8 caracteres</li>
+              <li data-req="maiuscula">1 letra maiúscula</li>
+              <li data-req="minuscula">1 letra minúscula</li>
+              <li data-req="numero">1 número</li>
+              <li data-req="especial">1 caractere especial</li>
+              <li data-req="semEspaco">Sem espaços</li>
+              <li data-req="comum">Não usar senha comum</li>
+            </ul>
+          </div>
+          <div id="resp-campo-confirmar-senha" class="campo-grupo oculto">
+            <label class="campo-label" for="resp-confirmar-senha">Confirmar senha</label>
+            <input type="password" id="resp-confirmar-senha" class="campo-input" placeholder="••••••••" maxlength="128"
+              autocomplete="new-password" />
+            <span class="campo-erro oculto" id="erro-resp-confirmar-senha" role="alert">As senhas não coincidem.</span>
+          </div>
+          <button class="btn-principal" id="btn-resp-continuar">Continuar</button>
+          <p class="resp-link-texto" id="resp-link-esqueci"><button class="link-inline" id="btn-esqueci-senha"
+              type="button">Esqueci minha senha</button></p>
+          <p class="resp-link-texto" id="resp-link-alterar"></p>
+        </div>
+        <div id="resp-recuperar-box" class="oculto">
+          <p class="tela-sub" id="resp-recuperar-sub" style="margin: 0.25rem 0 1rem; font-size: 0.9rem; text-align: center; color: var(--texto-sub, #4B5563);">Informe seu e-mail para enviarmos um código de 6 dígitos.</p>
+
+          <!-- Etapa 1: Enviar código -->
+          <div id="resp-etapa-email">
+            <div class="campo-grupo">
+              <label class="campo-label" for="resp-email-reset">E-mail</label>
+              <input type="email" id="resp-email-reset" class="campo-input" placeholder="email@exemplo.com" maxlength="160" autocomplete="email" />
+              <span class="campo-erro oculto" id="erro-resp-email-reset" role="alert">Digite um e-mail válido.</span>
+            </div>
+            <button class="btn-principal" id="btn-enviar-codigo" type="button">Enviar código por e-mail</button>
+          </div>
+
+          <!-- Etapa 2: Verificar código -->
+          <div id="resp-etapa-codigo" class="oculto">
+            <div class="recuperar-email-info" id="recuperar-email-info">
+              <span>Código enviado para <strong id="recuperar-email-destino"></strong></span>
+              <button class="link-inline" id="btn-trocar-email-reset" type="button" style="margin-top: 4px;">Trocar e-mail</button>
+            </div>
+            <div class="campo-grupo">
+              <label class="campo-label" for="resp-codigo-reset">Código de verificação</label>
+              <input type="text" id="resp-codigo-reset" class="campo-input campo-codigo-otp" placeholder="000000" maxlength="6"
+                inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" />
+              <span class="campo-erro oculto" id="erro-resp-codigo-reset" role="alert">Informe o código de 6 dígitos.</span>
+            </div>
+            <button class="btn-principal" id="btn-verificar-codigo" type="button">Verificar código</button>
+            <p class="resp-link-texto" style="margin-top: 10px;">
+              Não recebeu? <button class="link-inline" id="btn-reenviar-codigo" type="button">Reenviar código</button>
+            </p>
+          </div>
+
+          <!-- Etapa 3: Redefinir senha -->
+          <input type="hidden" id="resp-reset-token" value="" />
+          <div id="resp-etapa-senha" class="oculto">
+            <div class="campo-grupo">
+              <label class="campo-label" for="resp-nova-senha">Nova senha</label>
+              <input type="password" id="resp-nova-senha" class="campo-input" placeholder="Digite a nova senha" maxlength="128"
+                autocomplete="new-password" />
+              <span class="campo-erro oculto" id="erro-resp-nova-senha" role="alert"></span>
+              <ul class="senha-requisitos" id="resp-nova-senha-requisitos" aria-live="polite">
+                <li data-req="tamanho">Mínimo de 8 caracteres</li>
+                <li data-req="maiuscula">1 letra maiúscula</li>
+                <li data-req="minuscula">1 letra minúscula</li>
+                <li data-req="numero">1 número</li>
+                <li data-req="especial">1 caractere especial</li>
+                <li data-req="semEspaco">Sem espaços</li>
+                <li data-req="comum">Não usar senha comum</li>
+              </ul>
+            </div>
+            <div class="campo-grupo">
+              <label class="campo-label" for="resp-confirmar-nova-senha">Confirmar nova senha</label>
+              <input type="password" id="resp-confirmar-nova-senha" class="campo-input" placeholder="Repita a nova senha"
+                maxlength="128" autocomplete="new-password" />
+              <span class="campo-erro oculto" id="erro-resp-confirmar-nova-senha" role="alert">As senhas não coincidem.</span>
+            </div>
+            <button class="btn-principal" id="btn-resetar-senha" type="button">Redefinir senha</button>
+          </div>
+
+          <p class="resp-link-texto" style="margin-top: 14px;">
+            <button class="link-inline" id="btn-cancelar-reset" type="button">← Voltar para login</button>
+          </p>
+        </div>
+        <span class="campo-erro oculto" id="resp-erro" role="alert"></span>
+      </div>
+
+      <div class="login-card oculto" id="perfis-card" role="region" aria-label="Seleção de perfil infantil">
+        <div class="perfis-header-wrap">
+          <h2 class="login-card-titulo" style="margin: 0;">Quem vai ler?</h2>
+          <button class="btn-config-engrenagem" id="btn-ir-configuracoes" title="Configurações"
+            aria-label="Configurações">
+            <img src="midia/gear.png" alt="Configurações" class="img-engrenagem" />
+          </button>
+        </div>
+        <p class="tela-sub">Escolha o perfil da criança.</p>
+        <div id="perfis-lista" class="avatar-grid"></div>
+        <button class="btn-secundario" id="btn-add-crianca">+ Adicionar criança</button>
+        <button class="btn-principal" id="btn-logout-resp">Sair da conta do responsável</button>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="portao-overlay oculto" id="portao-parental-overlay" hidden role="dialog" aria-modal="true"
+    aria-labelledby="portao-titulo">
+    <div class="portao-card" id="portao-card">
+      <div class="portao-icone">🔐</div>
+      <h2 class="portao-titulo" id="portao-titulo">Área dos Responsáveis</h2>
+      <p class="portao-desc">Para acessar as configurações, resolva a conta abaixo:</p>
+      <div class="portao-conta" id="portao-conta" aria-live="polite"></div>
+      <div class="portao-input-wrap">
+        <input class="portao-input" id="portao-resposta" type="number" inputmode="numeric" placeholder="Sua resposta..."
+          autocomplete="off" aria-label="Resposta da conta">
+        <button class="btn-principal portao-btn-confirmar" id="portao-btn-confirmar">Confirmar</button>
+      </div>
+      <p class="portao-erro oculto" id="portao-erro" aria-live="assertive">❌ Resposta incorreta. Tente novamente!</p>
+      <button class="btn-secundario portao-btn-cancelar" id="portao-btn-cancelar">Cancelar</button>
+    </div>
+  </div>
+
+  <script src="js/models/faixaEtaria.js"></script>
+  <script src="js/utils/validacao.js"></script>
+  <script src="js/utils/avatarUtils.js"></script>
+  <script src="js/portaoParental.js"></script>
+  <script src="js/login.js"></script>
+</body>
+
+</html>
