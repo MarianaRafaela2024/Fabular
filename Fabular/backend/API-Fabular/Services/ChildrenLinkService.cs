@@ -1,0 +1,453 @@
+using API_Fabular.Contracts;
+using API_Fabular.Infra;
+using Dapper;
+
+namespace API_Fabular.Services;
+
+public class ChildrenLinkService
+{
+    private readonly DbConnectionFactory _db;
+
+    public ChildrenLinkService(DbConnectionFactory db)
+    {
+        _db = db;
+    }
+    // DEPRECATED (etapa 1): schema oficial em CriarBanco.sql + migrations/001_*.up.sql.
+    // Rede de segurança para bancos antigos ainda não migrados. Remover após a etapa 1 estar aplicada em todos os ambientes.
+    private async Task GarantirColunasCriancaAsync(System.Data.Common.DbConnection conn)
+    {
+        try
+        {
+            await conn.ExecuteAsync(@"
+                IF COL_LENGTH('Crianca', 'DataNascimento') IS NULL ALTER TABLE Crianca ADD DataNascimento DATE NULL;
+                IF COL_LENGTH('Crianca', 'HorarioBrincar') IS NULL ALTER TABLE Crianca ADD HorarioBrincar VARCHAR(10) NULL;
+            ");
+        }
+        catch { }
+    }
+
+    public async Task<ApplicationResult<IEnumerable<ChildResponse>>> GetChildrenAsync(int responsavelId)
+    {
+        await using var conn = _db.Create();
+        await conn.OpenAsync();
+        await GarantirColunasCriancaAsync(conn);
+
+        var children = (await conn.QueryAsync<ChildResponse>(
+            """
+        SELECT
+            c.Id,
+            c.Nome,
+            c.FaixaEtaria,
+            c.DataNascimento,
+            c.Avatar,
+            COALESCE(g.Slug, c.GeneroFavorito) AS GeneroFavorito,
+            c.HorarioBrincar
+        FROM Crianca c
+        INNER JOIN Responsavel_Crianca rc
+            ON rc.Id_Crianca = c.Id
+        LEFT JOIN Genero g ON g.Id = c.Id_GeneroFavorito
+        WHERE rc.Id_Responsavel = @ResponsavelId
+        ORDER BY c.Nome
+        """,
+            new { ResponsavelId = responsavelId })).ToList();
+
+        var hoje = DateOnly.FromDateTime(DateTime.Today);
+        foreach (var child in children)
+        {
+            if (!child.DataNascimento.HasValue)
+            {
+                continue;
+            }
+
+            var faixaCalculada = FaixaEtariaHelper.Calcular(child.DataNascimento, hoje);
+            if (child.FaixaEtaria != faixaCalculada)
+            {
+                await conn.ExecuteAsync(
+                    "UPDATE Crianca SET FaixaEtaria = @FaixaEtaria WHERE Id = @Id",
+                    new { FaixaEtaria = faixaCalculada, child.Id });
+                child.FaixaEtaria = faixaCalculada;
+            }
+        }
+
+        return ApplicationResult<IEnumerable<ChildResponse>>.Ok(children);
+    }
+
+    public async Task<ApplicationResult<int>> CreateChildAsync(CreateChildRequest request)
+    {
+        if (!request.DataNascimento.HasValue)
+        {
+            return ApplicationResult<int>.BadRequest("Data de nascimento é obrigatória.");
+        }
+
+        if (!ValidacaoCampos.TentarNormalizarNomeCrianca(request.Nome, out var nomeCrianca))
+        {
+            return ApplicationResult<int>.BadRequest("Informe o nome da criança.");
+        }
+
+        if (!ValidacaoCampos.TentarNormalizarHorarioBrincar(request.HorarioBrincar, out var horarioBrincar))
+        {
+            return ApplicationResult<int>.BadRequest(ValidacaoCampos.MensagemHorarioBrincar);
+        }
+
+        var faixaEtaria = FaixaEtariaHelper.Calcular(request.DataNascimento);
+
+        await using var conn = _db.Create();
+        await conn.OpenAsync();
+        await GarantirColunasCriancaAsync(conn);
+
+        var dataNascParam = request.DataNascimento.Value.ToDateTime(TimeOnly.MinValue);
+        var (generoSlug, idGeneroFavorito) = await GeneroCatalog.ResolverAsync(conn, request.GeneroFavorito);
+
+        var childId = await conn.QuerySingleAsync<int>(
+            """
+        INSERT INTO Crianca
+            (Nome, FaixaEtaria, DataNascimento, Avatar, GeneroFavorito, Id_GeneroFavorito, HorarioBrincar)
+        OUTPUT INSERTED.Id
+        VALUES
+            (@Nome, @FaixaEtaria, @DataNascimento, @Avatar, @GeneroFavorito, @IdGeneroFavorito, @HorarioBrincar)
+        """,
+            new
+            {
+                Nome = nomeCrianca,
+                FaixaEtaria = faixaEtaria,
+                DataNascimento = dataNascParam,
+                request.Avatar,
+                GeneroFavorito = generoSlug ?? request.GeneroFavorito,
+                IdGeneroFavorito = idGeneroFavorito,
+                HorarioBrincar = horarioBrincar
+            });
+
+        await conn.ExecuteAsync(
+            """
+        INSERT INTO Responsavel_Crianca
+            (Id_Responsavel, Id_Crianca)
+        VALUES
+            (@ResponsavelId, @ChildId)
+        """,
+            new
+            {
+                request.ResponsavelId,
+                ChildId = childId
+            });
+
+        return ApplicationResult<int>.Ok(childId);
+    }
+    public async Task<ApplicationResult<ChildResponse>> UpdateChildAsync(int childId, UpdateChildRequest request)
+    {
+        if (childId <= 0 || request.ResponsavelId <= 0 || !ValidacaoCampos.TentarNormalizarNomeCrianca(request.Nome, out var nomeCrianca))
+        {
+            return ApplicationResult<ChildResponse>.BadRequest("Dados inválidos para atualização.");
+        }
+
+        if (!request.DataNascimento.HasValue)
+        {
+            return ApplicationResult<ChildResponse>.BadRequest("Data de nascimento é obrigatória.");
+        }
+
+        if (!ValidacaoCampos.TentarNormalizarHorarioBrincar(request.HorarioBrincar, out var horarioBrincar))
+        {
+            return ApplicationResult<ChildResponse>.BadRequest(ValidacaoCampos.MensagemHorarioBrincar);
+        }
+
+        await using var conn = _db.Create();
+        await conn.OpenAsync();
+        await GarantirColunasCriancaAsync(conn);
+
+        var vinculo = await conn.QueryFirstOrDefaultAsync<int?>(
+            """
+            SELECT rc.Id
+            FROM Responsavel_Crianca rc
+            WHERE rc.Id_Responsavel = @ResponsavelId AND rc.Id_Crianca = @ChildId
+            """,
+            new { request.ResponsavelId, ChildId = childId });
+
+        if (!vinculo.HasValue)
+        {
+            return ApplicationResult<ChildResponse>.NotFound("Criança não vinculada a este responsável.");
+        }
+
+        var faixaEtaria = FaixaEtariaHelper.Calcular(request.DataNascimento);
+        var dataNascParam = request.DataNascimento.Value.ToDateTime(TimeOnly.MinValue);
+        var (generoSlug, idGeneroFavorito) = await GeneroCatalog.ResolverAsync(conn, request.GeneroFavorito);
+
+        await conn.ExecuteAsync(
+            """
+            UPDATE Crianca
+            SET Nome = @Nome,
+                FaixaEtaria = @FaixaEtaria,
+                DataNascimento = @DataNascimento,
+                Avatar = @Avatar,
+                GeneroFavorito = @GeneroFavorito,
+                Id_GeneroFavorito = @IdGeneroFavorito,
+                HorarioBrincar = @HorarioBrincar
+            WHERE Id = @Id
+            """,
+            new
+            {
+                Id = childId,
+                Nome = nomeCrianca,
+                FaixaEtaria = faixaEtaria,
+                DataNascimento = dataNascParam,
+                request.Avatar,
+                GeneroFavorito = generoSlug ?? request.GeneroFavorito,
+                IdGeneroFavorito = idGeneroFavorito,
+                HorarioBrincar = horarioBrincar
+            });
+
+        var updated = await conn.QueryFirstOrDefaultAsync<ChildResponse>(
+            """
+            SELECT c.Id, c.Nome, c.FaixaEtaria, c.DataNascimento, c.Avatar,
+                   COALESCE(g.Slug, c.GeneroFavorito) AS GeneroFavorito, c.HorarioBrincar
+            FROM Crianca c
+            LEFT JOIN Genero g ON g.Id = c.Id_GeneroFavorito
+            WHERE c.Id = @Id
+            """,
+            new { Id = childId });
+
+        if (updated is null)
+        {
+            return ApplicationResult<ChildResponse>.NotFound("Criança não encontrada.");
+        }
+
+        return ApplicationResult<ChildResponse>.Ok(updated);
+    }
+
+    public async Task<ApplicationResult<object>> LinkLocalAsync(LinkLocalChildrenRequest request)
+    {
+        if (request.ResponsavelId <= 0 || request.ChildrenLocal is null || request.ChildrenLocal.Count == 0)
+        {
+            return ApplicationResult<object>.BadRequest("Responsável e crianças locais são obrigatórios.");
+        }
+
+        await using var conn = _db.Create();
+        await conn.OpenAsync();
+        await using var tx = await conn.BeginTransactionAsync();
+        var linked = new List<LinkedChildDto>();
+
+        foreach (var child in request.ChildrenLocal)
+        {
+            if (string.IsNullOrWhiteSpace(child.LocalChildKey) || string.IsNullOrWhiteSpace(child.Nome))
+            {
+                continue;
+            }
+
+            var existing = await conn.QueryFirstOrDefaultAsync<int?>(
+                """
+                SELECT TOP 1 c.Id
+                FROM Crianca c
+                INNER JOIN Responsavel_Crianca rc ON rc.Id_Crianca = c.Id
+                WHERE rc.Id_Responsavel = @ResponsavelId
+                  AND c.LocalChildKey = @LocalChildKey
+                """,
+                new { request.ResponsavelId, child.LocalChildKey },
+                tx);
+
+            int childId;
+            var status = "reused";
+            var faixaEtaria = child.DataNascimento.HasValue
+                ? FaixaEtariaHelper.Calcular(child.DataNascimento)
+                : (byte)Math.Clamp(child.FaixaEtaria, 1, 3);
+            ValidacaoCampos.TentarNormalizarHorarioBrincar(child.HorarioBrincar, out var horarioBrincar);
+
+            if (existing.HasValue)
+            {
+                childId = existing.Value;
+                if (child.DataNascimento.HasValue)
+                {
+                    await conn.ExecuteAsync(
+                        """
+                        UPDATE Crianca
+                        SET FaixaEtaria = @FaixaEtaria,
+                            DataNascimento = @DataNascimento,
+                            HorarioBrincar = COALESCE(@HorarioBrincar, HorarioBrincar)
+                        WHERE Id = @Id
+                        """,
+                        new { FaixaEtaria = faixaEtaria, child.DataNascimento, HorarioBrincar = horarioBrincar, Id = childId },
+                        tx);
+                }
+            }
+            else
+            {
+                var (generoSlug, idGeneroFavorito) = await GeneroCatalog.ResolverAsync(conn, child.GeneroFavorito, tx);
+                childId = await conn.QuerySingleAsync<int>(
+                    """
+                    INSERT INTO Crianca (Nome, FaixaEtaria, DataNascimento, Avatar, GeneroFavorito, Id_GeneroFavorito, HorarioBrincar, LocalChildKey)
+                    OUTPUT INSERTED.Id
+                    VALUES (@Nome, @FaixaEtaria, @DataNascimento, @Avatar, @GeneroFavorito, @IdGeneroFavorito, @HorarioBrincar, @LocalChildKey)
+                    """,
+                    new
+                    {
+                        Nome = child.Nome.Trim(),
+                        FaixaEtaria = faixaEtaria,
+                        child.DataNascimento,
+                        child.Avatar,
+                        GeneroFavorito = generoSlug ?? child.GeneroFavorito,
+                        IdGeneroFavorito = idGeneroFavorito,
+                        HorarioBrincar = horarioBrincar,
+                        child.LocalChildKey
+                    },
+                    tx);
+
+                await conn.ExecuteAsync(
+                    "INSERT INTO Responsavel_Crianca (Id_Responsavel, Id_Crianca) VALUES (@ResponsavelId, @ChildId)",
+                    new { request.ResponsavelId, ChildId = childId },
+                    tx);
+                status = "created";
+            }
+
+            linked.Add(new LinkedChildDto(child.LocalChildKey, childId, status));
+        }
+
+        await tx.CommitAsync();
+        return ApplicationResult<object>.Ok(new { linkedChildren = linked });
+    }
+
+    public async Task<ApplicationResult<bool>> DeleteChildAsync(int childId, int responsavelId)
+    {
+        if (childId <= 0 || responsavelId <= 0)
+        {
+            return ApplicationResult<bool>.BadRequest("Identificadores inválidos.");
+        }
+
+        await using var conn = _db.Create();
+        await conn.OpenAsync();
+        await using var tx = await conn.BeginTransactionAsync();
+
+        var vinculo = await conn.QueryFirstOrDefaultAsync<int?>(
+            """
+            SELECT rc.Id
+            FROM Responsavel_Crianca rc
+            WHERE rc.Id_Responsavel = @ResponsavelId AND rc.Id_Crianca = @ChildId
+            """,
+            new { ResponsavelId = responsavelId, ChildId = childId },
+            tx);
+
+        if (!vinculo.HasValue)
+        {
+            return ApplicationResult<bool>.NotFound("Criança não vinculada a este responsável.");
+        }
+
+        var outrosVinculos = await conn.ExecuteScalarAsync<int>(
+            """
+            SELECT COUNT(1)
+            FROM Responsavel_Crianca
+            WHERE Id_Crianca = @ChildId AND Id_Responsavel <> @ResponsavelId
+            """,
+            new { ChildId = childId, ResponsavelId = responsavelId },
+            tx);
+
+        if (outrosVinculos > 0)
+        {
+            await conn.ExecuteAsync(
+                """
+                DELETE FROM Responsavel_Crianca
+                WHERE Id_Crianca = @ChildId AND Id_Responsavel = @ResponsavelId
+                """,
+                new { ChildId = childId, ResponsavelId = responsavelId },
+                tx);
+        }
+        else
+        {
+            await ExcluirDadosDaCriancaAsync(conn, tx, childId);
+        }
+
+        await tx.CommitAsync();
+        return ApplicationResult<bool>.Ok(true);
+    }
+
+    public async Task ExcluirDadosDaCriancaAsync(
+        System.Data.Common.DbConnection conn,
+        System.Data.Common.DbTransaction tx,
+        int childId)
+    {
+        await conn.ExecuteAsync(
+            """
+            IF OBJECT_ID(N'dbo.Evento_Minigame', N'U') IS NOT NULL
+            AND OBJECT_ID(N'dbo.Sessao_Leitura', N'U') IS NOT NULL
+                DELETE em
+                FROM Evento_Minigame em
+                INNER JOIN Sessao_Leitura sl ON sl.Id = em.Id_SessaoLeitura
+                WHERE sl.Id_Crianca = @ChildId
+            """,
+            new { ChildId = childId },
+            tx);
+
+        await conn.ExecuteAsync(
+            """
+            IF OBJECT_ID(N'dbo.Sessao_Leitura', N'U') IS NOT NULL
+                DELETE FROM Sessao_Leitura WHERE Id_Crianca = @ChildId
+            """,
+            new { ChildId = childId },
+            tx);
+
+        var historiasIa = (await conn.QueryAsync<int>(
+            """
+            SELECT DISTINCT Id_Historia
+            FROM IA_Geracao
+            WHERE Id_Crianca = @ChildId AND Id_Historia IS NOT NULL
+            """,
+            new { ChildId = childId },
+            tx)).ToList();
+
+        await conn.ExecuteAsync(
+            "DELETE FROM IA_Geracao WHERE Id_Crianca = @ChildId",
+            new { ChildId = childId },
+            tx);
+
+        foreach (var historiaId in historiasIa)
+        {
+            var aindaReferenciada = await conn.ExecuteScalarAsync<int>(
+                "SELECT COUNT(1) FROM IA_Geracao WHERE Id_Historia = @HistoriaId",
+                new { HistoriaId = historiaId },
+                tx);
+            var origem = await conn.ExecuteScalarAsync<string?>(
+                "SELECT Origem FROM Historia WHERE Id = @HistoriaId",
+                new { HistoriaId = historiaId },
+                tx);
+
+            if (aindaReferenciada == 0 && string.Equals(origem, "ia", StringComparison.OrdinalIgnoreCase))
+            {
+                await conn.ExecuteAsync(
+                    "DELETE FROM Historia WHERE Id = @HistoriaId",
+                    new { HistoriaId = historiaId },
+                    tx);
+            }
+        }
+
+        await conn.ExecuteAsync(
+            "DELETE FROM Relatorio_Crianca WHERE Id_Crianca = @ChildId",
+            new { ChildId = childId },
+            tx);
+
+        await conn.ExecuteAsync(
+            "DELETE FROM Atividade_Diaria WHERE Id_Crianca = @ChildId",
+            new { ChildId = childId },
+            tx);
+
+        await conn.ExecuteAsync(
+            """
+            IF OBJECT_ID(N'dbo.Sincronizacao_Progresso', N'U') IS NOT NULL
+                DELETE FROM dbo.Sincronizacao_Progresso WHERE Id_Crianca = @ChildId
+            """,
+            new { ChildId = childId },
+            tx);
+
+        await conn.ExecuteAsync(
+            """
+            IF OBJECT_ID(N'dbo.Progresso_Snapshot', N'U') IS NOT NULL
+                DELETE FROM dbo.Progresso_Snapshot WHERE Id_Crianca = @ChildId
+            """,
+            new { ChildId = childId },
+            tx);
+
+        await conn.ExecuteAsync(
+            "DELETE FROM Responsavel_Crianca WHERE Id_Crianca = @ChildId",
+            new { ChildId = childId },
+            tx);
+
+        await conn.ExecuteAsync(
+            "DELETE FROM Crianca WHERE Id = @ChildId",
+            new { ChildId = childId },
+            tx);
+    }
+}
